@@ -22,12 +22,12 @@ setup_keywords = dict()
 #
 # THESE SETTINGS NEED TO BE CHANGED FOR EVERY PRODUCT.
 #
-setup_keywords['name'] = 'exgalspec'
+setup_keywords['name'] = 'specdb'
 setup_keywords['description'] = 'Extragalactic Galaxy Spectra Database'
 setup_keywords['author'] = 'IGM Community'
 setup_keywords['author_email'] = 'xavier@ucolick.org'
 setup_keywords['license'] = 'BSD'
-setup_keywords['url'] = 'https://github.com/specdb/exgalspec'
+setup_keywords['url'] = 'https://github.com/specdb/specdb'
 #
 # END OF SETTINGS THAT NEED TO BE CHANGED.
 #
@@ -53,7 +53,7 @@ setup_keywords['requires'] = ['Python (>2.7.0)']
 # setup_keywords['install_requires'] = ['Python (>2.7.0)']
 setup_keywords['zip_safe'] = False
 setup_keywords['use_2to3'] = True
-setup_keywords['packages'] = ['exgalspec']
+setup_keywords['packages'] = ['specdb']
 #setup_keywords['package_dir'] = {'':''}
 #setup_keywords['cmdclass'] = {'version': DesiVersion, 'test': DesiTest, 'sdist': DistutilsSdist}
 #etup_keywords['test_suite']='{name}.tests.{name}_test_suite.{name}_test_suite'.format(**setup_keywords)
@@ -70,15 +70,17 @@ setup_keywords['tests_require']=['pytest']
 
 data_files = []
 
+"""
 # walk through the data directory, adding all files
-data_generator = os.walk('exgalspec/data')
+data_generator = os.walk('specdb/data')
 for path, directories, files in data_generator:
     for f in files:
         data_path = '/'.join(path.split('/')[1:])
         data_files.append(data_path + '/' + f)
-setup_keywords['package_data'] = {'exgalspec': data_files,
+setup_keywords['package_data'] = {'specdb': data_files,
                                   '': ['*.rst', '*.txt']}
 setup_keywords['include_package_data'] = True
+"""
 
 #
 # Run setup command.
