@@ -19,7 +19,7 @@ from linetools.spectra import io as lsio
 from linetools.spectra.xspectrum1d import XSpectrum1D
 
 from specdb.build import utils as spbu
-from specdb.build import privatedb as spbp
+from specdb.zem import utils as spzu
 from specdb import defs
 
 
@@ -63,15 +63,18 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
     return pfiles
 
 
-def mk_meta(files, fname=False, stype='QSO', skip_badz=False,
+def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             mdict=None, parse_head=None, debug=False, chkz=False,
-            private_z=None, verbose=False, **kwargs):
+            verbose=False, **kwargs):
     """ Generate a meta Table from an input list of files
 
     Parameters
     ----------
     files : list
       List of FITS files
+    ztbl : Table
+      Table of redshifts.  Must include RA, DEC, ZEM, ZEM_SOURCE
+      Used for RA/DEC if fname=False;  then requires SPEC_FILE too
     fname : bool, optional
       Attempt to parse RA/DEC from the file name
       Format must be
@@ -83,8 +86,6 @@ def mk_meta(files, fname=False, stype='QSO', skip_badz=False,
       Parse header for meta info with this dict
     mdict : dict, optional
       Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
-    private_z : Table, optional
-      Table of private redshifts.  Must include RA, DEC, ZEM, ZEM_SOURCE
     chkz : bool, optional
       If any sources have no parseable redshift, hit a set_trace
 
@@ -122,44 +123,26 @@ def mk_meta(files, fname=False, stype='QSO', skip_badz=False,
             except (UnboundLocalError, ValueError):
                 pdb.set_trace()
         else:
-            if private_z:
-                sname = ifile.split('/')[-1]
-                mt = np.where(private_z['SPEC_FILE'] == sname)[0]
-                if len(mt) != 1:
-                    raise IndexError("NO MATCH FOR {:s}".format(sname))
-                coord = ltu.radec_to_coord((private_z['RA'][mt],
-                                            private_z['DEC'][mt]))[0]
-            else:
-                raise NotImplementedError("NEED RA/DEC")
+            sname = ifile.split('/')[-1]
+            mt = np.where(ztbl['SPEC_FILE'] == sname)[0]
+            if len(mt) != 1:
+                raise IndexError("NO MATCH FOR {:s}".format(sname))
+            coord = ltu.radec_to_coord((ztbl['RA'][mt],
+                                        ztbl['DEC'][mt]))[0]
         coordlist.append(coord)
     coords = SkyCoord(ra=[coord.ra.degree for coord in coordlist], dec=[coord.dec.degree for coord in coordlist], unit='deg')
 
     # Generate Meta Table
     maindb, tkeys = spbu.start_maindb(private=True)
-    '''
-    idict = defs.get_db_table_format()
-    idict['PRIV_ID'] = 0
-    idict.pop('IGM_ID')
-    tkeys = idict.keys()
-    lst = [[idict[tkey]] for tkey in tkeys]
-    maindb = Table(lst, names=tkeys)
-    '''
 
     # Fill
     meta = Table()
     meta['RA'] = coords.ra.deg
     meta['DEC'] = coords.dec.deg
     meta['STYPE'] = [stype]*len(meta)
-    #meta['PRIV_ID'] = np.arange(len(meta)).astype(int) + (max_pid+1)
     meta['flag_survey'] = [1]*len(meta)
 
-    # Redshift from Myers (and more)
-    myers = Table(igmsp.idb.hdf['quasars'].value)
-    if private_z is not None:
-        zqsos = vstack([myers, private_z])
-    else:
-        zqsos = myers
-    zem, zsource = zem_from_radec(meta['RA'], meta['DEC'], zqsos)
+    zem, zsource = spzu.zem_from_radec(meta['RA'], meta['DEC'], ztbl)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
