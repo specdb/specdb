@@ -60,8 +60,8 @@ matrix:
           env: SETUP_CMD='test'
         #- python: 3.3
         #  env: SETUP_CMD='test'
-        - python: 3.4
-          env: SETUP_CMD='test'
+        #- python: 3.4
+        #  env: SETUP_CMD='test'
         - python: 3.5
           env: SETUP_CMD='test'
 
