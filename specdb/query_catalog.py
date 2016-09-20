@@ -275,7 +275,7 @@ class QueryCatalog(object):
         -------
 
         """
-        from igmspec import cat_utils as icu
+        from specdb import cat_utils as icu
         # SkyCoord
         self.coords = SkyCoord(ra=self.cat['RA'], dec=self.cat['DEC'], unit='deg')
         # Formatting the Table
