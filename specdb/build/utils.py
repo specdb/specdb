@@ -8,14 +8,12 @@ import warnings
 import numbers
 import pdb
 
-from igmspec import defs
-
 from astropy.table import Table, Column
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
 
+from specdb import defs
 #from linetools import utils as ltu
-
 
 
 def add_to_flag(cur_flag, add_flag):
@@ -197,15 +195,14 @@ def chk_meta(meta):#, skip_igmid=False):
     chk : bool
 
     """
-    from specdb.defs import instruments, get_req_clms
     from astropy.time import Time
     from astropy.table import Column
     # Init
-    inst_dict = instruments()
+    inst_dict = defs.instruments()
 
     chk = True
     # Required columns
-    req_clms = get_req_clms()
+    req_clms = defs.get_req_clms()
     meta_keys = meta.keys()
     for clm in req_clms:
         if clm not in meta_keys:
@@ -247,7 +244,6 @@ def set_resolution(head, instr=None):
     -------
 
     """
-    from igmspec import defs
     # Dicts
     Rdicts = defs.get_res_dicts()
     # Grab instrument
