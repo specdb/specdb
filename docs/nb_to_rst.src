@@ -1,0 +1,25 @@
+#/bin/bash
+
+# Converts notebooks to rst and insert a line at the top with a link
+# to the original notebook.
+
+# Requires pandoc https://github.com/jgm/pandoc/releases/tag/1.15.2
+
+filenames=( Simple_Usage
+     Simple_Scripts
+     Private_Ingest
+     )
+
+for n in "${filenames[@]}"
+
+do
+	echo nb/$n\.ipynb
+	echo $n\.rst
+	jupyter nbconvert nb/$n.ipynb --to rst;
+	sed -i '' "5 i\\
+ :download:\`Download <nb/$n\.ipynb>\` this notebook.\\
+\\
+
+" $n\.rst;
+
+done
