@@ -1,11 +1,11 @@
 .. highlight:: rest
 
-*************
-Using igmspec
-*************
+************
+Using specdb
+************
 
 This file summarizes some of the simple usage cases
-of igmspec from within Python.
+of specdb from within Python.
 See the :doc:`scripts` documentation for a discussion of
 command-line usage cases outside of Python.
 
@@ -20,10 +20,10 @@ Notebooks
 Setup
 =====
 
-The main class of igmspec is simply instantiated::
+The main class of specdb is simply instantiated::
 
-    from igmspec.igmspec import IgmSpec
-    igmsp = IgmSpec()
+    from specdb.specdb import SpecDB
+    igmsp = SpecDB(db_file='/raid/IGMSPEC_DB/IGMspec_DB_v02.hdf5')
 
 This loads the database catalog::
 
@@ -39,7 +39,7 @@ and opens the hdf5 file (without loading the data)::
 Grabbing Spectra
 ================
 
-A common usage of igmspec may be to grab a single spectrum from
+A common usage of specdb may be to grab a single spectrum from
 a single survey.  Here is an example::
 
    speclist, metalist = igmsp.spec_from_coord('J223438.52+005730.0', isurvey=['HD-LLS_DR1'])
