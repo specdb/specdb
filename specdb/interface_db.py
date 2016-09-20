@@ -198,7 +198,11 @@ class InterfaceDB(object):
             print("Staging failed..  Not returning spectra")
             return
         # Generate XSpectrum1D
-        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], masking='edges')
+        if 'co' in data.dtype.names:
+            co = data['co']
+        else:
+            co = None
+        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking='edges')
         # Return
         return spec, self.meta
 

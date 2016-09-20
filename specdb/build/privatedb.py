@@ -291,7 +291,7 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
-                   refs=None, verbose=False, badf=None, **kwargs):
+                   refs=None, verbose=False, badf=None, grab_conti=False, **kwargs):
     """ Ingest the spectra
     Parameters
     ----------
@@ -307,6 +307,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       list of dicts with reference info
     badf : list, optional
       List of bad spectra [use only if you know what you are doing!]
+    grab_conti : bool, optional
+      Grab continua.  They should exist but do not have to
 
     Returns
     -------
@@ -317,14 +319,15 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     grp = hdf.create_group(sname)
     # Spectra
     nspec = len(meta)
-    data = np.ma.empty((1,),
-                       dtype=[(str('wave'), 'float64', (max_npix)),
-                              (str('flux'), 'float32', (max_npix)),
-                              (str('sig'),  'float32', (max_npix)),
-                              #(str('co'),   'float32', (max_npix)),
-                             ])
+    dtypes=[(str('wave'), 'float64', (max_npix)),
+           (str('flux'), 'float32', (max_npix)),
+           (str('sig'),  'float32', (max_npix))]
+    dkeys = ['wave','flux','sig']
+    if grab_conti:
+        dtypes += [(str('co'),   'float32', (max_npix))]
+        dkeys += ['co']
+    data = np.ma.empty((1,), dtype=dtypes)
     # Init
-    #full_idx = np.zeros(len(hdlls_full), dtype=int)
     spec_set = hdf[sname].create_dataset('spec', data=data, chunks=True,
                                          maxshape=(None,), compression='gzip')
     spec_set.resize((nspec,))
@@ -354,11 +357,14 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
         if npix > max_npix:
             raise ValueError("Not enough pixels in the data... ({:d})".format(npix))
         # Some fiddling about
-        for key in ['wave','flux','sig']:
+        for key in dkeys:
             data[key] = 0.  # Important to init (for compression too)
         data['flux'][0][:npix] = spec.flux.value
         data['sig'][0][:npix] = spec.sig.value
         data['wave'][0][:npix] = spec.wavelength.value
+        if grab_conti:
+            if spec.co_is_set:
+                data['co'][0][:npix] = spec.co.value
         # Meta
         wvminlist.append(np.min(data['wave'][0][:npix]))
         wvmaxlist.append(np.max(data['wave'][0][:npix]))
