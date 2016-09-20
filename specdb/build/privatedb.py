@@ -387,7 +387,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     return
 
 
-def mk_db(trees, names, outfil, **kwargs):
+def mk_db(trees, names, outfil, ztbl, **kwargs):
     """ Generate the DB
 
     Parameters
@@ -398,12 +398,14 @@ def mk_db(trees, names, outfil, **kwargs):
       List of names for the various datasets
     outfil : str
       Output file name for the hdf5 file
+    ztbl : Table
+      See above
 
     Returns
     -------
 
     """
-    from igmspec import build_db as ibdb
+    from igmspec import defs as igmsp_defs
     # HDF5 file
     hdf = h5py.File(outfil,'w')
 
@@ -412,7 +414,7 @@ def mk_db(trees, names, outfil, **kwargs):
     sdict = {}
 
     # Main DB Table
-    maindb, tkeys = ibdb.start_maindb(private=True)
+    maindb, tkeys = spbu.start_maindb(private=True)
     maindb['PRIV_ID'] = -1  # To get the indexing right
     tkeys += ['PRIV_ID']
 
@@ -422,7 +424,7 @@ def mk_db(trees, names, outfil, **kwargs):
         # Files
         fits_files = grab_files(tree)
         # Meta
-        full_meta = mk_meta(fits_files, **kwargs)
+        full_meta = mk_meta(fits_files, ztbl, **kwargs)
         # Survey IDs
         flag_s = 2**ss
         sdict[names[ss]] = flag_s
@@ -432,13 +434,13 @@ def mk_db(trees, names, outfil, **kwargs):
             full_meta['flag_survey'] = flag_s
             cut = full_meta
         else:
-            cut, new, ids = ibdb.set_new_ids(maindb, full_meta, idkey='PRIV_ID')
+            cut, new, ids = spbu.set_new_ids(maindb, full_meta, idkey='PRIV_ID')
             cut['flag_survey'] = [flag_s]*len(cut)
             midx = np.array(maindb['PRIV_ID'][ids[~new]])
             maindb['flag_survey'][midx] += flag_s   # ASSUMES NOT SET ALREADY
         # Catalog
         cat_meta = cut[tkeys]
-        assert ibdb.chk_maindb_join(maindb, cat_meta)
+        assert spbu.chk_maindb_join(maindb, cat_meta)
         # Append
         maindb = vstack([maindb,cat_meta], join_type='exact')
         if ss == 0:
