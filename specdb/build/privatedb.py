@@ -24,7 +24,8 @@ from specdb import defs
 
 
 def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
-                                      'E.fits', 'N.fits', 'old.fits')):
+                                      'E.fits', 'N.fits', 'old.fits'),
+               only_conti=False):
     """ Generate a list of FITS files within the file tree
 
     Parameters
@@ -33,6 +34,8 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
       Top level path of the tree of FITS files
     skip_files : tuple
       List of file roots to skip as primary files when ingesting
+    only_conti : bool, optional
+      Only grab files with separate continua files (mainly for QPQ)
 
     Returns
     -------
@@ -47,7 +50,10 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
         # Search for fits files
         ofiles = []
         for folder in folders:
-            ofiles += glob.glob(tree_root+folder+'/*.fits*')
+            if only_conti:
+                ofiles += glob.glob(tree_root+folder+'/*_c.fits*')
+            else:
+                ofiles += glob.glob(tree_root+folder+'/*.fits*')
             # Eliminate error and continua files
             for ofile in ofiles:
                 flg = True
@@ -55,6 +61,9 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                 for skip_file in skip_files:
                     if skip_file in ofile:
                         flg = False
+                #
+                if only_conti:
+                    ofile = ofile.replace('_c','')
                 if flg:
                     pfiles.append(ofile)
             # walk
@@ -152,6 +161,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             if chkz:
                 pdb.set_trace()
             else:
+                pdb.set_trace()
                 raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem'] = zem
