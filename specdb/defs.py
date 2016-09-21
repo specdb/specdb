@@ -147,46 +147,6 @@ def get_db_table_format():
     return idict
 
 
-def get_survey_dict():
-    """ Return the survey dict
-    Returns
-    -------
-
-    """
-    survey_dict = OrderedDict()
-    survey_dict['BOSS_DR12'] = 1
-    survey_dict['SDSS_DR7'] = 2
-    survey_dict['KODIAQ_DR1'] = 4   # O'Meara et al. 2016
-    survey_dict['HD-LLS_DR1'] = 8   # Prochaska et al. 2015
-    survey_dict['GGG'] = 16         # Worseck et al. 201X
-    survey_dict['HST_z2'] = 2**5    # O'Meara et al. 2011
-    survey_dict['XQ-100'] = 2**6    # Lopez et al. 2016
-    survey_dict['HDLA100'] = 2**7   # Neeleman et al. 2013
-    survey_dict['2QZ'] = 2**8       # Croom et al.
-    survey_dict['ESI_DLA'] = 2**9   # Rafelski et al. 2012, 2014
-    survey_dict['COS-Halos'] = 2**10 # Tumlinson et al. 2013
-    survey_dict['HSTQSO'] = 2**12 # Ribaudo et al. 2011; Neeleman et al. 2016
-    #
-    return survey_dict
-
-
-def survey_flag(survey, iflag=None):
-    """ Defines bitwise survey flag for IGMspec
-    Parameters
-    ----------
-    survey : str
-      Name of the survey
-    iflag : int, optional
-    Returns
-    -------
-    flag_val : int
-
-    """
-    survey_dict = get_survey_dict()
-    #
-    return survey_dict[survey]
-
-
 def get_res_dicts():
     """ Resolution dicts
 
