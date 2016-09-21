@@ -59,7 +59,9 @@ def instruments():
         # HST
         'ACS': dict(gratings=['PR200L']),
         'WFC3': dict(gratings=['G280']),
-        'COS': dict(gratings=['G130M', 'G160M', 'G130M/G160M']),
+        'COS': dict(gratings=['G130M', 'G160M', 'G130M/G160M', 'G130M-G160M']),
+        'FOS': dict(gratings=['G160L', 'G130H', 'G190H', 'G270H']),
+        'STIS': dict(gratings=['G140L', 'G230L']),
         # VLT
         'XSHOOTER': dict(gratings=['UVB,VIS,NIR,ALL']),
         'ISAAC': dict(gratings=['SW_MRes']),
