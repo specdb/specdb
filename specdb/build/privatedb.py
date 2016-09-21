@@ -64,6 +64,8 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                 #
                 if only_conti:
                     ofile = ofile.replace('_c','')
+                    if not os.path.isfile(ofile):
+                        print("{:s} not present".format(ofile))
                 if flg:
                     pfiles.append(ofile)
             # walk

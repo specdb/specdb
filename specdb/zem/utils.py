@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 
 
-def zem_from_radec(ra, dec, qsos, qtoler=2*u.arcsec, debug=True):
+def zem_from_radec(ra, dec, qsos, qtoler=2*u.arcsec, debug=False):
     """ Parse quasar catalog (Myers) for zem
 
     Parameters
