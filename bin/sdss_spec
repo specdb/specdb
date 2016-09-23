@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# See top-level LICENSE file for Copyright information
+#
+# -*- coding: utf-8 -*-
+
+
+"""
+This script does various things with the SDSS/BOSS datasets
+"""
+
+import specdb.scripts.sdss_spec as sdss_spec
+
+if __name__ == '__main__':
+    args = sdss_spec.parser()
+    sdss_spec.main(args)
