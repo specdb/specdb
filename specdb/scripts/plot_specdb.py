@@ -9,7 +9,7 @@ def parser(options=None):
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='plot_igmspec script v0.2')
+    parser = argparse.ArgumentParser(description='plot_specdb script v0.2')
     parser.add_argument("coord", type=str, help="Coordinates, e.g. J081240.7+320809")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all]")
     parser.add_argument("--tol", default=5., type=float, help="Maximum offset in arcsec [default=5.]")
