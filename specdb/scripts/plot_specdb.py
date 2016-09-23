@@ -30,13 +30,10 @@ def main(args, unit_test=False, **kwargs):
     """
 
     from astropy import units as u
+    from specdb.utils import load_db
 
     # init
-    if args.dbase == 'igmspec':
-        from specdb.specdb import IgmSpec
-        Specdb = IgmSpec(**kwargs)
-    else:
-        raise IOError("Not ready for this dbase value: {:s}".format(args.dbase))
+    Specdb = load_db(args.dbase, **kwargs)
 
     # Grab
     all_spec, all_meta = Specdb.spec_from_coord(args.coord, tol=args.tol*u.arcsec, isurvey=args.survey)
