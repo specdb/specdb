@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+"""
+Check a DB file from specdb
+"""
+from __future__ import (print_function, absolute_import, division, unicode_literals)
+
+import os
+import pdb
+
+try:  # Python 3
+    ustr = unicode
+except NameError:
+    ustr = str
+
+def parser(options=None):
+    import argparse
+    # Parse
+    parser = argparse.ArgumentParser(description='Check a specdb DB file')
+    parser.add_argument("db_file", type=str, help="Database file")
+    #parser.add_argument("-v", "--version", default='v01', help="DB version to generate")
+    #parser.add_argument("-v", "--version", default='v01', help="DB version to generate")
+    #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
+
+    if options is None:
+        pargs = parser.parse_args()
+    else:
+        pargs = parser.parse_args(options)
+    return pargs
+
+
+def main(pargs):
+    """ Run
+    Parameters
+    ----------
+    pargs
+
+    Returns
+    -------
+
+    """
+    import h5py
+    import warnings
+
+    # Open file
+    hdf = h5py.File(pargs.db_file, 'r')
+
+    # Name
+    try:
+        dbname = hdf['catalog'].attrs['NAME']
+    except:
+        warnings.warn('DB file has no name.  Must be really old..')
+        dbname = 'none'
+
+    # Check for Creation Date
+    try:
+        cdate = hdf['catalog'].attrs['CREATION_DATE']
+    except:
+        warnings.warn('DB file has no Creation Date.  Must be really old..')
+        return
+
+
+if __name__ == '__main__':
+    # Giddy up
+    main()

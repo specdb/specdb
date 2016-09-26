@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# See top-level LICENSE file for Copyright information
+#
+# -*- coding: utf-8 -*-
+
+
+"""
+This script grabs the igmspec database file from the great Internet
+"""
+
+import specdb.scripts.specdb_chk as specdb_chk
+
+if __name__ == '__main__':
+    args = specdb_chk.parser()
+    specdb_chk.main(args)

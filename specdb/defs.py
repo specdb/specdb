@@ -243,7 +243,7 @@ def slit_width(slitname, req_long=True):
 
 
 def get_req_clms():
-    """
+    """ Return a list of required columns for any specdb META table
     Returns
     -------
     req_clms : list
@@ -253,3 +253,26 @@ def get_req_clms():
             'WV_MAX', 'DATE-OBS', 'SURVEY_ID', 'NPIX', 'SPEC_FILE',
             'INSTR', 'GRATING', 'TELESCOPE', 'IGM_ID']
     return req_clms
+
+
+def dbase_info():
+    """ Return a dict of info on the specdb databases
+    Returns
+    -------
+    db_info : dict
+
+    """
+    db_info = {}
+    # IGMSpec
+    db_info['igmspec'] = {}
+    db_info['igmspec']['latest_version'] = 'v02'
+    db_info['igmspec']['v01'] = {}
+    db_info['igmspec']['v01']['oldest_ok_date'] = '2016-09-25'
+    db_info['igmspec']['v01']['newest_date'] = '2016-09-25'
+    db_info['igmspec']['v02'] = {}
+    db_info['igmspec']['v02']['oldest_ok_date'] = '2016-09-25'
+    db_info['igmspec']['v02']['newest_date'] = '2016-09-25'
+
+    # Return
+    return db_info
+
