@@ -51,9 +51,9 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
         ofiles = []
         for folder in folders:
             if only_conti:
-                ofiles += glob.glob(tree_root+folder+'/*_c.fits*')
+                ofiles += glob.glob(tree_root+'/'+folder+'/*_c.fits*')
             else:
-                ofiles += glob.glob(tree_root+folder+'/*.fits*')
+                ofiles += glob.glob(tree_root+'/'+folder+'/*.fits*')
             # Eliminate error and continua files
             for ofile in ofiles:
                 flg = True
@@ -105,7 +105,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta : Table
       Meta table
     """
-    from igmspec.igmspec import IgmSpec
+    from specdb.specdb import IgmSpec
     igmsp = IgmSpec(skip_test=True)
     Rdicts = defs.get_res_dicts()
     #
@@ -167,6 +167,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem'] = zem
+    pdb.set_trace()
     meta['sig_zem'] = 0.  # Need to add
     meta['flag_zem'] = zsource
     # Cut
