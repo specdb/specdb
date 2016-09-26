@@ -63,6 +63,8 @@ def main(pargs):
     else:
         version = hdf['catalog'].attrs['VERSION']
         print("specdb DB file version={:s} was created on {:s}".format(version,cdate))
+        print("Latest version for specdb DB type={:s} is version={:s}".format(
+                dbname, dbinfo[dbname]['latest_version']))
         # Check
         if dbname is not None:
             print("Latest creation date for this DB version was {:s}".format(
