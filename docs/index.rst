@@ -18,6 +18,7 @@ Contents
 
    installing
    private
+   scripts
 
 
 Indices and tables
