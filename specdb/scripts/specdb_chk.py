@@ -4,7 +4,6 @@ Check a DB file from specdb
 """
 from __future__ import (print_function, absolute_import, division, unicode_literals)
 
-import os
 import pdb
 
 try:  # Python 3
@@ -72,7 +71,7 @@ def main(pargs):
                     dbinfo[dbname][version]['oldest_ok_date']))
             # Compare?
 
-
+##
 if __name__ == '__main__':
     # Giddy up
     main()
