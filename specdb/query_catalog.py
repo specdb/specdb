@@ -201,7 +201,7 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def radial_search(self, inp, radius, verbose=True):
+    def radial_search(self, inp, radius, verbose=True, private=False):
         """ Search for sources in a radius around the input coord
 
         Parameters
@@ -224,7 +224,10 @@ class QueryCatalog(object):
         # Return
         if verbose:
             print("Your search yielded {:d} match[es]".format(np.sum(good)))
-        return self.cat['PRIV_ID'][good]
+        if private:
+            return self.cat['PRIV_ID'][good]
+        else:
+            return self.cat['IGM_ID'][good]
 
     def get_cat(self, IGM_IDs):
         """ Grab catalog rows corresponding to the input IDs
