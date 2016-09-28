@@ -224,7 +224,7 @@ class QueryCatalog(object):
         # Return
         if verbose:
             print("Your search yielded {:d} match[es]".format(np.sum(good)))
-        return self.cat['IGM_ID'][good]
+        return self.cat['PRIV_ID'][good]
 
     def get_cat(self, IGM_IDs):
         """ Grab catalog rows corresponding to the input IDs
