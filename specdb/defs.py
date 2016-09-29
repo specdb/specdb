@@ -191,11 +191,43 @@ def get_res_dicts():
     NIRI_Rdict = {'Hgrism_G5203': 940.,    # Assumes 4 pixels
                   'Kgrism_G5204': 780.,    # Assumes 4 pixels
                   }
+    FUSE_Rdict = {'LWRS_LIF2B': 20000.,    # Assumes 4 pixels
+                  'LWRS_LIF1B': 20000.,    # Assumes 4 pixels
+                  'LWRS_LIF1A': 20000.,    # Assumes 4 pixels
+                  'LWRS_LIF2A': 20000.,    # Assumes 4 pixels
+                  'LWRS_SIC1A': 20000.,
+                  'LWRS_SIC2A': 20000.,
+                  'LWRS_SIC1B': 20000.,
+                  'LWRS_SIC2B': 20000.,
+                  }
+    #
+    STIS_Rdict = {'E140M': 45800.,    # Assumes 4 pixels
+                  'E230M': 30000.,    # Assumes 4 pixels
+                  'G140M': 12700.,
+                  'G160M': 20000.,
+                  'G270M': 20000.,
+                  'G230M':  9450.,
+                  'G230MB': 9450.,
+                  'G430M': 2000.,
+                  'G750M': 2000.,
+                  'G140L': 2000.,
+                  'G230L': 2000.,
+                  'G230LB': 2000.,
+                  'G430L': 2000.,
+                  'G750L': 2000.,
+                  }
+    GHRS_Rdict = {'ECH-A': 100000.,    # Assumes 4 pixels
+                  'ECH-B': 100000.,    # Assumes 4 pixels
+                  'G160M': 20000.,    # Assumes 4 pixels
+                  'G200M': 20000.,    # Assumes 4 pixels
+                  'G270M': 20000.,    # Assumes 4 pixels
+                 }
     #
     Rdicts = dict(ESI=ESI_Rdict, HIRES=HIRES_Rdict,
                   GMOS=GMOS_Rdict, GNIRS=GNIRS_Rdict, LRISb=LRISb_Rdict,
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
+                  FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
