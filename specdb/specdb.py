@@ -73,10 +73,10 @@ class SpecDB(object):
 
         """
         # Catalog
-        ids = self.qcat.radial_search(coord, tol)
+        ids = self.qcat.radial_search(coord, tol, **kwargs)
         if len(ids) == 0:
             warnings.warn("No sources found at your coordinate.  Returning none")
-            return None
+            return None, None
         elif len(ids) > 1:
             warnings.warn("Found multiple sources.  Hope you expected that.")
 
