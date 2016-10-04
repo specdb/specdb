@@ -76,7 +76,7 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
 
 def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             mdict=None, parse_head=None, debug=False, chkz=False,
-            verbose=False, **kwargs):
+            verbose=False, specdb=None, sdb_key=None, **kwargs):
     """ Generate a meta Table from an input list of files
 
     Parameters
@@ -91,6 +91,11 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
       Format must be
       SDSSJ######(.##)+/-######(.#)[x]
         where x cannot be a #. or +/-
+    specdb : SpecDB, optional
+      Database object to grab ID values from
+      Requires sdb_key
+    sdb_key : str, optional
+      ID key in SpecDB object
     skip_badz : bool, optional
       Skip spectra without a parseable redshift (using the Myers catalog)
     parse_head : dict, optional
@@ -105,8 +110,9 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta : Table
       Meta table
     """
-    from specdb.specdb import IgmSpec
-    igmsp = IgmSpec(skip_test=True)
+    if specdb is not None:
+        if sdb_key is None:
+            raise IOError("Must specify sdb_key if you are passing in specdb")
     Rdicts = defs.get_res_dicts()
     #
     coordlist = []
@@ -160,10 +166,17 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             warnings.warn("Skipping {:d} entries without a parseable redshift".format(
                 np.sum(badz)))
         else:
-            if chkz:
+            # Try specdb if it exists
+            if specdb is not None:
+                pdb.set_trace()
+                sztbl = specdb.qcat.cat[['RA','zem','DEC', 'flag_zem']]
+                sztbl.rename_column('flag_zem', 'ZEM_SOURCE')
+                sztbl.rename_column('zem', 'ZEM')
+                szem, szsource = spzu.zem_from_radec(meta['RA'][badz], meta['DEC'][badz], sztbl)
+                pdb.set_trace()
+            if chkz:  # Turn this on to hit a stop instead of an Exception
                 pdb.set_trace()
             else:
-                pdb.set_trace()
                 raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem'] = zem
@@ -173,15 +186,16 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     # Cut
     meta = meta[~badz]
 
-    # igmspec IDs
-    meta['IGM_ID'] = [-9999]*len(meta)
-    c_igmsp = SkyCoord(ra=igmsp.qcat.cat['RA'], dec=igmsp.qcat.cat['DEC'], unit='deg')
-    c_new = SkyCoord(ra=meta['RA'], dec=meta['DEC'], unit='deg')
-    # Find new sources
-    idx, d2d, d3d = match_coordinates_sky(c_new, c_igmsp, nthneighbor=1)
-    cdict = defs.get_cat_dict()
-    mtch = d2d < cdict['match_toler']
-    meta['IGM_ID'][mtch] = igmsp.qcat.cat['IGM_ID'][idx[mtch]]
+    # specdb IDs
+    if specdb is not None:
+        meta[sdb_key] = [-9999]*len(meta)
+        c_igmsp = SkyCoord(ra=specdb.qcat.cat['RA'], dec=specdb.qcat.cat['DEC'], unit='deg')
+        c_new = SkyCoord(ra=meta['RA'], dec=meta['DEC'], unit='deg')
+        # Find new sources
+        idx, d2d, d3d = match_coordinates_sky(c_new, c_igmsp, nthneighbor=1)
+        cdict = defs.get_cat_dict()
+        mtch = d2d < cdict['match_toler']
+        meta[sdb_key][mtch] = specdb.qcat.cat[sdb_key][idx[mtch]]
 
     # Stack (primarily as a test)
     try:

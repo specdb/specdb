@@ -303,7 +303,7 @@ def dbase_info():
     db_info['igmspec']['v01']['newest_date'] = '2016-09-25'
     db_info['igmspec']['v02'] = {}
     db_info['igmspec']['v02']['oldest_ok_date'] = '2016-09-25'
-    db_info['igmspec']['v02']['newest_date'] = '2016-09-25'
+    db_info['igmspec']['v02']['newest_date'] = '2016-10-04'
 
     # Return
     return db_info
