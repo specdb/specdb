@@ -87,7 +87,7 @@ def chk_for_duplicates(maindb):
         return True
 
 
-def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
+def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     """ Generate new IGM_IDs for an input DB
 
     Parameters
@@ -98,6 +98,8 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
       Perform some checks
     idkey : str, optional
       Key for ID
+    mtch_toler : Quantity, optional
+      Matching tolerance;  typically taken from the default
 
     Returns
     -------
@@ -106,14 +108,16 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
       New IDs are generated as needed
 
     """
-    cdict = defs.get_cat_dict()
+    if mtch_toler is None:
+        cdict = defs.get_cat_dict()
+        mtch_toler = cdict['match_toler']
     IDs = np.zeros(len(newdb), dtype=int)
     # Setup
     c_main = SkyCoord(ra=maindb['RA'], dec=maindb['DEC'], unit='deg')
     c_new = SkyCoord(ra=newdb['RA'], dec=newdb['DEC'], unit='deg')
     # Find new sources
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
-    new = d2d > cdict['match_toler']
+    new = d2d > mtch_toler
     # Old IDs
     IDs[~new] = -1 * maindb[idkey][idx[~new]]
     nnew = np.sum(new)
@@ -131,7 +135,7 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
     return IDs
 
 
-def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
+def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     """ Set the new IDs
     Parameters
     ----------
@@ -146,10 +150,12 @@ def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID'):
       Cut to the new QSOs
     new : bool array
     ids : ID values
+    mtch_toler : Quantity, optional
+      Match tolerance passed to get_new_ids
 
     """
     # IDs
-    ids = get_new_ids(maindb, newdb, idkey=idkey)  # Includes new and old
+    ids = get_new_ids(maindb, newdb, idkey=idkey, mtch_toler=mtch_toler)  # Includes new and old
     # Truncate
     new = ids > 0
     cut_db = newdb[new]
