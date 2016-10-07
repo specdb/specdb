@@ -81,8 +81,7 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
 
 def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             mdict=None, parse_head=None, debug=False, chkz=False,
-            specdb=None, sdb_key=None,
-            verbose=False, **kwargs):
+            verbose=False, specdb=None, sdb_key=None, **kwargs):
     """ Generate a meta Table from an input list of files
 
     Parameters
@@ -97,6 +96,11 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
       Format must be
       SDSSJ######(.##)+/-######(.#)[x]
         where x cannot be a #. or +/-
+    specdb : SpecDB, optional
+      Database object to grab ID values from
+      Requires sdb_key
+    sdb_key : str, optional
+      ID key in SpecDB object
     skip_badz : bool, optional
       Skip spectra without a parseable redshift (using the Myers catalog)
     parse_head : dict, optional
@@ -105,16 +109,15 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
       Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
     chkz : bool, optional
       If any sources have no parseable redshift, hit a set_trace
-    specdb : SpecDB, optional
-      Standard specdb database
-    sdb_key : str, optional
-      Key for ID in the database
 
     Returns
     -------
     meta : Table
       Meta table
     """
+    if specdb is not None:
+        if sdb_key is None:
+            raise IOError("Must specify sdb_key if you are passing in specdb")
     Rdicts = defs.get_res_dicts()
     #
     coordlist = []
@@ -170,10 +173,9 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             warnings.warn("Skipping {:d} entries without a parseable redshift".format(
                 np.sum(badz)))
         else:
-            if chkz:
+            if chkz:  # Turn this on to hit a stop instead of an Exception
                 pdb.set_trace()
             else:
-                pdb.set_trace()
                 raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem'] = zem
