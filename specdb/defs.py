@@ -294,17 +294,11 @@ def dbase_info():
     db_info : dict
 
     """
-    db_info = {}
-    # IGMSpec
-    db_info['igmspec'] = {}
-    db_info['igmspec']['latest_version'] = 'v02'
-    db_info['igmspec']['v01'] = {}
-    db_info['igmspec']['v01']['oldest_ok_date'] = '2016-09-25'
-    db_info['igmspec']['v01']['newest_date'] = '2016-09-25'
-    db_info['igmspec']['v02'] = {}
-    db_info['igmspec']['v02']['oldest_ok_date'] = '2016-09-25'
-    db_info['igmspec']['v02']['newest_date'] = '2016-10-04'
-
+    import specdb, yaml
+    update_file = specdb.__path__[0]+'/data/DB/updates.yaml'
+    # Read
+    with open(update_file, 'r') as infile:
+        db_info = yaml.load(infile)
     # Return
     return db_info
 
