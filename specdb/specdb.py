@@ -38,6 +38,9 @@ class SpecDB(object):
         # Init
         self.qcat = QueryCatalog(db_file, **kwargs)
         self.idb = InterfaceDB(db_file, **kwargs)
+        # Name, Creation date
+        print("Database is {:s}".format(self.idb.hdf['catalog'].attrs['NAME']))
+        print("Created on {:s}".format(self.idb.hdf['catalog'].attrs['CREATION_DATE']))
         # Checks
         assert self.idb.db_file == self.qcat.db_file
         if not skip_test:
