@@ -77,7 +77,7 @@ for path, directories, files in data_generator:
         data_path = '/'.join(path.split('/')[1:])
         data_files.append(data_path + '/' + f)
 setup_keywords['package_data'] = {'specdb': data_files,
-                                  '': ['*.rst', '*.txt']}
+                                  '': ['*.rst', '*.txt', '*.yaml']}
 setup_keywords['include_package_data'] = True
 
 #
