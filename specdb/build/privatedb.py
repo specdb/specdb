@@ -25,7 +25,7 @@ from specdb import defs
 
 def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
-               only_conti=False):
+               only_conti=False, skip_folders=[]):
     """ Generate a list of FITS files within the file tree
 
     Parameters
@@ -36,6 +36,8 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
       List of file roots to skip as primary files when ingesting
     only_conti : bool, optional
       Only grab files with separate continua files (mainly for QPQ)
+    skip_folders : list, optional
+      Skip any folder with these names
 
     Returns
     -------
@@ -50,6 +52,9 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
         # Search for fits files
         ofiles = []
         for folder in folders:
+            if folder in skip_folders:
+                print("Skipping folder = {:s}".format(folder))
+                continue
             if only_conti:
                 ofiles += glob.glob(tree_root+'/'+folder+'/*_c.fits*')
             else:
@@ -147,7 +152,9 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             coord = ltu.radec_to_coord((ztbl['RA'][mt],
                                         ztbl['DEC'][mt]))[0]
         coordlist.append(coord)
-    coords = SkyCoord(ra=[coord.ra.degree for coord in coordlist], dec=[coord.dec.degree for coord in coordlist], unit='deg')
+    ras = np.array([coord.ra.degree for coord in coordlist])
+    decs= np.array([coord.dec.degree for coord in coordlist])
+    coords = SkyCoord(ra=ras, dec=decs, unit='deg')
 
     # Generate Meta Table
     maindb, tkeys = spbu.start_maindb(private=True)
@@ -166,28 +173,19 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             warnings.warn("Skipping {:d} entries without a parseable redshift".format(
                 np.sum(badz)))
         else:
-            # Try specdb if it exists
-            if specdb is not None:
-                pdb.set_trace()
-                sztbl = specdb.qcat.cat[['RA','zem','DEC', 'flag_zem']]
-                sztbl.rename_column('flag_zem', 'ZEM_SOURCE')
-                sztbl.rename_column('zem', 'ZEM')
-                szem, szsource = spzu.zem_from_radec(meta['RA'][badz], meta['DEC'][badz], sztbl)
-                pdb.set_trace()
             if chkz:  # Turn this on to hit a stop instead of an Exception
                 pdb.set_trace()
             else:
                 raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem'] = zem
-    pdb.set_trace()
     meta['sig_zem'] = 0.  # Need to add
     meta['flag_zem'] = zsource
     # Cut
     meta = meta[~badz]
 
     # specdb IDs
-    if specdb is not None:
+    if sdb_key is not None:
         meta[sdb_key] = [-9999]*len(meta)
         c_igmsp = SkyCoord(ra=specdb.qcat.cat['RA'], dec=specdb.qcat.cat['DEC'], unit='deg')
         c_new = SkyCoord(ra=meta['RA'], dec=meta['DEC'], unit='deg')
@@ -318,7 +316,8 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
-                   refs=None, verbose=False, badf=None, grab_conti=False, **kwargs):
+                   refs=None, verbose=False, badf=None,
+                   grab_conti=False, **kwargs):
     """ Ingest the spectra
     Parameters
     ----------
@@ -375,9 +374,12 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                 if ibadf in f:
                     spec = dumb_spec()
                 else:
-                    spec = lsio.readspec(f)
+                    try:
+                        spec = lsio.readspec(f, **kwargs)
+                    except ValueError:  # Probably a continuum problem
+                        pdb.set_trace()
         else:
-            spec = lsio.readspec(f)
+            spec = lsio.readspec(f, **kwargs)
         # npix
         head = spec.header
         npix = spec.npix
