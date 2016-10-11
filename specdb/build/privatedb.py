@@ -163,7 +163,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta = Table()
     meta['RA'] = coords.ra.deg
     meta['DEC'] = coords.dec.deg
-    meta['STYPE'] = [stype]*len(meta)
+    meta['STYPE'] = [str(stype)]*len(meta)
     meta['flag_survey'] = [1]*len(meta)
 
     zem, zsource = spzu.zem_from_radec(meta['RA'], meta['DEC'], ztbl)
