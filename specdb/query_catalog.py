@@ -289,6 +289,7 @@ class QueryCatalog(object):
         # Surveys
         unif = np.unique(self.cat['flag_survey'])
         all_surveys = []
+        pdb.set_trace()
         for ifs in unif:
             all_surveys += icu.flag_to_surveys(ifs, self.survey_dict)
         self.surveys = list(np.unique(all_surveys))

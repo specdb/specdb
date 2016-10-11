@@ -70,7 +70,6 @@ setup_keywords['tests_require']=['pytest']
 
 data_files = []
 
-"""
 # walk through the data directory, adding all files
 data_generator = os.walk('specdb/data')
 for path, directories, files in data_generator:
@@ -80,7 +79,6 @@ for path, directories, files in data_generator:
 setup_keywords['package_data'] = {'specdb': data_files,
                                   '': ['*.rst', '*.txt', '*.yaml']}
 setup_keywords['include_package_data'] = True
-"""
 
 #
 # Run setup command.

@@ -9,7 +9,6 @@ from astropy.table import Table
 
 from specdb import defs
 
-
 def flag_to_surveys(flag, survey_dict=None):
     """ Convert flag_survey to list of surveys
 
