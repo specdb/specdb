@@ -25,8 +25,11 @@ def load_db(db_type, **kwargs):
     if db_type == 'igmspec':
         from specdb.specdb import IgmSpec
         Specdb = IgmSpec(**kwargs)
+    elif db_type == 'priv':  # Private
+        from specdb.specdb import SpecDB
+        Specdb = SpecDB(**kwargs)
     else:
-        raise IOError("Not ready for this dbase value: {:s}".format(args.dbase))
+        raise IOError("Not ready for this dbase value: {:s}".format(db_type))
 
     # Return
     return Specdb
