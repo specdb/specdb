@@ -9,21 +9,19 @@ from astropy.table import Table
 
 from specdb import defs
 
-def flag_to_surveys(flag, survey_dict=None):
+def flag_to_surveys(flag, survey_dict):
     """ Convert flag_survey to list of surveys
 
     Parameters
     ----------
     flag : int
+    survey_dict : dict
 
     Returns
     -------
     surveys : list
 
     """
-    if survey_dict is None:
-        survey_dict = defs.get_survey_dict()
-    #
     surveys = []
     for key,sflag in survey_dict.items():
         if flag % (2*sflag) >= sflag:
