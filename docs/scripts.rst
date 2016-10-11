@@ -26,16 +26,16 @@ spectrum from the available list.  By default, the
 XSpecGui gui from linetools is called to display
 the spectrum.   Here is the help::
 
-   $ wolverine.local> plot_specdb -h
+   plot_specdb -h
     usage: plot_specdb [-h] [--tol TOL] [--meta] [-s SURVEY] [--select SELECT]
-                   [--mplot MPLOT]
-                   coord dbase
+                       [--mplot MPLOT] [--db_file DB_FILE]
+                       coord dbase
 
-    plot_specdb script v0.2
+    plot_specdb script v0.3
 
     positional arguments:
       coord                 Coordinates, e.g. J081240.7+320809
-      dbase                 Database [igmspec,all]
+      dbase                 Database [igmspec,all,priv]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -45,6 +45,13 @@ the spectrum.   Here is the help::
                             Name of Survey to use
       --select SELECT       Index of spectrum to plot (when multiple exist)
       --mplot MPLOT         Use simple matplotlib plot [default: False]
+      --db_file DB_FILE     Full path of db_file
+
+Here is an example or two::
+
+   plot_specdb J220248.31+123656.3 priv --db_file=qpq_optical.hdf5
+   plot_specdb J220248.31+123656.3 igmspec
+
 
 sdss_spec
 =========
