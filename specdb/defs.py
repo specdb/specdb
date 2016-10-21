@@ -65,6 +65,7 @@ def instruments():
         # VLT
         'XSHOOTER': dict(gratings=['UVB,VIS,NIR,ALL']),
         'ISAAC': dict(gratings=['SW_MRes']),
+        'UVES': dict(gratings=['BOTH']),
         # Palomar
         'TSpec': dict(gratings=['ECH']),
     }
