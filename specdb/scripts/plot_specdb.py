@@ -10,7 +10,7 @@ def parser(options=None):
     import argparse
 
     parser = argparse.ArgumentParser(description='plot_specdb script v0.3')
-    parser.add_argument("coord", type=str, help="Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322")
+    parser.add_argument("coord", type=str, help="Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322 or 07:45:00.47,34:17:31.1")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all,priv]")
     parser.add_argument("--tol", default=5., type=float, help="Maximum offset in arcsec [default=5.]")
     parser.add_argument("--meta", default=True, help="Show meta data? [default: True]", action="store_true")
@@ -32,17 +32,14 @@ def main(args, unit_test=False, **kwargs):
 
     from astropy import units as u
     from specdb.utils import load_db
+    from .utils import coord_arg_to_coord
 
     # init
     Specdb = load_db(args.dbase, db_file=args.db_file, **kwargs)
 
     # Grab
-    if ',' in args.coord:
-        radec = args.coord.split(',')
-        coord = (float(radec[0]), float(radec[1]))
-    else:
-        coord = args.coord
-    all_spec, all_meta = Specdb.spec_from_coord(coord, tol=args.tol*u.arcsec, isurvey=args.survey)
+    icoord = coord_arg_to_coord(args.coord)
+    all_spec, all_meta = Specdb.spec_from_coord(icoord, tol=args.tol*u.arcsec, isurvey=args.survey)
 
     # Outcome
     if len(all_meta) == 0:
