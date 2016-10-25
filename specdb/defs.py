@@ -127,9 +127,13 @@ def get_cat_dict():
     return cdict
 
 
-def get_db_table_format():
+def get_db_table_format(extras=None):
     """ Returns DB Table format
 
+    Parameters
+    ----------
+    extras : dict, optional
+      Additional meta data to include
     Returns
     -------
     idict : dict
@@ -144,8 +148,12 @@ def get_db_table_format():
     dummys = str('#')*np.max(np.array(lens))  # For the Table
 
     # Dict for Table
-    idict = dict(RA=0., DEC=0., IGM_ID=0, zem=0., sig_zem=0.,
+    idict = dict(RA=0., DEC=0., zem=0., sig_zem=0.,
                  flag_zem=dummyf, flag_survey=0, STYPE=dummys)
+    # Extras
+    if extras is not None:
+        for key,item in extras.items():
+            idict[key] =item
     # Return
     return idict
 

@@ -166,7 +166,7 @@ def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     return cut_db, new, ids
 
 
-def start_maindb(private=False):
+def start_maindb(private=False, **kwargs):
     """ Start the main DB catalog
 
     Returns
@@ -178,7 +178,7 @@ def start_maindb(private=False):
       Private DB?
 
     """
-    idict = defs.get_db_table_format()
+    idict = defs.get_db_table_format(**kwargs)
     #if private:
     #    idict['PRIV_ID'] = 0
         #idict.pop('IGM_ID')

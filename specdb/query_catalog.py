@@ -66,10 +66,7 @@ class QueryCatalog(object):
         self.cat = Table(hdf['catalog'].value)
         self.db_file = db_file
         # Survey dict
-        try: # BACKWARD COMP FOR A BIT
-            self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
-        except:
-            self.survey_dict = None
+        self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
         hdf.close()
 
     def in_surveys(self, input_surveys, return_list=True):
