@@ -32,7 +32,7 @@ def main(args, unit_test=False, **kwargs):
 
     from astropy import units as u
     from specdb.utils import load_db
-    from .utils import coord_arg_to_coord
+    from linetools.scripts.utils import coord_arg_to_coord
 
     # init
     Specdb = load_db(args.dbase, db_file=args.db_file, **kwargs)
