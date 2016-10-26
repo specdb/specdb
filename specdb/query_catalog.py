@@ -217,9 +217,9 @@ class QueryCatalog(object):
 
         Returns
         -------
-        idx : int or int array
-          Index or indices corresponding to match
-          Or -1 if no match
+        idx : int array
+          Indices corresponding to match
+          Returns an empty array if there is no match
         """
         if not isinstance(radius, (Angle, Quantity)):
             raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
@@ -229,8 +229,6 @@ class QueryCatalog(object):
         sep = coord.separation(self.coords)
         # Match
         good = sep < radius
-        if np.sum(good) == 0:
-            return -1
         # Return
         if verbose:
             print("Your search yielded {:d} match[es]".format(np.sum(good)))

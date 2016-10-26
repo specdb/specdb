@@ -28,6 +28,9 @@ def test_radial_search():
     igmsp = IgmSpec(db_file=db_file)
     idx = igmsp.qcat.radial_search((0.038604,15.298477), 1*u.arcsec)
     assert idx >= 0
+    # Blank
+    idx = igmsp.qcat.radial_search((10.038604,55.298477), 1*u.arcsec)
+    assert len(idx) == 0
 
 
 def test_match_coord():
