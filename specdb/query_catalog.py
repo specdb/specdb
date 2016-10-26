@@ -135,7 +135,7 @@ class QueryCatalog(object):
         final = np.in1d(IGM_IDs, gdIDs)
         return final
 
-    def match_coord(self, cat_coords, toler=0.5*u.arcsec, verbose=True):
+    def match_coord(self, coords, toler=0.5*u.arcsec, verbose=True):
         """ Match an input set of SkyCoords to the catalog within a given radius
 
         Parameters
@@ -148,20 +148,26 @@ class QueryCatalog(object):
 
         Returns
         -------
-        indices : bool array
-          True = match
+        indices : int array
+          ID values
+          -1 if no match within toler
 
         """
         # Checks
         if not isinstance(toler, (Angle, Quantity)):
             raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
         # Match
-        idx, d2d, d3d = match_coordinates_sky(self.coords, cat_coords, nthneighbor=1)
+        idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
+        IDs = self.cat['IGM_ID'][idx]
+        if len(d2d) == 1:
+            IDs = np.array([IDs])
         good = d2d < toler
-        # Return
         if verbose:
             print("Your search yielded {:d} matches".format(np.sum(good)))
-        return self.cat['IGM_ID'][good]
+        # Deal with out of tolerance
+        IDs[~good] = -1
+        # Finish
+        return IDs
 
     def pairs(self, sep, dv):
         """ Generate a pair catalog
@@ -205,19 +211,26 @@ class QueryCatalog(object):
         ----------
         inp : str or tuple or SkyCoord
           See linetools.utils.radec_to_coord
-        toler
+        radius : Angle or Quantity, optional
+          Tolerance for a match
         verbose
 
         Returns
         -------
-
+        idx : int or int array
+          Index or indices corresponding to match
+          Or -1 if no match
         """
+        if not isinstance(radius, (Angle, Quantity)):
+            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
         # Convert to SkyCoord
         coord = ltu.radec_to_coord(inp)
         # Separation
         sep = coord.separation(self.coords)
         # Match
         good = sep < radius
+        if np.sum(good) == 0:
+            return -1
         # Return
         if verbose:
             print("Your search yielded {:d} match[es]".format(np.sum(good)))
