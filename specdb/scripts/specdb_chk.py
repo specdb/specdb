@@ -73,6 +73,10 @@ def main(pargs):
                     dbinfo[dbname][version]['oldest_ok_date']))
             # Compare?
 
+    # List datasets
+    for key in hdf.keys():
+        print("Dataset: {:s}".format(key))
+
 ##
 if __name__ == '__main__':
     # Giddy up
