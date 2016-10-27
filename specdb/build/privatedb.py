@@ -187,6 +187,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     # specdb IDs
     if sdb_key is not None:
         meta[sdb_key] = [-9999]*len(meta)
+        if sdb_key not in maindb.keys():
+            maindb[sdb_key] = [-9999]*len(maindb)
         c_igmsp = SkyCoord(ra=specdb.qcat.cat['RA'], dec=specdb.qcat.cat['DEC'], unit='deg')
         c_new = SkyCoord(ra=meta['RA'], dec=meta['DEC'], unit='deg')
         # Find new sources
