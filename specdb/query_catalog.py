@@ -48,12 +48,14 @@ class QueryCatalog(object):
         # Setup
         self.setup()
 
-    def load_cat(self, db_file):
+    def load_cat(self, db_file, idkey=None):
         """ Open the DB catalog file
         Parameters
         ----------
         db_file : str
           Name of DB file
+        idkey : str, optional
+          Key for ID indices
 
         Returns
         -------
@@ -64,6 +66,14 @@ class QueryCatalog(object):
         print("Using {:s} for the catalog file".format(db_file))
         hdf = h5py.File(db_file,'r')
         self.cat = Table(hdf['catalog'].value)
+        # Set ID key
+        self.idkey = idkey
+        if idkey is None:
+            for key in self.cat.keys():
+                if 'ID' in key:
+                    if self.idkey is not None:
+                        raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
+                    self.idkey = key
         self.db_file = db_file
         # Survey dict
         self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
@@ -103,14 +113,14 @@ class QueryCatalog(object):
         # Return
         return fsurveys
 
-    def cutid_on_surveys(self, surveys, IGM_IDs):
-        """ Find the subset of IGM_IDs within a survey list
+    def cutid_on_surveys(self, surveys, IDs):
+        """ Find the subset of IDs within a survey list
 
         Parameters
         ----------
         surveys : list
           List of surveys to consider, e.g. ['BOSS-DR12', 'SDSS_DR7']
-        IGM_IDs : int array
+        IDs : int array
 
         Returns
         -------
@@ -119,7 +129,7 @@ class QueryCatalog(object):
           True indicates in survey
 
         """
-        good = np.in1d(self.cat['IGM_ID'], IGM_IDs)
+        good = np.in1d(self.cat[self.idkey], IDs)
         cut_cat = self.cat[good]
         # Flags
         fs = cut_cat['flag_survey']
@@ -130,9 +140,9 @@ class QueryCatalog(object):
             query = (fs % (flag*2)) >= flag
             if np.sum(query) > 0:
                 msk[query] = True
-        gdIDs = cut_cat['IGM_ID'][msk]
+        gdIDs = cut_cat[self.idkey][msk]
         # Return
-        final = np.in1d(IGM_IDs, gdIDs)
+        final = np.in1d(IDs, gdIDs)
         return final
 
     def match_coord(self, coords, toler=0.5*u.arcsec, verbose=True):
@@ -158,7 +168,7 @@ class QueryCatalog(object):
             raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
         # Match
         idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
-        IDs = self.cat['IGM_ID'][idx]
+        IDs = self.cat[self.idkey][idx]
         if len(d2d) == 1:
             IDs = np.array([IDs])
         good = d2d < toler
@@ -197,8 +207,8 @@ class QueryCatalog(object):
             gdz = np.abs(dv12) > dv
             # f/g and b/g
             izfg = dv12[gdz] < 0*u.km/u.s
-            ID_fg = self.cat['IGM_ID'][close][gdz][izfg]
-            ID_bg = self.cat['IGM_ID'][idx[close]][gdz][izfg]
+            ID_fg = self.cat[self.idkey][close][gdz][izfg]
+            ID_bg = self.cat[self.idkey][idx[close]][gdz][izfg]
         else:
             pdb.set_trace()
         # Reload
@@ -232,17 +242,14 @@ class QueryCatalog(object):
         # Return
         if verbose:
             print("Your search yielded {:d} match[es]".format(np.sum(good)))
-        if private:
-            return self.cat['PRIV_ID'][good]
-        else:
-            return self.cat['IGM_ID'][good]
+        return self.cat[self.idkey][good]
 
-    def get_cat(self, IGM_IDs):
+    def get_cat(self, IDs):
         """ Grab catalog rows corresponding to the input IDs
 
         Parameters
         ----------
-        IGM_IDs : int array
+        IDs : int array
 
         Returns
         -------
@@ -250,25 +257,25 @@ class QueryCatalog(object):
           Rows of the catalog
 
         """
-        good = np.in1d(self.cat['IGM_ID'], IGM_IDs)
+        good = np.in1d(self.cat[self.idkey], IDs)
         return self.cat[good]
 
-    def show_cat(self, IGM_IDs):
+    def show_cat(self, IDs):
         """  Show the catalog
 
         Parameters
         ----------
-        IGM_IDs : int array
+        IDs : int array
 
         Returns
         -------
 
         """
         # IGMspec catalog
-        good = np.in1d(self.cat['IGM_ID'], IGM_IDs)
+        good = np.in1d(self.cat[self.idkey], IDs)
 
         # Catalog keys
-        cat_keys = ['IGM_ID', 'RA', 'DEC', 'zem', 'flag_survey']
+        cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_survey']
         for key in self.cat.keys():
             if key not in cat_keys:
                 cat_keys += [key]
