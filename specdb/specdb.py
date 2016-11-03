@@ -27,7 +27,7 @@ class SpecDB(object):
     idb : InterfaceDB
     """
 
-    def __init__(self, skip_test=True, db_file=None, **kwargs):
+    def __init__(self, skip_test=True, db_file=None, verbose=None, **kwargs):
         """
         """
         if db_file is None:
@@ -37,8 +37,10 @@ class SpecDB(object):
                 raise IOError("For this DB you must provide the db_file")
         # Init
         self.qcat = QueryCatalog(db_file, **kwargs)
+        self.qcat.verbose = verbose
         self.idb = InterfaceDB(db_file, **kwargs)
         self.idb.idkey = self.qcat.idkey
+        self.idb.verbose = verbose
         # Name, Creation date
         try:
             print("Database is {:s}".format(self.idb.hdf['catalog'].attrs['NAME']))
