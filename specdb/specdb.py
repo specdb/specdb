@@ -38,6 +38,7 @@ class SpecDB(object):
         # Init
         self.qcat = QueryCatalog(db_file, **kwargs)
         self.idb = InterfaceDB(db_file, **kwargs)
+        self.idb.idkey = self.qcat.idkey
         # Name, Creation date
         try:
             print("Database is {:s}".format(self.idb.hdf['catalog'].attrs['NAME']))
