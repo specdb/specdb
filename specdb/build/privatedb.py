@@ -442,7 +442,7 @@ def mk_db(trees, names, outfil, ztbl, **kwargs):
     -------
 
     """
-    from igmspec import defs as igmsp_defs
+    from specdb import defs as igmsp_defs
     # HDF5 file
     hdf = h5py.File(outfil,'w')
 
