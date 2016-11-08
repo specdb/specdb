@@ -77,3 +77,23 @@ Make sure that your PATH includes the standard
 location for Python scripts (e.g. ~/anaconda/bin)
 
 
+Building the public Data Bases
+==============================
+
+igmspec
+-------
+
+`igmspec` is a public database intended to contain all published spectra associated
+to intergalactic medium (IGM) studies (see "link to paper" for further details).
+To build `igmspec` you should simply download the database (in hdf5 format) from our public
+repository using the `get_igmspec` script provided by `specdb`. You can download the file to
+any location of your choice but we recommend to locate it in the ./data/DB/ subdirectory
+within specdb, e.g.::
+
+    cd specdb/data/DB
+    get_igmspec
+
+This will start a download of the most recent `igmspec` database; the current file is v02
+and has ~26Gb. Once the file is downloaded, you need to make sure the shell environmental
+variable `$IGMSPEC_DB` points to such directory.
+

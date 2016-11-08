@@ -4,9 +4,9 @@
 Private Database
 ****************
 
-It is possible within igmspec to generate a private
+It is possible within `specdb` to generate a private
 database that can be used in tandem with the public
-database.  The following describes the procedure.
+database(s). The following describes the procedure.
 
 Notebooks
 =========
