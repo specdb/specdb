@@ -27,7 +27,7 @@ sub-folders, e.g.::
 
 From this tree, a list of flux files is generated::
 
-    from igmspec.privatedb import build as pbuild
+    from specdb.build import privatedb as pbuild
     flux_files = pbuild.grab_files(tree)
 
 Meta
