@@ -34,7 +34,8 @@ class SpecDB(object):
             try:
                 db_file = self.grab_dbfile()
             except:
-                raise IOError("For this DB you must provide the db_file")
+                raise IOError("DB not found. Please either check the corresponding environmental "
+                              "variable or directly provide the db_file")
         # Init
         self.qcat = QueryCatalog(db_file, **kwargs)
         self.idb = InterfaceDB(db_file, **kwargs)
@@ -153,7 +154,7 @@ class IgmSpec(SpecDB):
         """
         import os, glob
         if os.getenv('IGMSPEC_DB') is None:
-            warnings.warn('Environmental variable IGMSPEC_DB not set.  Assuming this is a test')
+            warnings.warn('Environmental variable IGMSPEC_DB not set. Assuming this is a test')
             import igmspec
             db_dir = igmspec.__path__[0]+'/tests/files/'
         else:
