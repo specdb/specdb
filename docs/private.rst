@@ -57,7 +57,7 @@ One Step
 It is recommended that all of the above steps be run in
 one go with the mk_db method::
 
-   pbuild.mk_db([tree], ['test'], ztbl, 'tmp.hdf5', fname=True, skip_badz=True)
+   pbuild.mk_db([tree], ['test'], 'tmp.hdf5', ztbl, fname=True, skip_badz=True)
 
 One inputs a list of directory trees and a list of names
 for each one. Key words are passed to the various methods.

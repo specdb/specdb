@@ -77,8 +77,8 @@ Make sure that your PATH includes the standard
 location for Python scripts (e.g. ~/anaconda/bin)
 
 
-Building the public Data Bases
-==============================
+Downloading the public Data Bases
+=================================
 
 igmspec
 -------
