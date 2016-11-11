@@ -72,8 +72,9 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                     if not os.path.isfile(ofile):
                         print("{:s} not present".format(ofile))
                 if flg:
+                    # import pdb;pdb.set_trace()
                     pfiles.append(ofile)
-            # walk
+        # walk
         folders = next(walk)[1]
     # Return
     return pfiles
@@ -442,7 +443,7 @@ def mk_db(trees, names, outfil, ztbl, **kwargs):
     -------
 
     """
-    from igmspec import defs as igmsp_defs
+    from specdb import defs as igmsp_defs
     # HDF5 file
     hdf = h5py.File(outfil,'w')
 
@@ -456,7 +457,7 @@ def mk_db(trees, names, outfil, ztbl, **kwargs):
     tkeys += ['PRIV_ID']
 
     # MAIN LOOP
-    for ss,tree in enumerate(trees):
+    for ss, tree in enumerate(trees):
         print('Working on tree: {:s}'.format(tree))
         # Files
         fits_files = grab_files(tree)
