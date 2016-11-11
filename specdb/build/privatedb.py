@@ -8,6 +8,7 @@ import json
 import h5py
 import warnings
 import pdb
+import datetime
 
 from astropy.table import Table, vstack, Column
 from astropy.io import fits
@@ -43,6 +44,8 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
     -------
     files : list
       List of FITS files
+    meta_file : str or None
+      Name of meta file in tree_root
 
     """
     walk = os.walk(tree_root)
@@ -75,8 +78,16 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                     pfiles.append(ofile)
             # walk
         folders = next(walk)[1]
+    # Grab meta file (if one exists)
+    mfile = glob.glob(tree_root+'/*_meta.json')
+    if len(mfile) == 1:
+        mfile = mfile[0]
+    elif len(mfile) == 0:
+        mfile = None
+    else:
+        raise IOError("Multiple meta files in branch {:s}.  Limit to one".format(tree_root))
     # Return
-    return pfiles
+    return pfiles, mfile
 
 
 def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
@@ -287,7 +298,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
 
     # Fill in empty columns with warning
     mkeys = maindb.keys()
-    req_clms = defs.get_req_clms()
+    req_clms = defs.get_req_clms(sdb_key=sdb_key)
     for clm in req_clms:
         if clm not in mkeys:
             if clm not in ['NPIX','WV_MIN','WV_MAX']:  # File in ingest_spec
@@ -299,7 +310,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
 
     # Return
     if debug:
-        maindb[['IGM_ID', 'RA', 'DEC', 'SPEC_FILE']].pprint(max_width=120)
+        maindb[['RA', 'DEC', 'SPEC_FILE']].pprint(max_width=120)
         pdb.set_trace()
     return maindb
 
@@ -377,16 +388,17 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                     spec = dumb_spec()
                 else:
                     try:
-                        spec = lsio.readspec(f, **kwargs)
+                        spec = lsio.readspec(f)#, **kwargs)
                     except ValueError:  # Probably a continuum problem
                         pdb.set_trace()
         else:
-            spec = lsio.readspec(f, **kwargs)
+            spec = lsio.readspec(f)#, **kwargs)
         # npix
         head = spec.header
         npix = spec.npix
         if npix > max_npix:
-            raise ValueError("Not enough pixels in the data... ({:d})".format(npix))
+            raise ValueError("Not enough pixels in the data... ({:d} vs {:d})".format(
+                    npix, max_npix))
         # Some fiddling about
         for key in dkeys:
             data[key] = 0.  # Important to init (for compression too)
@@ -424,30 +436,35 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     return
 
 
-def mk_db(trees, names, outfil, ztbl, **kwargs):
+def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
     """ Generate the DB
 
     Parameters
     ----------
-    trees : list
-      List of top level paths for the FITS files
-    names : list
-      List of names for the various datasets
+    dbname : str
+      Name for the database
+    trees : str
+      Path to top level of the tree of FITS files
     outfil : str
       Output file name for the hdf5 file
     ztbl : Table
       See above
+    version : str, optional
+      Version code
 
     Returns
     -------
 
     """
-    from igmspec import defs as igmsp_defs
+    from specdb import defs
+    # Find the branches
+    branches = glob.glob(tree+'/*')
+    branches.sort()
     # HDF5 file
     hdf = h5py.File(outfil,'w')
 
     # Defs
-    zpri = igmsp_defs.z_priority()
+    zpri = defs.z_priority()
     sdict = {}
 
     # Main DB Table
@@ -456,15 +473,32 @@ def mk_db(trees, names, outfil, ztbl, **kwargs):
     tkeys += ['PRIV_ID']
 
     # MAIN LOOP
-    for ss,tree in enumerate(trees):
-        print('Working on tree: {:s}'.format(tree))
+    for ss,branch in enumerate(branches):
+        print('Working on branch: {:s}'.format(branch))
         # Files
-        fits_files = grab_files(tree)
+        fits_files, meta_file = grab_files(branch)
         # Meta
-        full_meta = mk_meta(fits_files, ztbl, **kwargs)
+        maxpix, phead, mdict, stype = 10000, None, None, 'QSO'
+        if meta_file is not None:
+            # Load
+            meta_dict = ltu.loadjson(meta_file)
+            # Maxpix
+            if 'maxpix' in meta_dict.keys():
+                maxpix = meta_dict['maxpix']
+            # STYPE
+            if 'stype' in meta_dict.keys():
+                stype = meta_dict['stype']
+            # Parse header
+            if 'parse_head' in meta_dict.keys():
+                phead = meta_dict['parse_head']
+            if 'meta_dict' in meta_dict.keys():
+                mdict = meta_dict['meta_dict']
+        full_meta = mk_meta(fits_files, ztbl,
+                            parse_head=phead, mdict=mdict, **kwargs)
         # Survey IDs
         flag_s = 2**ss
-        sdict[names[ss]] = flag_s
+        name = branch.split('/')[-1]
+        sdict[name] = flag_s
         if ss == 0:
             ids = np.arange(len(full_meta), dtype=int)
             full_meta['PRIV_ID'] = ids
@@ -483,16 +517,16 @@ def mk_db(trees, names, outfil, ztbl, **kwargs):
         if ss == 0:
             maindb = maindb[1:]  # Eliminate dummy line
         # Ingest
-        ingest_spectra(hdf, names[ss], full_meta, **kwargs)
+        ingest_spectra(hdf, name, full_meta, max_npix=maxpix, **kwargs)
 
     # Write
     hdf['catalog'] = maindb
+    hdf['catalog'].attrs['NAME'] = str(dbname)
     hdf['catalog'].attrs['EPOCH'] = 2000.
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['SURVEY_DICT'] = json.dumps(ltu.jsonify(sdict))
-    #hdf['catalog'].attrs['VERSION'] = version
-    #hdf['catalog'].attrs['CAT_DICT'] = cdict
-    #hdf['catalog'].attrs['SURVEY_DICT'] = defs.get_survey_dict()
+    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
+    hdf['catalog'].attrs['VERSION'] = version
     hdf.close()
     print("Wrote {:s} DB file".format(outfil))
 

@@ -283,8 +283,13 @@ def slit_width(slitname, req_long=True):
     return swidth
 
 
-def get_req_clms():
+def get_req_clms(sdb_key=None):
     """ Return a list of required columns for any specdb META table
+
+    Parameters
+    ----------
+    sdb_key : str, optional
+      Name of the ID key for the database
     Returns
     -------
     req_clms : list
@@ -292,7 +297,9 @@ def get_req_clms():
     """
     req_clms = ['RA', 'DEC', 'EPOCH', 'zem', 'R', 'WV_MIN',
             'WV_MAX', 'DATE-OBS', 'SURVEY_ID', 'NPIX', 'SPEC_FILE',
-            'INSTR', 'GRATING', 'TELESCOPE', 'IGM_ID']
+            'INSTR', 'GRATING', 'TELESCOPE']
+    if sdb_key is not None:
+        req_clms += [sdb_key]
     return req_clms
 
 

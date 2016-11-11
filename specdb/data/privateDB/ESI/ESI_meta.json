@@ -1,0 +1,13 @@
+{
+    "maxpix": 35000,
+    "meta_dict": {
+        "GRATING": "ECH",
+        "TELESCOPE": "Keck-II",
+        "INSTR": "ESI",
+        "R": 4545.0
+    },
+    "parse_head": {
+        "DATE-OBS": "DATE",
+        "R": true
+    }
+}
