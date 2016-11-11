@@ -76,7 +76,7 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                         print("{:s} not present".format(ofile))
                 if flg:
                     pfiles.append(ofile)
-            # walk
+        # walk
         folders = next(walk)[1]
     # Grab meta file (if one exists)
     mfile = glob.glob(tree_root+'/*_meta.json')
