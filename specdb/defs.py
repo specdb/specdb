@@ -210,6 +210,8 @@ def get_res_dicts():
                   'LWRS_SIC2B': 20000.,
                   }
     #
+    COS_Rdict = {'G130M': 16000.,
+                 }
     STIS_Rdict = {'E140M': 45800.,    # Assumes 4 pixels
                   'E230M': 30000.,    # Assumes 4 pixels
                   'G140M': 12700.,
@@ -237,6 +239,7 @@ def get_res_dicts():
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
+                  COS=COS_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
