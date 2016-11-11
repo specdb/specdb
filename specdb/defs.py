@@ -292,7 +292,7 @@ def get_req_clms(sdb_key=None):
     Parameters
     ----------
     sdb_key : str, optional
-      Name of the ID key for the database
+      Name of the ID key for the database, e.g. 'IGM_ID'
     Returns
     -------
     req_clms : list

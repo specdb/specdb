@@ -42,7 +42,7 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
 
     Returns
     -------
-    files : list
+    pfiles : list
       List of FITS files
     meta_file : str or None
       Name of meta file in tree_root
@@ -107,6 +107,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
       Format must be
       SDSSJ######(.##)+/-######(.#)[x]
         where x cannot be a #. or +/-
+    stype : str, optional
+      Description of object type (e.g. 'QSO', 'Galaxy', 'SN')
     specdb : SpecDB, optional
       Database object to grab ID values from
       Requires sdb_key
@@ -443,8 +445,9 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
     ----------
     dbname : str
       Name for the database
-    trees : str
+    tree : str
       Path to top level of the tree of FITS files
+      Typically, each branch in the tree corresponds to a single instrument
     outfil : str
       Output file name for the hdf5 file
     ztbl : Table
@@ -497,8 +500,8 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
                             parse_head=phead, mdict=mdict, **kwargs)
         # Survey IDs
         flag_s = 2**ss
-        name = branch.split('/')[-1]
-        sdict[name] = flag_s
+        branch_name = branch.split('/')[-1]
+        sdict[branch_name] = flag_s
         if ss == 0:
             ids = np.arange(len(full_meta), dtype=int)
             full_meta['PRIV_ID'] = ids
@@ -517,7 +520,7 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
         if ss == 0:
             maindb = maindb[1:]  # Eliminate dummy line
         # Ingest
-        ingest_spectra(hdf, name, full_meta, max_npix=maxpix, **kwargs)
+        ingest_spectra(hdf, branch_name, full_meta, max_npix=maxpix, **kwargs)
 
     # Write
     hdf['catalog'] = maindb
