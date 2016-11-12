@@ -20,12 +20,21 @@ Getting Started
    scripts
    usage
 
+Databases
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   igmspec
+
 Data
 ----
 
 .. toctree::
    :maxdepth: 2
 
+   catalog
    meta
    spectra
 

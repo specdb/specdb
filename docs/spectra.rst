@@ -1,8 +1,8 @@
 .. highlight:: rest
 
-***********
-Spetra Data
-***********
+************
+Spectra Data
+************
 
 The spectra are stored in a series of hdf5 datasets
 as multi-dimension arrays.  This array has the following

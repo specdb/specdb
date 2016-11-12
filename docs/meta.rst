@@ -12,7 +12,7 @@ Here are the required columns:
 ==========  ======== ============================================
 Key         Type     Description
 ==========  ======== ============================================
-XXX_ID      int      Database ID values.
+IDKEY       int      Database ID values.
 zem         float    Emission redshift of background source
 RA          float    Right Ascension (deg)
 DEC         float    Declination (deg)
@@ -29,7 +29,7 @@ GRATING     str      Grating name (see `Instruments and Gratings`_ below for def
 TELESCOPE   str      Telescope name (see `Telescopes`_ below for definitions)
 ==========  ======== ============================================
 
-Each specdb database should use a unique key for the Database ID
+Each specdb database should use a unique ID key for the Database ID
 values.  For example, igmspec uses IGM_ID.
 
 Instruments and Gratings
