@@ -10,7 +10,7 @@ def parser(options=None):
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='sdss_spec script v0.1')
+    parser = argparse.ArgumentParser(description='specdb_sdss script v0.1')
     parser.add_argument("plate", type=int, help="Plate")
     parser.add_argument("fiberid", type=int, help="FiberID")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all]")

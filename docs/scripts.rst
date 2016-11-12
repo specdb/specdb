@@ -17,7 +17,7 @@ Notebooks
 
        Simple Scripts <Simple_Scripts>
 
-plot_specdb
+specdb_plot
 ===========
 
 Plot a spectrum at the given coordinate.  One can
@@ -26,12 +26,12 @@ spectrum from the available list.  By default, the
 XSpecGui gui from linetools is called to display
 the spectrum.   Here is the help::
 
-   plot_specdb -h
-    usage: plot_specdb [-h] [--tol TOL] [--meta] [-s SURVEY] [--select SELECT]
+   specdb_plot -h
+    usage: specdb_plot [-h] [--tol TOL] [--meta] [-s SURVEY] [--select SELECT]
                        [--mplot MPLOT] [--db_file DB_FILE]
                        coord dbase
 
-    plot_specdb script v0.3
+    specdb_plot script v0.3
 
     positional arguments:
       coord                 Coordinates, e.g. J081240.7+320809
@@ -49,8 +49,8 @@ the spectrum.   Here is the help::
 
 Here is an example or two::
 
-   plot_specdb J220248.31+123656.3 priv --db_file=qpq_optical.hdf5
-   plot_specdb J220248.31+123656.3 igmspec
+   specdb_plot J220248.31+123656.3 priv --db_file=qpq_optical.hdf5
+   specdb_plot J220248.31+123656.3 igmspec
 
 
 sdss_spec
@@ -59,10 +59,10 @@ sdss_spec
 Grab data from the SDSS/BOSS survey with plate-fiber notation.
 Here is the help::
 
-   $sdss_spec -h
-    usage: sdss_spec [-h] [-s SURVEY] [--select SELECT] [-p] plate fiberid dbase
+   $specdb_sdss -h
+    usage: specdb_sdss [-h] [-s SURVEY] [--select SELECT] [-p] plate fiberid dbase
 
-    sdss_spec script v0.1
+    specdb_sdss script v0.1
 
     positional arguments:
       plate                 Plate
@@ -75,4 +75,9 @@ Here is the help::
                             Name of Survey to use (BOSS_DR12 or SDSS_DR7)
       --select SELECT       Index of spectrum to plot (when multiple exist)
       -p, --plot            Plot with lt_xspec
+
+Here is an example::
+
+   specdb_sdss 377 321 igmspec
+
 
