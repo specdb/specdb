@@ -24,15 +24,15 @@ from specdb.zem import utils as spzu
 from specdb import defs
 
 
-def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
+def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
                only_conti=False, skip_folders=[]):
     """ Generate a list of FITS files within the file tree
 
     Parameters
     ----------
-    tree_root : str
-      Top level path of the tree of FITS files
+    branch : str
+      Top level path of the FITS files
     skip_files : tuple
       List of file roots to skip as primary files when ingesting
     only_conti : bool, optional
@@ -48,7 +48,7 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
       Name of meta file in tree_root
 
     """
-    walk = os.walk(tree_root)
+    walk = os.walk(branch)
     folders = ['/.']
     pfiles = []
     while len(folders) > 0:
@@ -59,9 +59,9 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
                 print("Skipping folder = {:s}".format(folder))
                 continue
             if only_conti:
-                ofiles += glob.glob(tree_root+'/'+folder+'/*_c.fits*')
+                ofiles += glob.glob(branch+'/'+folder+'/*_c.fits*')
             else:
-                ofiles += glob.glob(tree_root+'/'+folder+'/*.fits*')
+                ofiles += glob.glob(branch+'/'+folder+'/*.fits*')
             # Eliminate error and continua files
             for ofile in ofiles:
                 flg = True
@@ -79,13 +79,14 @@ def grab_files(tree_root, skip_files=('c.fits', 'C.fits', 'e.fits',
         # walk
         folders = next(walk)[1]
     # Grab meta file (if one exists)
-    mfile = glob.glob(tree_root+'/*_meta.json')
+    mfile = glob.glob(branch+'/*_meta.json')
     if len(mfile) == 1:
         mfile = mfile[0]
     elif len(mfile) == 0:
+        warnings.warn("No meta JSON file found in branch: {:s}  This is not recommended".format(branch))
         mfile = None
     else:
-        raise IOError("Multiple meta files in branch {:s}.  Limit to one".format(tree_root))
+        raise IOError("Multiple meta JSON files in branch: {:s}.  Limit to one".format(branch))
     # Return
     return pfiles, mfile
 
@@ -298,6 +299,9 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         warnings.warn("EPOCH not defined.  Filling with 2000.")
         maindb['EPOCH'] = 2000.
 
+    # Survey ID
+    maindb['SURVEY_ID'] = np.arange(len(maindb)).astype(int)
+
     # Fill in empty columns with warning
     mkeys = maindb.keys()
     req_clms = defs.get_req_clms(sdb_key=sdb_key)
@@ -477,6 +481,9 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
 
     # MAIN LOOP
     for ss,branch in enumerate(branches):
+        # Skip files
+        if not os.path.isdir(branch):
+            continue
         print('Working on branch: {:s}'.format(branch))
         # Files
         fits_files, meta_file = grab_files(branch)

@@ -47,27 +47,8 @@ def test_ingest():
 
 def test_mkdb():
     import specdb
-    from linetools import utils as ltu
-    # Generate a fake ztbl
-    obj = ['J220758.30+125944.3',
-           'J172524.66+303803.9',
-           'J230044.36+015541.7',
-           'J095240.17+515250.03',
-           'J095243.05+515121.15',
-           ]
-    ztbl = Table()
-    RA, DEC, ZEM, ZSOURCE = [], [], [], []
-    for kk,iobj in enumerate(obj):
-           icoord = ltu.radec_to_coord(iobj)
-           RA.append(icoord.ra.value)
-           DEC.append(icoord.dec.value)
-           ZEM.append(1 + kk*0.1)
-           ZSOURCE.append('UNKNW')
-    ztbl['RA'] = RA
-    ztbl['DEC'] = DEC
-    ztbl['ZEM'] = ZEM
-    ztbl['ZEM_SOURCE'] = ZSOURCE
-
+    # Redshift table
+    ztbl = Table.read(specdb.__path__[0]+'/data/privateDB/testDB_ztbl.fits')
     # Run
     tree = specdb.__path__[0]+'/data/privateDB'
     pbuild.mk_db('tst_db', tree, 'tst_db.hdf5', ztbl, fname=True)
