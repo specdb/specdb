@@ -91,7 +91,7 @@ any location of your choice but we recommend to locate it in the ./data/DB/ subd
 within specdb, e.g.::
 
     cd specdb/data/DB
-    get_igmspec
+    specdb_get_igmspec
 
 This will start a download of the most recent `igmspec` database; the current file is v02
 and has ~26Gb. Once the file is downloaded, you need to make sure the shell environmental

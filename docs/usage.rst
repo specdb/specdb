@@ -5,7 +5,7 @@ Using specdb
 ************
 
 This file summarizes some of the simple usage cases
-of specdb from within Python.
+of `specdb` from within Python.
 See the :doc:`scripts` documentation for a discussion of
 command-line usage cases outside of Python.
 

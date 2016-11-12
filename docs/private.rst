@@ -52,7 +52,7 @@ Here is an example of a directory tree
 Meta parameter file
 -------------------
 
-Every dataset in specdb must include a meta table and there
+Every dataset in `specdb` must include a meta table and there
 is a required set of columns (see :doc:`meta`) for the list
 and descriptions.
 
@@ -72,17 +72,19 @@ Here is an example file::
          "DATE-OBS": "DATE",
          "GRATING": "OPT_ELEM",
          "INSTR": "INSTRUME",
-         "R": true
+         "R": True
       }
    }
 
 This example sets the maximum number of pixels in any given file
 within the branch (default: 10000).  The values in meta_dict are
-set for each file.  The items in parse_head indicate which header
-keyword to use for each meta parameter.
-
-The spectral resolution may be dynamically calculated.  That
-is the default and it is asserted with True in this example.
+also set for all the files in the branch. The items in
+parse_head indicate which header keyword to use for retrieving
+the corresponding values for each individual file of the branch. These
+values may be different from file to file and this is a convenient way to get
+them directly from the headers of the FITS files. The spectral resolution (`R`) may
+be dynamically calculated within `specdb`.  That is the default and it is asserted
+with `True` in this example.
 
 Redshift table
 --------------
@@ -100,16 +102,17 @@ ZEM         float    Redshift value
 ZEM_SOURCE  str      Name of the source (e.g. SDSS, BOSS)
 ==========  ======== ============================================
 
-One can generate one's own table or specify any of the public specdb databases.
-If you generate your own, place in the top-level of the tree and
-give it an extension _ztbl.fits.
+One can generate one's own table or specify any of the public `specdb`
+databases (e.g. `igmspec`). If you generate your own, place in the top-level
+of the database tree and give it an extension _ztbl.fits (see example of
+tree structure above).
 
 Spectra
 -------
 
 Spectra will be ingested provided they can be read with
-`linetools.spectra.io.readspec`.  You can test this by
-running::
+`linetools.spectra.io.readspec`.  You can test whether this is the case
+by running::
 
    lt_xspec name_of_spectrum
 
@@ -124,25 +127,32 @@ Script
 ------
 
 The database construction is intended to be run in one go with
-a single command from the command line.  One uses the specdb_privatedb
-script.  Here is the current usage::
+a single command from the command line. One uses the specdb_privatedb
+script. Here is the current usage::
 
-   specdb_chk -h
-    usage: specdb_chk [-h] db_file
+   usage: specdb_privatedb [-h] [--ztbl ZTBL] [--zspecdb ZSPECDB]
+                        db_name tree_path outfile
 
-    Check a specdb DB file
+   Generate a private specdb DB
 
-    positional arguments:
-      db_file     Database file
+   positional arguments:
+      db_name            Name of your private DB
+      tree_path          Path to the directory tree of spectral files
+      outfile            Filename for the private DB HDF5
 
-    optional arguments:
-      -h, --help  show this help message and exit
-
+   optional arguments:
+      -h, --help         show this help message and exit
+      --ztbl ZTBL        Name of data file containing redshift info
+      --zspecdb ZSPECDB  Name of specdb DB to use for redshifts
 
 And here is an example of running it on the test DB::
 
    cd specdb/specdb/data/
-   specdb_privatedb testDB privateDB tst_DB.hdf5
+   specdb_privatedb testDB test_privateDB tst_DB.hdf5
+
+This will create a private DB called `testDB` from the directory tree
+`test_privateDB`; the database itself is contained in a single .hdf5 named
+`tst_DB.hdf5`
 
 Within Python
 -------------
@@ -157,8 +167,8 @@ Here is a call for the test database::
    # Read z table
    ztbl = Table.read(specdb.__path__[0]+'/data/privateDB/testDB_ztbl.fits')
    # Go
-   tree2 = specdb.__path__[0]+'/data/privateDB'
-   pbuild.mk_db(tree2, 'test', 'tmp.hdf5', ztbl, fname=True)
+   tree2 = specdb.__path__[0]+'/data/test_privateDB'
+   pbuild.mk_db(tree2, 'testDB', 'tst_DB.hdf5', ztbl, fname=True)
 
 
 Main Steps
@@ -179,7 +189,7 @@ ignores any files with the following extensions:
 
 Here is an example call::
 
-   branch = specdb.__path__[0]+'/data/privateDB/ESI/'
+   branch = specdb.__path__[0]+'/data/test_privateDB/ESI/'
    flux_files, meta_file = pbuild.grab_files(branch)
 
 
