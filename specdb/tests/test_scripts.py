@@ -31,9 +31,9 @@ def test_plot_spec():
     plot_specdb.main(pargs, unit_test=True)
 
 
-"""
+'''
 def test_sdss():
-    pargs = sdss_spec.parser(['751', '354'])
+    pargs = sdss_spec.parser(['751', '354', 'priv'])
     db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
     sdss_spec.main(pargs, db_file=db_file, unit_test=True)
-"""
+'''
