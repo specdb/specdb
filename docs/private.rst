@@ -104,16 +104,60 @@ One can generate one's own or specify any of the public specdb databases.
 If you generate your own, place in the top-level of the tree and
 give it an extension _ztbl.fits.
 
+Spectra
+-------
+
+Spectra will be ingested provided they can be read with
+`linetools.spectra.io.readspec`.  You can test this by
+running::
+
+   lt_xspec name_of_spectrum
+
+on any of your files.
+
 Quick go
 ========
+
+Script
+------
 
 The database construction is intended to be run in one go with
 a single command from the command line.  One uses the specdb_privatedb
 script.  Here is the current usage::
 
+   specdb_chk -h
+    usage: specdb_chk [-h] db_file
+
+    Check a specdb DB file
+
+    positional arguments:
+      db_file     Database file
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
 
 And here is an example of running it on the test DB::
 
+   cd specdb/specdb/data/
+   specdb_privatedb testDB privateDB tst_DB.hdf5
+
+Within Python
+-------------
+
+It is quite possible you will need to customize things enough
+that you will want to run from inside Python.
+
+Here is a call for the test database::
+
+   pbuild.mk_db([tree], ['test'], 'tmp.hdf5', ztbl, fname=True, skip_badz=True, nmax_pix=50000)
+
+   
+Step by Step
+============
+
+Here are the individual steps taken when generating the
+private DB.
 
 
 Grab Files
@@ -131,22 +175,9 @@ The *fname* flag indicates that the RA/DEC are to be parsed
 from the FITS filename.  The *skip_badz* flag allows the code
 to skip sources that are not cross-matched to the Myers catalog.
 
-Spectra
-=======
-
-Spectra are simply ingested into an HDF5 file
-provided they can be read with
-`linetools.spectra.io.readspec`::
 
    pbuild.ingest_spectra(hdf, 'test', meta)
 
-One Step
-========
+Ingest Spectra
+--------------
 
-It is recommended that all of the above steps be run in
-one go with the mk_db method::
-
-   pbuild.mk_db([tree], ['test'], 'tmp.hdf5', ztbl, fname=True, skip_badz=True, nmax_pix=50000)
-
-One inputs a list of directory trees and a list of names
-for each one. Key words are passed to the various methods.
