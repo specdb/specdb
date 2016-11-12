@@ -100,7 +100,7 @@ ZEM         float    Redshift value
 ZEM_SOURCE  str      Name of the source (e.g. SDSS, BOSS)
 ==========  ======== ============================================
 
-One can generate one's own or specify any of the public specdb databases.
+One can generate one's own table or specify any of the public specdb databases.
 If you generate your own, place in the top-level of the tree and
 give it an extension _ztbl.fits.
 
@@ -113,7 +113,9 @@ running::
 
    lt_xspec name_of_spectrum
 
-on any of your files.
+on any of your files.  The default is to take any FITS file
+in the branch (and sub-folders) except those files with these
+extensions: 'c.fits', 'C.fits', 'e.fits', 'E.fits', 'N.fits', 'old.fits'.
 
 Quick go
 ========
@@ -145,39 +147,66 @@ And here is an example of running it on the test DB::
 Within Python
 -------------
 
-It is quite possible you will need to customize things enough
-that you will want to run from inside Python.
+It is possible you will need to customize things to the
+extent that you will want to generate the database
+from inside Python.
 
 Here is a call for the test database::
 
-   pbuild.mk_db([tree], ['test'], 'tmp.hdf5', ztbl, fname=True, skip_badz=True, nmax_pix=50000)
+   from specdb.build import privatedb as pbuild
+   # Read z table
+   ztbl = Table.read(specdb.__path__[0]+'/data/privateDB/testDB_ztbl.fits')
+   # Go
+   tree2 = specdb.__path__[0]+'/data/privateDB'
+   pbuild.mk_db(tree2, 'test', 'tmp.hdf5', ztbl, fname=True)
 
-   
-Step by Step
-============
 
-Here are the individual steps taken when generating the
-private DB.
+Main Steps
+==========
+
+Here are the main, individual steps taken when generating the
+private DB.  There is, however, additional code within mk_db()
+that is required.
 
 
 Grab Files
 ----------
 
+The grab_files() method searches through a given branch to find
+all FITS files and a meta parameter file.  By default, the code
+ignores any files with the following extensions:
+'c.fits', 'C.fits', 'e.fits', 'E.fits', 'N.fits', 'old.fits'.
+
+Here is an example call::
+
+   branch = specdb.__path__[0]+'/data/privateDB/ESI/'
+   flux_files, meta_file = pbuild.grab_files(branch)
+
+
 Meta
 ----
 
 From the list of FITS files, a META table is generated.
-This includes redshifts taken from the Myers catalog (when available)::
+The redshift table must be supplied (as an astropy Table).
+Here is an example call::
 
-   meta = pbuild.mk_meta(spec_files, fname=True, skip_badz=True)
+   meta = pbuild.mk_meta(flux_files, ztbl, fname=True, mdict=mdict, parse_head=pdict, skip_badz=True)
 
 The *fname* flag indicates that the RA/DEC are to be parsed
 from the FITS filename.  The *skip_badz* flag allows the code
-to skip sources that are not cross-matched to the Myers catalog.
+to skip sources that are not cross-matched to redshift table
+(instead of terminating).
 
-
-   pbuild.ingest_spectra(hdf, 'test', meta)
 
 Ingest Spectra
 --------------
+
+The ingest_spectra() method loops through the spectral files,
+reads each, and populates a hdf5 dataset.  It also converts
+the meta table into a separate, parallel hdf5 dataset.
+
+Here is an example::
+
+   hdf = h5py.File('tmp.hdf5','w')
+   pbuild.ingest_spectra(hdf, 'test', meta, max_npix=50000)
 

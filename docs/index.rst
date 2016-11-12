@@ -10,19 +10,36 @@ Welcome to the specdb documentation!
 specdb is package for accessing spectra of astronomical sources.
 
 
-Contents
-++++++++
+Getting Started
+---------------
 
 .. toctree::
    :maxdepth: 2
 
    installing
-   private
    scripts
+   usage
+
+Data
+----
+
+.. toctree::
+   :maxdepth: 2
+
+   meta
+   spectra
+
+Generating a Database
+---------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   private
 
 
 Indices and tables
-++++++++++++++++++
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
