@@ -33,7 +33,7 @@ also not recommended.
 Here is an example of a directory tree
 (from the test dataset in specdb)::
 
-   ├── privateDB
+   ├── test_privateDB
    |  ├── testDB_ztbl.fits
    |  ├── ESI
    |  |  ├── ESI_meta.json
@@ -165,11 +165,13 @@ Here is a call for the test database::
 
    from specdb.build import privatedb as pbuild
    # Read z table
-   ztbl = Table.read(specdb.__path__[0]+'/data/privateDB/testDB_ztbl.fits')
+   ztbl = Table.read(specdb.__path__[0]+'/data/test_privateDB/testDB_ztbl.fits')
    # Go
    tree2 = specdb.__path__[0]+'/data/test_privateDB'
    pbuild.mk_db(tree2, 'testDB', 'tst_DB.hdf5', ztbl, fname=True)
 
+If ztbl == 'igmspec',  the code will attempt to load the
+IgmSpec database and use the quasars catalog for redshifts.
 
 Main Steps
 ==========

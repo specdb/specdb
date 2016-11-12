@@ -48,7 +48,7 @@ def test_ingest():
 def test_mkdb():
     import specdb
     # Redshift table
-    ztbl = Table.read(specdb.__path__[0]+'/data/privateDB/testDB_ztbl.fits')
+    ztbl = Table.read(specdb.__path__[0]+'/data/test_privateDB/testDB_ztbl.fits')
     # Run
-    tree = specdb.__path__[0]+'/data/privateDB'
+    tree = specdb.__path__[0]+'/data/test_privateDB'
     pbuild.mk_db('tst_db', tree, 'tst_db.hdf5', ztbl, fname=True)

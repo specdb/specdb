@@ -23,6 +23,10 @@ from specdb.build import utils as spbu
 from specdb.zem import utils as spzu
 from specdb import defs
 
+try:
+    basestring
+except NameError:  # For Python 3
+    basestring = str
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
@@ -442,7 +446,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     return
 
 
-def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
+def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
     """ Generate the DB
 
     Parameters
@@ -454,8 +458,9 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
       Typically, each branch in the tree corresponds to a single instrument
     outfil : str
       Output file name for the hdf5 file
-    ztbl : Table
-      See above
+    iztbl : Table or str
+      If Table, see meta() docs for details on its format
+      If str, it must be 'igmspec' and the user must have that DB downloaded
     version : str, optional
       Version code
 
@@ -464,6 +469,18 @@ def mk_db(dbname, tree, outfil, ztbl, version='v00', **kwargs):
 
     """
     from specdb import defs
+
+    # ztbl
+    if isinstance(iztbl, basestring):
+        if iztbl == 'igmspec':
+            from specdb.specdb import IgmSpec
+            igmsp = IgmSpec()
+            ztbl = Table(igmsp.idb.hdf['quasars'].value)
+    elif isinstance(iztbl, Table):
+        ztbl = iztbl
+    else:
+        raise IOError("Bad type for ztbl")
+
     # Find the branches
     branches = glob.glob(tree+'/*')
     branches.sort()
