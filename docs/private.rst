@@ -34,6 +34,7 @@ Here is an example of a directory tree
 (from the test dataset in specdb)::
 
    ├── privateDB
+   |  ├── testDB_ztbl.fits
    |  ├── ESI
    |  |  ├── ESI_meta.json
    |  |  ├── SDSSJ220758.30+125944.3_F.fits
@@ -87,7 +88,7 @@ Redshift table
 --------------
 
 Each unique source in your database (RA, DEC) is required to also
-have a redshift.   This must be supplied as a separate table with
+have a redshift.   This must be supplied as a separate Table with
 at least the following columns:
 
 ==========  ======== ============================================
@@ -99,15 +100,21 @@ ZEM         float    Redshift value
 ZEM_SOURCE  str      Name of the source (e.g. SDSS, BOSS)
 ==========  ======== ============================================
 
-This can be provided as a filename or as a Table.
-One can also specify any of the public specdb databases.
+One can generate one's own or specify any of the public specdb databases.
+If you generate your own, place in the top-level of the tree and
+give it an extension _ztbl.fits.
 
 Quick go
 ========
 
 The database construction is intended to be run in one go with
 a single command from the command line.  One uses the specdb_privatedb
-script.
+script.  Here is the current usage::
+
+
+And here is an example of running it on the test DB::
+
+
 
 Grab Files
 ----------
