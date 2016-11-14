@@ -277,6 +277,8 @@ def set_resolution(head, instr=None):
                 instr = 'MODS1B'
             elif 'MODS1R' in head['INSTRUME']:
                 instr = 'MODS1R'
+            elif 'COS' in head['INSTRUME']:
+                instr = 'COS'
         else:
             pass
         if instr is None:
@@ -287,6 +289,12 @@ def set_resolution(head, instr=None):
         try:
             return Rdicts[instr][head['SLMSKNAM']]
         except KeyError:
+            pdb.set_trace()
+    elif instr == 'COS':
+        try:
+            return Rdicts[instr][head['OPT_ELEM'].strip()]
+        except KeyError:
+            print("Need to add {:s}".format(head['DECKNAME']))
             pdb.set_trace()
     elif instr == 'HIRES':
         try:

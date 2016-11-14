@@ -1,0 +1,12 @@
+{
+    "maxpix": 60000,
+    "meta_dict": {
+        "TELESCOPE": "HST"
+    },
+    "parse_head": {
+        "DATE-OBS": "DATE",
+        "GRATING": "OPT_ELEM",
+        "INSTR": "INSTRUME",
+        "R": true
+    }
+}

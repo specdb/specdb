@@ -1,0 +1,9 @@
+{
+    "maxpix": 4200,
+    "meta_dict": {
+        "TELESCOPE": "Keck-I"
+    },
+    "parse_head": {
+        "DATE-OBS": "DATE"
+    }
+}

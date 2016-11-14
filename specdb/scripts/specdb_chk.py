@@ -49,7 +49,7 @@ def main(pargs):
     try:
         dbname = hdf['catalog'].attrs['NAME']
     except:
-        warnings.warn('DB file has no name.  Must be really old..')
+        warnings.warn('DB file has no name.  Must be really old.')
         dbname = None
     else:
         print("specdb DB file is from the {:s} database".format(dbname))

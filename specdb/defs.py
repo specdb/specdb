@@ -29,8 +29,8 @@ def instruments():
         # Keck/ESI spectrometer -- ECH
         'ESI': dict(gratings=['ECH']),
         # Keck/LRIS spectrometer
-        'LRISb': dict(gratings=['ECH']),
-        'LRISr': dict(gratings=['ECH']),
+        'LRISb': dict(gratings=['400/3400', '600/4000', '1200/3400']),
+        'LRISr': dict(gratings=['600/7500', '400/8500', '1200/7500']),
         # Keck/NIRSPEC spectrometer
         'NIRSPEC': dict(gratings=['Low-Res']),
         # Keck/MOSFIRE spectrometer
@@ -61,7 +61,10 @@ def instruments():
         'WFC3': dict(gratings=['G280']),
         'COS': dict(gratings=['G130M', 'G160M', 'G130M/G160M', 'G130M-G160M']),
         'FOS': dict(gratings=['G160L', 'G130H', 'G190H', 'G270H']),
-        'STIS': dict(gratings=['G140L', 'G230L']),
+        'STIS': dict(gratings=['G140L', 'G230L', 'E140M', 'E230M',
+                               'G140M', 'G160M', 'G270M', 'G230M',
+                               'G230MB', 'G430M', 'G750M', 'G230L',
+                               'G230LB', 'G430L', 'G750L']),
         # VLT
         'XSHOOTER': dict(gratings=['UVB,VIS,NIR,ALL']),
         'ISAAC': dict(gratings=['SW_MRes']),
@@ -210,6 +213,9 @@ def get_res_dicts():
                   'LWRS_SIC2B': 20000.,
                   }
     #
+    COS_Rdict = {'G130M': 17000.,
+                 'G160M': 17000.,
+                 }
     STIS_Rdict = {'E140M': 45800.,    # Assumes 4 pixels
                   'E230M': 30000.,    # Assumes 4 pixels
                   'G140M': 12700.,
@@ -237,6 +243,7 @@ def get_res_dicts():
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
+                  COS=COS_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -283,8 +290,13 @@ def slit_width(slitname, req_long=True):
     return swidth
 
 
-def get_req_clms():
+def get_req_clms(sdb_key=None):
     """ Return a list of required columns for any specdb META table
+
+    Parameters
+    ----------
+    sdb_key : str, optional
+      Name of the ID key for the database, e.g. 'IGM_ID'
     Returns
     -------
     req_clms : list
@@ -292,7 +304,9 @@ def get_req_clms():
     """
     req_clms = ['RA', 'DEC', 'EPOCH', 'zem', 'R', 'WV_MIN',
             'WV_MAX', 'DATE-OBS', 'SURVEY_ID', 'NPIX', 'SPEC_FILE',
-            'INSTR', 'GRATING', 'TELESCOPE', 'IGM_ID']
+            'INSTR', 'GRATING', 'TELESCOPE']
+    if sdb_key is not None:
+        req_clms += [sdb_key]
     return req_clms
 
 
