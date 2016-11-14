@@ -11,6 +11,7 @@ try:  # Python 3
 except NameError:
     ustr = str
 
+
 def parser(options=None):
     import argparse
     # Parse
@@ -20,6 +21,7 @@ def parser(options=None):
     parser.add_argument("outfile", type=str, help="Filename for the private DB HDF5")
     parser.add_argument("--ztbl", help="Name of data file containing redshift info")
     parser.add_argument("--zspecdb", help="Name of specdb DB to use for redshifts")
+    parser.add_argument("--version", type=str, help="Version of the DB; default is `v00`")
 
     if options is None:
         pargs = parser.parse_args()
@@ -44,21 +46,34 @@ def main(pargs):
 
     if pargs.ztbl is not None:
         raise NotImplementedError("Not ready for this yet")
-    if pargs.zspecdb is not None:
+    if pargs.zspecdb not in [None, 'igmspec']:
         raise NotImplementedError("Not ready for this yet")
 
-    # Search for a z table
+    # define main tree
     tree = pargs.tree_path
-    ztbl_files = glob.glob(tree+'/*_ztbl*')
-    if len(ztbl_files) == 1:
-        print("Reading redshift table {:s}".format(ztbl_files[0]))
-        ztbl = Table.read(ztbl_files[0])
-    elif len(ztbl_files) == 0:
-        raise IOError("No redshift table provided")
+
+    # iztbl
+    if pargs.zspecdb == 'igmspec':
+        iztbl = 'igmspec'
     else:
-        raise IOError("Multiple redshift tables found in your tree")
+        # Search for a z table
+        ztbl_files = glob.glob(tree+'/*_ztbl*')
+        if len(ztbl_files) == 1:
+            print("Reading redshift table {:s}".format(ztbl_files[0]))
+            iztbl = Table.read(ztbl_files[0])
+        elif len(ztbl_files) == 0:
+            raise IOError("No redshift table provided")
+        else:
+            raise IOError("Multiple redshift tables found in your tree")
+
+    # version
+    if pargs.version is None:
+        version = 'v00'
+    else:
+        version = pargs.version
+
     # Run
-    pbuild.mk_db(pargs.db_name, tree, pargs.outfile, ztbl, fname=True)
+    pbuild.mk_db(pargs.db_name, tree, pargs.outfile, iztbl, fname=True, version=version)
 
 ##
 if __name__ == '__main__':
