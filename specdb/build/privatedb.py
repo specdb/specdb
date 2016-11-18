@@ -28,6 +28,7 @@ try:
 except NameError:  # For Python 3
     basestring = str
 
+
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
                only_conti=False, skip_folders=[]):
@@ -49,8 +50,10 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
     pfiles : list
       List of FITS files
     meta_file : str or None
-      Name of meta file in tree_root
-
+      Name of meta JSON file in tree_root
+    mtbl_file : str or None
+      Name of meta table file in tree_root
+      Must have either _meta.ascii or _meta.fits extension
     """
     walk = os.walk(branch)
     folders = ['/.']
@@ -82,7 +85,7 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                     pfiles.append(ofile)
         # walk
         folders = next(walk)[1]
-    # Grab meta file (if one exists)
+    # Grab meta files (if they exists)
     mfile = glob.glob(branch+'/*_meta.json')
     if len(mfile) == 1:
         mfile = mfile[0]
@@ -91,12 +94,18 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
         mfile = None
     else:
         raise IOError("Multiple meta JSON files in branch: {:s}.  Limit to one".format(branch))
+    mtbl_file = glob.glob(branch+'/*_meta.ascii') + glob.glob(branch+'/*_meta.fits')
+    if len(mtbl_file) == 1:
+        mtbl_file = mtbl_file[0]
+    else:
+        mtbl_file = None
     # Return
-    return pfiles, mfile
+    return pfiles, mfile, mtbl_file
 
 
 def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             mdict=None, parse_head=None, debug=False, chkz=False,
+            mtbl_file=None,
             verbose=False, specdb=None, sdb_key=None, **kwargs):
     """ Generate a meta Table from an input list of files
 
@@ -127,6 +136,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
       Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
     chkz : bool, optional
       If any sources have no parseable redshift, hit a set_trace
+    mtbl_file : str
+      Filename of input meta table.  Current allowed extensions are _meta.ascii or _meta.fits
+      and they must be readable by Table.read().  The values in this table will overwrite
+      any others generated.  Table must include a SPEC_FILE column to link meta data
 
     Returns
     -------
@@ -318,6 +331,50 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 else:
                     maindb[clm] = ['DUMMY']*len(maindb)
 
+    # Input meta table
+    if mtbl_file is not None:
+        # Read
+        if '_meta.ascii' in mtbl_file:
+            imtbl = Table.read(mtbl_file, format='ascii')
+        elif '_meta.fits' in mtbl_file:
+            imtbl = Table.read(mtbl_file)
+        else:
+            raise IOError("Input meta table must have either an ascii or fits extension")
+        # Check length
+        if len(imtbl) != len(maindb):
+            raise IOError("Input meta table must have same length as maindb")
+        # Check for SPEC_FILE
+        if 'SPEC_FILE' not in imtbl.keys():
+            raise ValueError("Input meta table must include SPEC_FILE column")
+        # Loop to get indices
+        idx = []
+        for row in imtbl:
+            imt = np.where(maindb['SPEC_FILE'] == row['SPEC_FILE'])[0]
+            if len(imt) == 0:
+                print("No match to spec file {:s}.  Will ignore".format(row['SPEC_FILE']))
+            elif len(imt) == 0:
+                idx.append(imt[0])
+            else:
+                raise ValueError("Two entries with the same SPEC_FILE.  Something went wrong..")
+        pdb.set_trace()
+        idx = np.array(idx)
+        # Loop on keys
+        for key in imtbl.keys():
+            # Skip?
+            if key in ['SPEC_FILE']:
+                continue
+            if key in maindb.keys():
+                pdb.set_trace()
+            else:
+                # Add Column
+                pdb.set_trace()
+                maindb.add_column(imtbl[key][idx])
+
+
+
+
+
+
     # Return
     if debug:
         maindb[['RA', 'DEC', 'SPEC_FILE']].pprint(max_width=120)
@@ -503,7 +560,7 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
             continue
         print('Working on branch: {:s}'.format(branch))
         # Files
-        fits_files, meta_file = grab_files(branch)
+        fits_files, meta_file, mtbl_file = grab_files(branch)
         # Meta
         maxpix, phead, mdict, stype = 10000, None, None, 'QSO'
         if meta_file is not None:
@@ -521,7 +578,7 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
             if 'meta_dict' in meta_dict.keys():
                 mdict = meta_dict['meta_dict']
         full_meta = mk_meta(fits_files, ztbl,
-                            parse_head=phead, mdict=mdict, **kwargs)
+                            parse_head=phead, mdict=mdict, mtbl_file=mtbl_file, **kwargs)
         # Survey IDs
         flag_s = 2**ss
         branch_name = branch.split('/')[-1]

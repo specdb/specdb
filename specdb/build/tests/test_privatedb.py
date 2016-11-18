@@ -16,7 +16,7 @@ def data_path(filename):
 
 def test_grab_files():
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles, _ = pbuild.grab_files(data_dir)
+    ffiles, _, _ = pbuild.grab_files(data_dir)
     #
     assert len(ffiles) == 2
 
@@ -24,7 +24,7 @@ def test_grab_files():
 def test_meta():
     ztbl = Table.read(os.path.join(os.path.dirname(__file__), 'files', 'ztbl_E.fits'))
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles,_ = pbuild.grab_files(data_dir)
+    ffiles,_,_ = pbuild.grab_files(data_dir)
     meta = pbuild.mk_meta(ffiles, ztbl, fname=True, skip_badz=True, mdict=dict(INSTR='HIRES'))
     #
     np.testing.assert_allclose(meta['zem'].data, (2.39499998093, 2.59719920158))
@@ -33,7 +33,7 @@ def test_meta():
 def test_ingest():
     ztbl = Table.read(os.path.join(os.path.dirname(__file__), 'files', 'ztbl_E.fits'))
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles,_ = pbuild.grab_files(data_dir)
+    ffiles,_,_ = pbuild.grab_files(data_dir)
     meta = pbuild.mk_meta(ffiles, ztbl, fname=True, skip_badz=True, mdict=dict(INSTR='HIRES'))
     hdf = h5py.File('tmp.hdf5','w')
     pbuild.ingest_spectra(hdf, 'test', meta)
