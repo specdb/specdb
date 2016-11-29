@@ -170,7 +170,9 @@ class InterfaceDB(object):
 
     def grab_spec(self, survey, IDs, verbose=None, **kwargs):
         """ Grab spectra using staged IDs
-        All IDs must occur
+        All IDs must occur in each of the surveys listed
+
+        Order of spectra and meta tables will match the input IDs
 
         Parameters
         ----------
