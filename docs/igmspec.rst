@@ -41,6 +41,15 @@ The standard call is therefore::
     UNIX> cd where_you_want_the_DB_file
     UNIX> specdb_get_igmspec -v=v02
 
+Setup
+=====
+
+Add to your UNIX environmental variables the path to the DB file, e.g.::
+
+    setenv IGMSPEC_DB /raid/IGMSPEC_DB/   # csh or tcsh
+    export IGMSPEC_DB="/raid/IGMSPEC_DB/" # bash
+
+
 More
 ====
 
