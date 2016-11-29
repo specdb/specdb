@@ -86,8 +86,14 @@ class SpecDB(object):
             print(coords[bad])
             raise IOError("Increase the tolerance for the search or reconsider your query")
         # Check that all are within the dataset
-        flag = self.idb.survey_dict[dataset]
-        pdb.set_trace()
+        sflag = self.idb.survey_dict[dataset]
+        flags = self.qcat.cat['flag_survey'][ids]
+        query = (flags % (sflag*2)) >= sflag
+        if np.sum(query) != len(coords):
+            print("All of your input IDs are not in the input survey {:s}".format(dataset))
+            raise IOError("Try again")
+        # Grab and return
+        return self.idb.grab_spec(dataset, ids)
 
 
     def allspec_at_coord(self, coord, tol=0.5*u.arcsec, isurvey=None, **kwargs):
@@ -109,9 +115,9 @@ class SpecDB(object):
 
         Returns
         -------
-        spec : XSpectrum1D or list of XSpectrum1D
+        spec : list of XSpectrum1D
           One spectrum per survey containing the source
-        meta : Table or list of Tables
+        meta : list of Tables
           Meta data related to spec
 
         """
@@ -131,10 +137,11 @@ class SpecDB(object):
             surveys = self.qcat.in_surveys(isurvey)
 
         # Overlapping surveys
-        self.qcat.surveys_with_IDs(idv, isurvey=surveys)
+        gd_surveys = self.qcat.surveys_with_IDs(idv, isurvey=surveys)
 
         # Load spectra
-        spec, meta = self.idb.grab_spec(surveys, idv, **kwargs)
+        pdb.set_trace()
+        spec, meta = self.idb.grab_spec(gd_surveys, idv, **kwargs)
         return spec, meta
 
     def __getattr__(self, k):

@@ -29,6 +29,6 @@ def igmsp():
 
 def test_allspec_from_coord(igmsp):
     # One match
-    idx = igmsp.allspec_at_coord((0.038604,15.298477))
+    spec, meta = igmsp.allspec_at_coord((0.038604,15.298477))
     pytest.set_trace()
 

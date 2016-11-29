@@ -187,8 +187,10 @@ class InterfaceDB(object):
 
         Returns
         -------
-        spec
-        meta
+        spec : XSpectrum1D
+          Spectra requested, ordered by the IDs
+        meta : Table
+          Meta table, ordered by the IDs
 
         """
         if verbose is None:

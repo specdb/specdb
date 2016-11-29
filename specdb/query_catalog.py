@@ -145,7 +145,7 @@ class QueryCatalog(object):
         final = np.in1d(IDs, gdIDs)
         return final
 
-    def match_coord(self, coords, toler=0.5*u.arcsec, verbose=True):
+    def match_coord(self, coords, dataset=None, toler=0.5*u.arcsec, verbose=True):
         """ Match an input set of SkyCoords to the catalog within a given radius
 
         Parameters
@@ -176,6 +176,7 @@ class QueryCatalog(object):
             print("Your search yielded {:d} matches".format(np.sum(good)))
         # Deal with out of tolerance
         IDs[~good] = -1
+        # Restrict to dataset?
         # Finish
         return IDs
 
@@ -326,18 +327,27 @@ class QueryCatalog(object):
 
         Returns
         -------
+        gd_surveys : list
+          List of surveys containing all of the input IDs
 
         """
+        if isinstance(IDs,int):
+            nIDs = 1
+        else:
+            nIDs = IDs.size
         if isurvey is None:
             isurvey = self.surveys
         #
         flags = self.cat['flag_survey'][IDs]
+        gd_surveys = []
         for survey in isurvey:
             sflag = self.survey_dict[survey]
             # In the survey?
             query = (flags % (sflag*2)) >= sflag
-            if np.sum(query) == 0:
-                msk[query] = True
+            if np.sum(query) == nIDs:
+                gd_surveys.append(survey)
+        # Return
+        return gd_surveys
 
     def __repr__(self):
         txt = '<{:s}:  DB_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
