@@ -39,7 +39,7 @@ def main(args, unit_test=False, **kwargs):
 
     # Grab
     icoord = coord_arg_to_coord(args.coord)
-    all_spec, all_meta = Specdb.allspec_for_coord(icoord, tol=args.tol*u.arcsec, isurvey=args.survey)
+    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, isurvey=args.survey)
 
     # Outcome
     if len(all_meta) == 0:
