@@ -99,6 +99,7 @@ class InterfaceDB(object):
         ------
         match_survey : ndarray
           bool array of meta rows from the survey matching IDs
+        Also fills self.meta and self.indices and self.survey_bool
 
         """
         # Check
@@ -108,14 +109,25 @@ class InterfaceDB(object):
         if meta is None:
             meta = Table(self.hdf[survey]['meta'].value)  # This could be too slow..
             meta.meta = dict(survey=survey)
+        # Check that input IDs are all covered
+        chk_survey = np.in1d(IDs, meta[self.idkey])
+        if np.sum(chk_survey) != len(IDs):
+            raise IOError("Not all input IDs are located in this survey")
+        # Find rows to grab (bool array)
         match_survey = np.in1d(meta[self.idkey], IDs)
         # Match meta?
         if match_meta is not None:
             for key,value in match_meta.items():
                 match_survey = match_survey & (meta[key] == value)
+        # Find indices of input IDs in meta table
+        gdi = meta[self.idkey].data[match_survey]
+        xsorted = np.argsort(gdi)
+        ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
+        indices = xsorted[ypos] # Location in subset of meta table (spectra to be grabbed) of the input IDs
         # Store and return
         self.survey_bool = match_survey
-        self.meta = meta[match_survey]
+        self.meta = meta[gdi][indices]
+        self.indices = indices
         return match_survey
 
     def grab_meta(self, survey, IDs=None, show=True):
@@ -158,6 +170,7 @@ class InterfaceDB(object):
 
     def grab_spec(self, survey, IDs, verbose=None, **kwargs):
         """ Grab spectra using staged IDs
+        All IDs must occur
 
         Parameters
         ----------
@@ -190,7 +203,9 @@ class InterfaceDB(object):
             else:
                 if verbose:
                     print("Loaded spectra")
-                data = self.hdf[survey]['spec'][self.survey_bool]
+                tmp_data = self.hdf[survey]['spec'][self.survey_bool]
+                # Replicate and sort according to input IDs
+                data = tmp_data[self.indices]
         else:
             print("Staging failed..  Not returning spectra")
             return
