@@ -39,7 +39,7 @@ Here is the usage::
 The standard call is therefore::
 
     UNIX> cd where_you_want_the_DB_file
-    UNIX> specdb_get_igmspec -v v02
+    UNIX> specdb_get_igmspec -v=v02
 
 More
 ====
