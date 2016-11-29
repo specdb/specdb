@@ -214,21 +214,24 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def radial_search(self, inp, radius, verbose=True, private=False):
+    def radial_search(self, inp, radius, max=None, verbose=True, private=False):
         """ Search for sources in a radius around the input coord
 
         Parameters
         ----------
         inp : str or tuple or SkyCoord
           See linetools.utils.radec_to_coord
+          Single coordinate
         radius : Angle or Quantity, optional
           Tolerance for a match
+        max : int, optional
+          Maximum number of matches to return
         verbose
 
         Returns
         -------
         idx : int array
-          Indices corresponding to match
+          Indices corresponding to match in order of increasing separation
           Returns an empty array if there is no match
         """
         if not isinstance(radius, (Angle, Quantity)):
@@ -239,10 +242,14 @@ class QueryCatalog(object):
         sep = coord.separation(self.coords)
         # Match
         good = sep < radius
-        # Return
         if verbose:
-            print("Your search yielded {:d} match[es]".format(np.sum(good)))
-        return self.cat[self.idkey][good]
+            print("Your search yielded {:d} match[es] within radius={:g}".format(np.sum(good), radius))
+        # Sort by separation
+        asort = np.argsort(sep[good])
+        if max is not None:
+            asort = asort[:max]
+        # Return
+        return self.cat[self.idkey][good][asort]
 
     def get_cat(self, IDs):
         """ Grab catalog rows corresponding to the input IDs
@@ -307,6 +314,30 @@ class QueryCatalog(object):
         for ifs in unif:
             all_surveys += icu.flag_to_surveys(ifs, self.survey_dict)
         self.surveys = list(np.unique(all_surveys))
+
+    def surveys_with_IDs(self, IDs, isurvey=None):
+        """
+        Parameters
+        ----------
+        IDs: int or ndarray
+        isurvey : list, optional
+          List of surveys to consider
+          Default is the full list of surveys
+
+        Returns
+        -------
+
+        """
+        if isurvey is None:
+            isurvey = self.surveys
+        #
+        flags = self.cat['flag_survey'][IDs]
+        for survey in isurvey:
+            sflag = self.survey_dict[survey]
+            # In the survey?
+            query = (flags % (sflag*2)) >= sflag
+            if np.sum(query) == 0:
+                msk[query] = True
 
     def __repr__(self):
         txt = '<{:s}:  DB_file={:s} with {:d} sources\n'.format(self.__class__.__name__,

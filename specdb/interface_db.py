@@ -80,7 +80,8 @@ class InterfaceDB(object):
 
     def grab_ids(self, survey, IDs, meta=None, match_meta=None,
                  private=False):
-        """ Grab the rows in a survey matching IDs
+        """ Grab the rows in a survey matching input IDs
+        All IDs *must* occur within the survey
 
         Parameters
         ----------
@@ -88,6 +89,7 @@ class InterfaceDB(object):
           Name of the Survey
         IDs : int or ndarray
           ID values
+          Converted to array if int
         meta : Table, optional
           Meta data for the survey (usually read from hdf)
         match_meta : dict, optional
@@ -102,6 +104,9 @@ class InterfaceDB(object):
         Also fills self.meta and self.indices and self.survey_bool
 
         """
+        # For checking
+        if isinstance(IDs, int):
+            IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check
         if survey not in self.hdf.keys():
             raise IOError("Survey {:s} not in your DB file {:s}".format(survey, self.db_file))
@@ -111,8 +116,9 @@ class InterfaceDB(object):
             meta.meta = dict(survey=survey)
         # Check that input IDs are all covered
         chk_survey = np.in1d(IDs, meta[self.idkey])
-        if np.sum(chk_survey) != len(IDs):
-            raise IOError("Not all input IDs are located in this survey")
+        if np.sum(chk_survey) != IDs.size:
+            pdb.set_trace()
+            raise IOError("Not all input IDs are located in survey - {:s}".format(survey))
         # Find rows to grab (bool array)
         match_survey = np.in1d(meta[self.idkey], IDs)
         # Match meta?
@@ -126,7 +132,7 @@ class InterfaceDB(object):
         indices = xsorted[ypos] # Location in subset of meta table (spectra to be grabbed) of the input IDs
         # Store and return
         self.survey_bool = match_survey
-        self.meta = meta[gdi][indices]
+        self.meta = meta[match_survey][indices]
         self.indices = indices
         return match_survey
 

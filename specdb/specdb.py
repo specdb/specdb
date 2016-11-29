@@ -2,8 +2,8 @@
 """
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-#import numpy as np
 import pdb
+import numpy as np
 import warnings
 
 from astropy import units as u
@@ -59,18 +59,50 @@ class SpecDB(object):
                     print("Missing {:s}".format(survey))
                     raise IOError
 
-    def spec_from_coord(self, coord, tol=5.*u.arcsec, isurvey=None, **kwargs):
-        """ Radial search for spectra around given coordinate
+    def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, **kwargs):
+        """ Grab spectra for input coords from input dataset
+
+        Parameters
+        ----------
+        coords : SkyCoord
+          Typically more than 1
+        dataset : str
+        tol
+        kwargs
+
+        Returns
+        -------
+        spec : XSpectrum1D
+          One object containing all of the spectra, in order of input coords
+        meta : Table
+          Meta data related to spectra
+        """
+        # Match to catalog
+        ids = self.qcat.match_coord(coords, tol, **kwargs)
+        # Check for bad matches
+        bad = ids < 0
+        if np.sum(bad) > 0:
+            print("These input coords have no match in the main catalog")
+            print(coords[bad])
+            raise IOError("Increase the tolerance for the search or reconsider your query")
+        # Check that all are within the dataset
+        flag = self.idb.survey_dict[dataset]
+        pdb.set_trace()
+
+
+    def allspec_at_coord(self, coord, tol=0.5*u.arcsec, isurvey=None, **kwargs):
+        """ Radial search for spectra from all data sets for a given coordinate
         Best for single searches (i.e. slower than other approaches)
 
         Parameters
         ----------
         coord : str, tuple, SkyCoord
           See linetools.utils.radec_to_coord
+          Only one coord may be input
         tol : Angle or Quantity, optional
           Search radius
         isurvey : str or list, optional
-          One or more surveys to include
+          One or more surveys to restrict to
         kwargs :
           fed to grab_spec
 
@@ -78,7 +110,7 @@ class SpecDB(object):
         Returns
         -------
         spec : XSpectrum1D or list of XSpectrum1D
-          One or more spectra satisfying the radial search
+          One spectrum per survey containing the source
         meta : Table or list of Tables
           Meta data related to spec
 
@@ -86,19 +118,23 @@ class SpecDB(object):
         # Catalog
         ids = self.qcat.radial_search(coord, tol, **kwargs)
         if len(ids) == 0:
-            warnings.warn("No sources found at your coordinate.  Returning none")
+            warnings.warn("No sources found at your coordinate within tol={:g}.  Returning None".format(tol))
             return None, None
         elif len(ids) > 1:
-            warnings.warn("Found multiple sources.  Hope you expected that.")
+            warnings.warn("Found multiple sources in the catalog. Taking the closest one")
+        idv = ids[0]
 
-        # Surveys
+        # Restrict surveys searched according to user input
         if isurvey is None:
             surveys = self.qcat.surveys
         else:
             surveys = self.qcat.in_surveys(isurvey)
 
+        # Overlapping surveys
+        self.qcat.surveys_with_IDs(idv, isurvey=surveys)
+
         # Load spectra
-        spec, meta = self.idb.grab_spec(surveys, ids, **kwargs)
+        spec, meta = self.idb.grab_spec(surveys, idv, **kwargs)
         return spec, meta
 
     def __getattr__(self, k):

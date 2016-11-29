@@ -63,7 +63,7 @@ def main(args, unit_test=False, **kwargs):
     # Grab
     print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
                                               scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
-    all_spec, all_meta = Specdb.spec_from_coord(scoord, isurvey=surveys)
+    all_spec, all_meta = Specdb.allspec_for_coord(scoord, isurvey=surveys)
 
     # Outcome
     if len(all_meta) == 0:
