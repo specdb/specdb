@@ -33,7 +33,6 @@ def test_allspec_from_coord(igmsp):
     spec_list, meta_list = igmsp.allspec_at_coord((0.0019, 17.7737))
     assert len(spec_list) == 1
     assert meta_list[0]['PLATE'][0] == 6173
-    pytest.set_trace()
 
 
 def test_coords_to_spec(igmsp):
