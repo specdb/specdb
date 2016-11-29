@@ -232,7 +232,7 @@ class QueryCatalog(object):
         Returns
         -------
         idx : int array
-          Indices corresponding to match in order of increasing separation
+          Catalog IDs corresponding to match in order of increasing separation
           Returns an empty array if there is no match
         """
         if not isinstance(radius, (Angle, Quantity)):

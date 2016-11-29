@@ -31,7 +31,7 @@ def igmsp():
 
 def test_radial_search(igmsp):
     # One match
-    idx = igmsp.qcat.radial_search((0.038604,15.298477), 1*u.arcsec)
+    idx = igmsp.qcat.radial_search((0.0019,17.7737), 1*u.arcsec)
     assert idx >= 0
     # Blank
     idx = igmsp.qcat.radial_search((10.038604,55.298477), 1*u.arcsec)
@@ -39,7 +39,14 @@ def test_radial_search(igmsp):
     # Multiple (insure rank order)
     icoord = SkyCoord(ra=0.0055, dec=-1.5, unit='deg')
     idxm = igmsp.qcat.radial_search(icoord, 1*u.deg)
-    coord = SkyCoord(ra=igmsp.qcat.cat['RA'][idxm], dec=igmsp.qcat.cat['DEC'][idxm], unit='deg')
+    # Test
+    ras = []
+    decs = []
+    for ii in idxm:
+        mt = np.where(igmsp.cat['IGM_ID'] == ii)[0]
+        ras.append(igmsp.cat['RA'][mt][0])
+        decs.append(igmsp.cat['DEC'][mt][0])
+    coord = SkyCoord(ra=ras, dec=decs, unit='deg')
     sep = icoord.separation(coord)
     isrt = np.argsort(sep)
     assert isrt[0] == 0
@@ -51,12 +58,12 @@ def test_radial_search(igmsp):
 
 def test_match_coord(igmsp):
     # Single
-    coord = SkyCoord(ra=0.038604, dec=15.298477, unit='deg')
+    coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
     #
     idx = igmsp.qcat.match_coord(coord)
     assert idx[0] >= 0
     # Multiple
-    coords = SkyCoord(ra=[0.038604]*2, dec=[15.298477]*2, unit='deg')
+    coords = SkyCoord(ra=[0.0019]*2, dec=[17.7737]*2, unit='deg')
     idxs = igmsp.qcat.match_coord(coords)
     assert len(idxs) == 2
 

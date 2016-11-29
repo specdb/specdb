@@ -27,8 +27,17 @@ def igmsp():
     igmsp = IgmSpec(db_file=db_file)
     return igmsp
 
+
 def test_allspec_from_coord(igmsp):
     # One match
-    spec, meta = igmsp.allspec_at_coord((0.038604,15.298477))
-    pytest.set_trace()
+    spec_list, meta_list = igmsp.allspec_at_coord((0.0019, 17.7737))
+    assert len(spec_list) == 1
+    assert meta_list[0]['PLATE'][0] == 6173
 
+
+def test_coords_to_spec(igmsp):
+    coords = SkyCoord(ra=[0.0028, 0.0019], dec=[14.9747, 17.77374], unit='deg')
+    spec, meta = igmsp.coords_to_spectra(coords, 'BOSS_DR12')
+    # Test
+    assert spec.nspec == 2
+    assert meta['PLATE'][0] == 6177

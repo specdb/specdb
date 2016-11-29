@@ -95,7 +95,6 @@ class SpecDB(object):
         # Grab and return
         return self.idb.grab_spec(dataset, ids)
 
-
     def allspec_at_coord(self, coord, tol=0.5*u.arcsec, isurvey=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
         Best for single searches (i.e. slower than other approaches)
@@ -140,7 +139,6 @@ class SpecDB(object):
         gd_surveys = self.qcat.surveys_with_IDs(idv, isurvey=surveys)
 
         # Load spectra
-        pdb.set_trace()
         spec, meta = self.idb.grab_spec(gd_surveys, idv, **kwargs)
         return spec, meta
 
@@ -211,6 +209,17 @@ class IgmSpec(SpecDB):
         db_file = fils[-1]  # Should grab the latest
         # Return
         return db_file
+
+    def grab_myers(self):
+        """ Returns the Myers quasar catalog as an astropy Table
+
+        Returns
+        -------
+        myers : Table
+
+        """
+        from astropy.table import Table
+        return Table(self.idb.hdf['quasars'].value)
 
     def __repr__(self):
         txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
