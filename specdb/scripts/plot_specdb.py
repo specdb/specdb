@@ -59,7 +59,7 @@ def main(args, unit_test=False, **kwargs):
         #print("Choose another survey from this list (as you wish): {}".format(surveys))
 
     if args.meta:
-        Specdb.idb.show_meta()
+        Specdb.idb.show_meta(imeta=meta)
 
     # Load spectra
     spec.select = args.select
