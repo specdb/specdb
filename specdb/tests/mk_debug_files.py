@@ -19,7 +19,7 @@ import specdb
 
 
 
-def igmspec_file(version='v02', nspec=30):
+def igmspec_file(version='v02', nspec=5):
     """ Build a debug file from IGMspec
     Returns
     -------
@@ -34,7 +34,7 @@ def igmspec_file(version='v02', nspec=30):
     flags = igmsp.cat['flag_survey'].data
     all_IDs = []
     for dset in dsets:
-        sflag = igmsp.idb.survey_dict[dset]
+        sflag = igmsp.group_dict[dset]
         query = (flags % (sflag*2)) >= sflag
         gdi = np.where(query)[0]
         # Take nspec
@@ -43,7 +43,8 @@ def igmspec_file(version='v02', nspec=30):
         # Grab data
         if dset == '2QZ':
             pdb.set_trace()
-        spec, meta = igmsp.idb.grab_spec(dset, keep)  # Only grabs the first spectrum in table for each ID
+        rows = igmsp[dset].ids_to_allrows(keep)   # Match to all rows
+        spec, meta = igmsp[dset].grab_specmeta(rows)  # Grab
         # Group
         grp = hdf.create_group(dset)
         spec_set = hdf[dset].create_dataset('spec', data=spec.data, chunks=True, compression='gzip')
@@ -53,12 +54,12 @@ def igmspec_file(version='v02', nspec=30):
     hdf['catalog'] = igmsp.qcat.cat[IDs]
     hdf['catalog'].attrs['NAME'] = 'igmspec'
     hdf['catalog'].attrs['EPOCH'] = 2000.
-    zpri = igmsp.idb.hdf['catalog'].attrs['Z_PRIORITY']
+    zpri = igmsp.hdf['catalog'].attrs['Z_PRIORITY']
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['VERSION'] = version
     hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
     hdfkeys = hdf.keys()
-    sdict = igmsp.idb.survey_dict.copy()
+    sdict = igmsp.group_dict.copy()
     for dkey in sdict.keys():
         if dkey not in hdfkeys:
             sdict.pop(dkey, None)

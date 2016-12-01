@@ -49,7 +49,10 @@ class SpecDB(object):
         self.qcat = QueryCatalog(self.hdf, **kwargs)
         self.cat = self.qcat.cat # For convenience
         self.qcat.verbose = verbose
-        # Group dict
+        self.groups = self.qcat.groups
+        self.group_dict = self.qcat.group_dict
+        self.idkey = self.qcat.idkey
+        # Groups
         self._gdict = {}
         #self.idb = InterfaceDB(db_file, **kwargs)
         #self.idb.idkey = self.qcat.idkey
@@ -90,9 +93,7 @@ class SpecDB(object):
             print("Using {:s} for the DB file".format(db_file))
         self.hdf = h5py.File(db_file,'r')
         self.db_file = db_file
-        self.group_IDs = None
         #
-        self.group_dict = None
 
     def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, all_spec=False, **kwargs):
         """ Grab spectra for input coords from input dataset
@@ -184,7 +185,13 @@ class SpecDB(object):
         gd_groups = self.qcat.groups_with_IDs(idv, igroup=groups)
 
         # Load spectra
-        speclist, metalist = self.idb.grab_spec(gd_groups, idv, **kwargs)
+        speclist, metalist = [], []
+        for group in gd_groups:
+            rows = self[group].ids_to_rows(idv)
+            spec, meta = self[group].grab_spec(rows, **kwargs)
+            # Fill
+            speclist.append(spec)
+            metalist.append(meta)
         return speclist, metalist
 
     def __getitem__(self, key):
@@ -208,7 +215,8 @@ class SpecDB(object):
             if key not in self.groups:
                 raise IOError("Input group={:s} is not in the database".format(key))
             else: # Load
-                self._gdict[key] = InterfaceGroup(self.hdf, key)
+                self._gdict[key] = InterfaceGroup(self.hdf, key, idkey=self.idkey)
+                return self._gdict[key]
 
     def __repr__(self):
         txt = '<{:s}:  specDB_file={:s} with {:d} sources\n'.format(self.__class__.__name__,

@@ -14,6 +14,8 @@ from astropy.table import Table
 
 from linetools.spectra.xspectrum1d import XSpectrum1D
 
+from specdb.cat_utils import match_ids
+
 
 class InterfaceGroup(object):
     """ A Class for interfacing with the DB
@@ -32,7 +34,7 @@ class InterfaceGroup(object):
       Maximum memory allowed for the Python session, in Gb
     """
 
-    def __init__(self, hdf, group, maximum_ram=10., verbose=True, **kwargs):
+    def __init__(self, hdf, group, idkey, maximum_ram=10., verbose=True, **kwargs):
         """
         Parameters
         ----------
@@ -44,6 +46,7 @@ class InterfaceGroup(object):
         # Init
         self.hdf = hdf
         self.group = group
+        self.idkey = idkey
         self.verbose = verbose
         # Load meta
         self.load_meta(group, **kwargs)
@@ -68,49 +71,74 @@ class InterfaceGroup(object):
             self.meta['WV_MIN'].format = '6.1f'
             self.meta['WV_MAX'].format = '6.1f'
 
-
-    def rows_from_ids(self, IDs):
-        """ Grab the rows in a dataset matching input IDs
-        All IDs *must* occur within the survey
-        All of the rows matching the input IDs are returned
+    def ids_to_firstrow(self, IDs):
+        """ Given an input set of IDs, pass back the array of rows that
+        match.  If a given source has more than one entry, only the first
+        one is returned.
 
         Parameters
         ----------
-        meta : Table
-          Meta data for the dataset (taken previously from hdf DB file)
+        IDs : int or ndarray
+          ID values
+          Converted to array if int
+
+        Returns
+        -------
+        rows : int ndarray
+          Array of indices in meta table, that correspond to the input IDs (in order)
+        """
+        # Checking
+        if isinstance(IDs, int):
+            IDs = np.array([IDs])  # Insures meta and other arrays are proper
+        # Check that input IDs are all covered
+        chk_survey = np.in1d(IDs, self.meta[self.idkey])
+        if np.sum(chk_survey) != IDs.size:
+            raise IOError("Not all of the input IDs are located in requested group: {:s}".format(self.group))
+        # All matching rows
+        match_group = np.in1d(self.meta[self.idkey], IDs)
+        # Find indices of input IDs in meta table -- first instance in meta only!
+        gdi = self.meta[self.idkey].data[match_group]
+        xsorted = np.argsort(gdi)
+        ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
+        indices = xsorted[ypos]  # Location in subset of meta table
+        # Store and return
+        #self.sub_meta = self.meta[match_survey][indices] # only the first entry in table
+        #self.indices = indices
+        rows = np.where(match_group)[0][indices]
+        return rows
+
+    def ids_to_allrows(self, IDs):
+        """ Identify all the rows in a dataset matching input IDs
+        All of the rows matching the input IDs are returned
+        The current implementation checks that all sources exist
+        within the data group.
+
+        Parameters
+        ----------
         IDs : int or ndarray
           ID values
           Converted to array if int
 
         Returns
         ------
-        match_survey : ndarray
-          bool array of meta rows from the survey matching IDs
-        indices :
-        Also fills self.meta and self.indices and self.survey_bool
-
+        rows : int ndarray
+          Array of all rows in meta table that match to the input IDs
+          Ordered as in meta table
+          This array will exceed the size of the input array if there
+          is more than one spectrum per source
         """
-        # For checking
+        # Checking
         if isinstance(IDs, int):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check that input IDs are all covered
         chk_survey = np.in1d(IDs, self.meta[self.idkey])
         if np.sum(chk_survey) != IDs.size:
-            raise IOError("Not all of the input IDs are located in your survey")
-        # Find rows to grab (bool array)
+            raise IOError("Not all of the input IDs are located in requested group: {:s}".format(self.group))
+        # Find rows (bool array)
         match_survey = np.in1d(self.meta[self.idkey], IDs)
-        # Find indices of input IDs in meta table -- first instance in meta only!
-        gdi = self.meta[self.idkey].data[match_survey]
-        xsorted = np.argsort(gdi)
-        ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
-        indices = xsorted[ypos] # Location in subset of meta table (spectra to be grabbed) of the input IDs
-        # Store and return
-        self.survey_bool = match_survey
-        self.sub_meta = self.meta[match_survey][indices] # only the first entry in table
-        self.indices = indices
-        return match_survey
+        return np.where(match_survey)[0]
 
-    def cut_meta(self, IDs, reformat=True):
+    def cut_meta(self, IDs, first=True):
         """ Grab meta data
         Parameters
         ----------
@@ -123,13 +151,54 @@ class InterfaceGroup(object):
 
         """
         # Grab meta table
-        # Cut on IDs?
-        _ = self.meta_rows_from_ids(IDs)
-        cut_meta = self.meta[self.survey_bool]
+        if first:
+            rows = self.ids_to_firstrow(IDs)
+        else:
+            rows = self.ids_to_allrows(IDs)
+        cut_meta = self.meta[rows]
         return cut_meta
 
-    def grab_spec(self, survey, IDs, verbose=None, **kwargs):
-        pass
+    def grab_specmeta(self, rows, verbose=None, **kwargs):
+        """
+        Parameters
+        ----------
+        rows : int or ndarray
+        verbose
+        kwargs
+
+        Returns
+        -------
+        spec : XSpectrum1D
+          Spectra requested, ordered by the rows
+        meta : Table
+          Meta table, ordered by the rows
+        """
+        if isinstance(rows, int):
+            rows = np.array([rows])  # Insures meta and other arrays are proper
+        if verbose is None:
+            verbose = self.verbose
+        # Check memory
+        if self.stage_data(rows, **kwargs):
+            if verbose:
+                print("Loaded spectra")
+            # Load
+            msk = np.array([False]*len(self.meta))
+            msk[rows] = True
+            tmp_data = self.hdf[self.group]['spec'][msk]
+            # Replicate and sort according to input rows
+            idx = match_ids(rows, np.where(msk)[0])
+            data = tmp_data[idx]
+        else:
+            print("Staging failed..  Not returning spectra")
+            return
+        # Generate XSpectrum1D
+        if 'co' in data.dtype.names:
+            co = data['co']
+        else:
+            co = None
+        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking='edges')
+        # Return
+        return spec, self.meta[rows]
 
     def loop_grab_spec(self, survey, IDs, verbose=None, **kwargs):
         """ Grab spectra using staged IDs
@@ -208,16 +277,14 @@ class InterfaceGroup(object):
         imeta[mkeys].pprint(max_width=120)
         return
 
-    def stage_data(self, survey, IDs, verbose=None, **kwargs):
+    def stage_data(self, rows, verbose=None, **kwargs):
         """ Stage the spectra for serving
         Mainly checks the memory
 
         Parameters
         ----------
-        survey : str
-          Name of the Survey
-        IDs : int or ndarray
-          ID values
+        rows : ndarray
+          Indices of desired data
 
         Returns
         -------
@@ -228,24 +295,15 @@ class InterfaceGroup(object):
         """
         if verbose is None:
             verbose = self.verbose
-        # Checks
-        if survey not in self.hdf.keys():
-            if survey == 'BOSS_DR12':
-                return True
-            else:
-                raise IOError("Survey {:s} not in your DB file {:s}".format(survey, self.db_file))
-        match_survey = self.grab_ids(survey, IDs, **kwargs)
-        # Meta?
-        nhits = np.sum(match_survey)
         # Memory check (approximate; ignores meta data)
-        spec_Gb = self.hdf[survey]['spec'][0].nbytes/1e9  # Gb
-        new_memory = spec_Gb*nhits
+        spec_Gb = self.hdf[self.group]['spec'][0].nbytes/1e9  # Gb
+        new_memory = spec_Gb*rows.size
         if new_memory + self.memory_used > self.memory_max:
             warnings.warn("This request would exceed your maximum memory limit of {:g} Gb".format(self.memory_max))
             return False
         else:
             if verbose:
-                print("Staged {:d} spectra totalling {:g} Gb".format(nhits, new_memory))
+                print("Staged {:d} spectra totalling {:g} Gb".format(len(rows), new_memory))
             return True
 
 
