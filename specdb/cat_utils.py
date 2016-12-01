@@ -2,12 +2,40 @@
 """
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+
+import numpy as np
 import h5py
 import pdb
 
 from astropy.table import Table
 
 from specdb import defs
+
+
+def match_ids(IDs, tbl_IDs):
+    """ Match input IDs to another array of IDs (usually in a table)
+
+    Parameters
+    ----------
+    IDs : ndarray
+    tbl_IDs : ndarray
+
+    Returns
+    -------
+
+    """
+    rows = -1 * np.ones_like(IDs).astype(int)
+    # Find which IDs are in tbl_IDs
+    in_tbl = np.in1d(IDs, tbl_IDs)
+    rows[~in_tbl] = -1
+    #
+    IDs_intbl = IDs[in_tbl]
+    # Find indices of input IDs in meta table -- first instance in meta only!
+    xsorted = np.argsort(tbl_IDs)
+    ypos = np.searchsorted(tbl_IDs, IDs_intbl, sorter=xsorted)
+    indices = xsorted[ypos]
+    rows[in_tbl] = indices
+    return rows
 
 def flag_to_surveys(flag, survey_dict):
     """ Convert flag_survey to list of surveys

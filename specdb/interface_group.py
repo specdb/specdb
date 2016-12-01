@@ -1,4 +1,4 @@
-""" Module to interface with hdf5 database for IGMspec
+""" Module to interface with an hdf5 data group in specdb
 """
 from __future__ import print_function, absolute_import, division, unicode_literals
 
@@ -15,7 +15,7 @@ from astropy.table import Table
 from linetools.spectra.xspectrum1d import XSpectrum1D
 
 
-class InterfaceDB(object):
+class InterfaceGroup(object):
     """ A Class for interfacing with the DB
 
     Parameters
@@ -30,11 +30,9 @@ class InterfaceDB(object):
     hdf : pointer to DB
     maximum_ram : float, optonal
       Maximum memory allowed for the Python session, in Gb
-    survey_bool : bool array
-      Used to grab data from a given survey
     """
 
-    def __init__(self, db_file, maximum_ram=10.,verbose=True):
+    def __init__(self, hdf, group, maximum_ram=10., verbose=True, **kwargs):
         """
         Parameters
         ----------
@@ -44,41 +42,34 @@ class InterfaceDB(object):
 
         """
         # Init
+        self.hdf = hdf
+        self.group = group
+        self.verbose = verbose
+        # Load meta
+        self.load_meta(group, **kwargs)
+        # Memory
         self.memory_used = 0.
         self.memory_warning = 5.  # Gb
         self.memory_max = 10.  # Gb
-        self.hdf = None
-        self.verbose = verbose
-        # Open DB
-        self.open_db(db_file)
-        # Check memory
         self.update()
 
-    def open_db(self, db_file):
-        """ Open the DB file
+    def load_meta(self, group, reformat=True):
+        """ Load the meta data as a Table
         Parameters
         ----------
-        db_file : str
-
-        Returns
-        -------
-
+        group : str
         """
-        import json
-        #
-        if self.verbose:
-            print("Using {:s} for the DB file".format(db_file))
-        self.hdf = h5py.File(db_file,'r')
-        self.db_file = db_file
-        self.survey_IDs = None
-        #
-        self.survey_dict = json.loads(self.hdf['catalog'].attrs['SURVEY_DICT'])
-        surveys = self.survey_dict.keys()
-        self.surveys = surveys
-        if self.verbose:
-            print("Available surveys: {}".format(self.surveys))
+        self.meta = Table(self.hdf[group+'/meta'].value)
+        # Reformat
+        if reformat:
+            self.meta['RA'].format = '7.3f'
+            self.meta['DEC'].format = '7.3f'
+            self.meta['zem'].format = '6.3f'
+            self.meta['WV_MIN'].format = '6.1f'
+            self.meta['WV_MAX'].format = '6.1f'
 
-    def meta_rows_from_ids(self, meta, IDs):
+
+    def rows_from_ids(self, IDs):
         """ Grab the rows in a dataset matching input IDs
         All IDs *must* occur within the survey
         All of the rows matching the input IDs are returned
@@ -103,28 +94,27 @@ class InterfaceDB(object):
         if isinstance(IDs, int):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check that input IDs are all covered
-        chk_survey = np.in1d(IDs, meta[self.idkey])
+        chk_survey = np.in1d(IDs, self.meta[self.idkey])
         if np.sum(chk_survey) != IDs.size:
             raise IOError("Not all of the input IDs are located in your survey")
         # Find rows to grab (bool array)
-        match_survey = np.in1d(meta[self.idkey], IDs)
+        match_survey = np.in1d(self.meta[self.idkey], IDs)
         # Find indices of input IDs in meta table -- first instance in meta only!
-        gdi = meta[self.idkey].data[match_survey]
+        gdi = self.meta[self.idkey].data[match_survey]
         xsorted = np.argsort(gdi)
         ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
         indices = xsorted[ypos] # Location in subset of meta table (spectra to be grabbed) of the input IDs
         # Store and return
         self.survey_bool = match_survey
-        self.meta = meta[match_survey][indices] # only the first entry in table
+        self.sub_meta = self.meta[match_survey][indices] # only the first entry in table
         self.indices = indices
         return match_survey
 
-    def grab_meta(self, survey, IDs=None, reformat=True):
-        """ Grab meta data for survey
+    def cut_meta(self, IDs, reformat=True):
+        """ Grab meta data
         Parameters
         ----------
-        survey : str
-        IDs : int or array, optional
+        IDs : int or array
           Return full table if None
 
         Returns
@@ -133,22 +123,13 @@ class InterfaceDB(object):
 
         """
         # Grab meta table
-        meta = Table(self.hdf[survey]['meta'].value)
         # Cut on IDs?
-        if IDs is not None:
-            _ = self.meta_rows_from_ids(meta, IDs)
-            meta = meta[self.survey_bool]
-        self.meta = meta
-        if reformat:
-            self.meta['RA'].format = '7.3f'
-            self.meta['DEC'].format = '7.3f'
-            self.meta['zem'].format = '6.3f'
-            self.meta['WV_MIN'].format = '6.1f'
-            self.meta['WV_MAX'].format = '6.1f'
-
-        return meta
+        _ = self.meta_rows_from_ids(IDs)
+        cut_meta = self.meta[self.survey_bool]
+        return cut_meta
 
     def grab_spec(self, survey, IDs, verbose=None, **kwargs):
+        pass
 
     def loop_grab_spec(self, survey, IDs, verbose=None, **kwargs):
         """ Grab spectra using staged IDs
@@ -282,9 +263,6 @@ class InterfaceDB(object):
             warnings.warn("Your memory usage -- {:g} Gb -- is high".format(self.memory_used))
 
     def __repr__(self):
-        txt = '<{:s}:  DB_file={:s} \n'.format(self.__class__.__name__,
-                                            self.db_file)
-        # Surveys
-        txt += '   Loaded surveys are {} \n'.format(self.surveys)
-        txt += '>'
+        txt = '<{:s}:  Group={:s} \n'.format(self.__class__.__name__,
+                                            self.group)
         return (txt)

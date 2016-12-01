@@ -5,13 +5,18 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import pdb
 import numpy as np
 import warnings
+import h5py
 
 from astropy import units as u
 from astropy.table import Table
 
 from specdb.query_catalog import QueryCatalog
-from specdb.interface_db import InterfaceDB
+from specdb.interface_group import InterfaceGroup
 
+try:
+    basestring
+except NameError:  # For Python 3
+    basestring = str
 
 class SpecDB(object):
     """ The primary class of this Repository
@@ -28,7 +33,7 @@ class SpecDB(object):
     idb : InterfaceDB
     """
 
-    def __init__(self, skip_test=True, db_file=None, verbose=None, **kwargs):
+    def __init__(self, skip_test=True, db_file=None, verbose=False, **kwargs):
         """
         """
         if db_file is None:
@@ -38,27 +43,56 @@ class SpecDB(object):
                 raise IOError("DB not found. Please either check the corresponding environmental "
                               "variable or directly provide the db_file")
         # Init
-        self.qcat = QueryCatalog(db_file, **kwargs)
+        self.verbose = verbose
+        self.open_db(db_file)
+        # Catalog
+        self.qcat = QueryCatalog(self.hdf, **kwargs)
+        self.cat = self.qcat.cat # For convenience
         self.qcat.verbose = verbose
-        self.idb = InterfaceDB(db_file, **kwargs)
-        self.idb.idkey = self.qcat.idkey
-        self.idb.verbose = verbose
+        # Group dict
+        self._gdict = {}
+        #self.idb = InterfaceDB(db_file, **kwargs)
+        #self.idb.idkey = self.qcat.idkey
+        #self.idb.verbose = verbose
         # Name, Creation date
         try:
-            print("Database is {:s}".format(self.idb.hdf['catalog'].attrs['NAME']))
+            print("Database is {:s}".format(self.cat.attrs['NAME']))
         except:
             pass
         else:
-            print("Created on {:s}".format(self.idb.hdf['catalog'].attrs['CREATION_DATE']))
+            print("Created on {:s}".format(self.cat.attrs['CREATION_DATE']))
         # Checks
+        '''
         assert self.idb.db_file == self.qcat.db_file
         if not skip_test:
-            for survey in self.idb.surveys:
+            for group in self.idb.groups:
                 try:
-                    assert survey in self.qcat.surveys
+                    assert group in self.qcat.groups
                 except AssertionError:
-                    print("Missing {:s}".format(survey))
+                    print("Missing {:s}".format(group))
                     raise IOError
+        '''
+
+    def open_db(self, db_file):
+        """ Open the DB file
+
+        Parameters
+        ----------
+        db_file : str
+
+        Returns
+        -------
+
+        """
+        import json
+        #
+        if self.verbose:
+            print("Using {:s} for the DB file".format(db_file))
+        self.hdf = h5py.File(db_file,'r')
+        self.db_file = db_file
+        self.group_IDs = None
+        #
+        self.group_dict = None
 
     def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, all_spec=False, **kwargs):
         """ Grab spectra for input coords from input dataset
@@ -88,7 +122,7 @@ class SpecDB(object):
         """
         if all_spec:
             meta = Table(self.hdf[dataset]['meta'].value)  # This could be too slow..
-            meta.meta = dict(survey=survey)
+            meta.meta = dict(group=group)
         else:
             # Match to catalog
             ids = self.qcat.match_coord(coords, tol, dataset=dataset, **kwargs)
@@ -100,13 +134,13 @@ class SpecDB(object):
                 raise IOError("Increase the tolerance for the search or reconsider your query")
             bad_query = ids == -2
             if np.sum(bad_query) > 0:
-                print("These input coords are not in the input survey {:s}".format(dataset))
+                print("These input coords are not in the input group {:s}".format(dataset))
                 print(coords[bad_query])
                 raise IOError("Try again")
             # Grab and return
             return self.idb.grab_spec(dataset, ids)
 
-    def allspec_at_coord(self, coord, tol=0.5*u.arcsec, isurvey=None, **kwargs):
+    def allspec_at_coord(self, coord, tol=0.5*u.arcsec, igroup=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
         Best for single searches (i.e. slower than other approaches)
 
@@ -117,8 +151,8 @@ class SpecDB(object):
           Only one coord may be input
         tol : Angle or Quantity, optional
           Search radius
-        isurvey : str or list, optional
-          One or more surveys to restrict to
+        igroup : str or list, optional
+          One or more groups to restrict to
         kwargs :
           fed to grab_spec
 
@@ -126,7 +160,7 @@ class SpecDB(object):
         Returns
         -------
         speclist : list of XSpectrum1D
-          One spectrum per survey containing the source
+          One spectrum per group containing the source
         metalist : list of Tables
           Meta data related to spec
 
@@ -140,42 +174,47 @@ class SpecDB(object):
             warnings.warn("Found multiple sources in the catalog. Taking the closest one")
         idv = ids[0]
 
-        # Restrict surveys searched according to user input
-        if isurvey is None:
-            surveys = self.qcat.surveys
+        # Restrict groups searched according to user input
+        if igroup is None:
+            groups = self.qcat.groups
         else:
-            surveys = self.qcat.in_surveys(isurvey)
+            groups = self.qcat.in_groups(igroup)
 
-        # Overlapping surveys
-        gd_surveys = self.qcat.surveys_with_IDs(idv, isurvey=surveys)
+        # Overlapping groups
+        gd_groups = self.qcat.groups_with_IDs(idv, igroup=groups)
 
         # Load spectra
-        speclist, metalist = self.idb.grab_spec(gd_surveys, idv, **kwargs)
+        speclist, metalist = self.idb.grab_spec(gd_groups, idv, **kwargs)
         return speclist, metalist
 
-    def __getattr__(self, k):
-        """ Overload attributes using the underlying classes
+    def __getitem__(self, key):
+        """ Access the DB groups
 
         Parameters
         ----------
-        k
+        key : str
 
         Returns
         -------
 
         """
-        # Try DB first
+        # Check
+        if not isinstance(key, basestring):
+            raise IOError("Item must be str")
+        # Try to access the dict
         try:
-            return getattr(self.idb, k)
-        except AttributeError:
-            # Try qcat last
-            return getattr(self.qcat, k)
+            return self._gdict[key]
+        except KeyError:
+            if key not in self.groups:
+                raise IOError("Input group={:s} is not in the database".format(key))
+            else: # Load
+                self._gdict[key] = InterfaceGroup(self.hdf, key)
 
     def __repr__(self):
-        txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
+        txt = '<{:s}:  specDB_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
                                             self.db_file, len(self.cat))
         # Surveys
-        txt += '   Loaded surveys are {} \n'.format(self.surveys)
+        txt += '   Groups are {} \n'.format(self.groups)
         txt += '>'
         return (txt)
 
@@ -236,6 +275,6 @@ class IgmSpec(SpecDB):
         txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
                                                                  self.db_file, len(self.cat))
         # Surveys
-        txt += '   Loaded surveys are {} \n'.format(self.surveys)
+        txt += '   Loaded groups are {} \n'.format(self.groups)
         txt += '>'
         return (txt)

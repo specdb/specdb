@@ -73,19 +73,19 @@ def test_match_coord(igmsp):
     assert np.sum(idxs3 >= 0) == 0
 
 
-def test_ids_in_surveys(igmsp):
+def test_ids_in_groups(igmsp):
     # BOSS
-    IDs = igmsp.ids_in_surveys(['BOSS_DR12'])
+    IDs = igmsp.qcat.ids_in_groups(['BOSS_DR12'])
     assert IDs.size == 119
     assert IDs[0] == 0
     # BOSS and HD-LLS -- Both
-    IDs2 = igmsp.ids_in_surveys(['HD-LLS_DR1', 'GGG'], in_all=True)
+    IDs2 = igmsp.qcat.ids_in_groups(['HD-LLS_DR1', 'GGG'], in_all=True)
     assert IDs2.size == 1
     # BOSS and HD-LLS -- Either
-    IDs3 = igmsp.ids_in_surveys(['HD-LLS_DR1', 'GGG'])
+    IDs3 = igmsp.qcat.ids_in_groups(['HD-LLS_DR1', 'GGG'])
     assert IDs3.size == 59
     # With input IDs
-    IDs4 = igmsp.ids_in_surveys(['BOSS_DR12'], np.array([0,1]))
-    pytest.set_trace()
+    IDs4 = igmsp.qcat.ids_in_groups(['BOSS_DR12'], np.array([0,1]))
+    assert IDs4.size == 2
 
 

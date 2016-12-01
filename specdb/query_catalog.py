@@ -14,6 +14,8 @@ from astropy.coordinates import SkyCoord, match_coordinates_sky, Angle
 
 from linetools import utils as ltu
 
+from specdb.cat_utils import match_ids
+
 try:
     basestring
 except NameError:  # For Python 3
@@ -30,25 +32,24 @@ class QueryCatalog(object):
     ----------
     cat : Table
       Astropy Table holding the IGMspec catalog
-    surveys : list
-      List of surveys included in the catalog
+    groups : list
+      List of groups included in the catalog
     """
 
-    def __init__(self, db_file=None, maximum_ram=10.):
+    def __init__(self, hdf, maximum_ram=10., verbose=False):
         """
         Returns
         -------
 
         """
         # Init
-        self.cat = None
-        self.surveys = None
+        self.verbose = verbose
         # Load catalog
-        self.load_cat(db_file)
+        self.load_cat(hdf)
         # Setup
         self.setup()
 
-    def load_cat(self, db_file, idkey=None):
+    def load_cat(self, hdf, idkey=None):
         """ Open the DB catalog file
         Parameters
         ----------
@@ -63,8 +64,6 @@ class QueryCatalog(object):
         """
         import json
         #
-        print("Using {:s} for the catalog file".format(db_file))
-        hdf = h5py.File(db_file,'r')
         self.cat = Table(hdf['catalog'].value)
         # Set ID key
         self.idkey = idkey
@@ -74,82 +73,84 @@ class QueryCatalog(object):
                     if self.idkey is not None:
                         raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
                     self.idkey = key
-        self.db_file = db_file
         # Survey dict
-        self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
-        hdf.close()
+        self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
+        self.groups = list(self.group_dict.keys())
+        if self.verbose:
+            print("Available groups: {}".format(self.groups))
 
-    def in_surveys(self, input_surveys, return_list=True):
-        """ Return a list of input surveys that are in the DB
+    def in_groups(self, input_groups, return_list=True):
+        """ Return a list of input groups that are in the DB
 
         Parameters
         ----------
-        in_surveys : list or str
-          List of one or more surveys
+        in_groups : list or str
+          List of one or more groups
           If str, converted to list
-        surveys : list
-          List of surveys to compare against
+        groups : list
+          List of groups to compare against
         return_list : bool, optional
-          Return input survey(s) as a list?
+          Return input group(s) as a list?
 
         Returns
         -------
-        out_surveys : list
-          List of overlapping surveys between input and DB
+        out_groups : list
+          List of overlapping groups between input and DB
 
         """
         # Checks
-        if isinstance(input_surveys, basestring):
-            isurveys = [input_surveys]
-        elif isinstance(input_surveys, list):
-            isurveys = input_surveys
+        if not isinstance(input_groups, basestring):
+            igroups = [input_groups]
+        elif isinstance(input_groups, list):
+            igroups = input_groups
         else:
-            raise IOError("input_surveys must be str or list")
+            raise IOError("input_groups must be str or list")
         #
-        fsurveys = []
-        for isurvey in isurveys:
-            if isurvey in self.surveys:
-                fsurveys.append(isurvey)
+        fgroups = []
+        for igroup in input_groups:
+            if igroup in self.groups:
+                fgroups.append(igroup)
         # Return
-        return fsurveys
+        return fgroups
 
-    def ids_in_surveys(self, surveys, IDs=None, in_all=False):
+    def ids_in_groups(self, groups, IDs=None, in_all=False):
         """ Return a list of IDs of sources located in
-        one or more surveys.  If IDs is input, the subset
-        within the surveys is returned.
+        one or more groups.  If IDs is input, the subset
+        within the groups is returned.
 
         Default is to require the source occur in at least
-        one of the surveys.  Use in_all=True to require the
-        source be in each of the surveys.
+        one of the groups.  Use in_all=True to require the
+        source be in each of the groups.
 
         Parameters
         ----------
-        surveys : list
-          List of surveys to consider, e.g. ['BOSS-DR12', 'SDSS_DR7']
+        groups : list
+          List of groups to consider, e.g. ['BOSS-DR12', 'SDSS_DR7']
         IDs : ndarray, optional
           If not input, use the entire catalog of IDs
         in_all : bool, optional
-          Require that the source be within *all* of the input surveys
-          Default is to require it be within at least one survey
+          Require that the source be within *all* of the input groups
+          Default is to require it be within at least one group
 
         Returns
         -------
         gdIDs : int array
         """
         # Init
-        nsurvey = len(surveys)
+        ngroup = len(groups)
         if IDs is None:
             IDs = self.cat[self.idkey].data
         # Flags
-        fs = self.cat['flag_survey'][IDs].data
+        cat_rows = match_ids(IDs, self.cat[self.idkey].data)
+        fs = self.cat['flag_survey'][cat_rows].data
         msk = np.zeros_like(fs).astype(int)
-        for survey in surveys:
-            flag = self.survey_dict[survey]
-            # In the survey?
+        for group in groups:
+            flag = self.group_dict[group]
+            # In the group?
             query = (fs % (flag*2)) >= flag
             msk[query] += 1
         if in_all:
-            gd = msk == nsurvey
+            gd = msk == ngroup
         else:
             gd = msk >= 1
         gdIDs = IDs[gd]
@@ -190,7 +191,7 @@ class QueryCatalog(object):
         close = d2d < toler
         # Restrict to dataset?
         if dataset is not None:
-            sflag = self.survey_dict[dataset]
+            sflag = self.group_dict[dataset]
             flags = self.cat['flag_survey'][IDs]
             query = (flags % (sflag*2)) >= sflag
             IDs[~query] = -2
@@ -311,11 +312,11 @@ class QueryCatalog(object):
             if key not in cat_keys:
                 cat_keys += [key]
         self.cat[cat_keys][good].pprint(max_width=120)
-        # Print survey dict
+        # Print group dict
         print("----------")
         print("Survey key:")
-        for survey in self.surveys:
-            print("    {:s}: {:d}".format(survey, self.survey_dict[survey]))
+        for group in self.groups:
+            print("    {:s}: {:d}".format(group, self.group_dict[group]))
             #print("    {:s}: {:d}".format(survey, idefs.get_survey_dict()[survey]))
 
     def setup(self):
@@ -324,7 +325,6 @@ class QueryCatalog(object):
         -------
 
         """
-        from specdb import cat_utils as icu
         # SkyCoord
         self.coords = SkyCoord(ra=self.cat['RA'], dec=self.cat['DEC'], unit='deg')
         # Formatting the Table
@@ -332,50 +332,44 @@ class QueryCatalog(object):
         self.cat['DEC'].format = '8.4f'
         self.cat['zem'].format = '6.3f'
         self.cat['sig_zem'].format = '5.3f'
-        # Surveys
-        unif = np.unique(self.cat['flag_survey'])
-        all_surveys = []
-        for ifs in unif:
-            all_surveys += icu.flag_to_surveys(ifs, self.survey_dict)
-        self.surveys = list(np.unique(all_surveys))
 
-    def surveys_with_IDs(self, IDs, isurvey=None):
+    def groups_with_IDs(self, IDs, igroup=None):
         """
         Parameters
         ----------
         IDs: int or ndarray
-        isurvey : list, optional
-          List of surveys to consider
-          Default is the full list of surveys
+        igroup : list, optional
+          List of groups to consider
+          Default is the full list of groups
 
         Returns
         -------
-        gd_surveys : list
-          List of surveys containing all of the input IDs
+        gd_groups : list
+          List of groups containing all of the input IDs
 
         """
         if isinstance(IDs,int):
             nIDs = 1
         else:
             nIDs = IDs.size
-        if isurvey is None:
-            isurvey = self.surveys
+        if igroup is None:
+            igroup = self.groups
         #
         flags = self.cat['flag_survey'][IDs]
-        gd_surveys = []
-        for survey in isurvey:
-            sflag = self.survey_dict[survey]
-            # In the survey?
+        gd_groups = []
+        for group in igroup:
+            sflag = self.group_dict[group]
+            # In the group?
             query = (flags % (sflag*2)) >= sflag
             if np.sum(query) == nIDs:
-                gd_surveys.append(survey)
+                gd_groups.append(group)
         # Return
-        return gd_surveys
+        return gd_groups
 
     def __repr__(self):
-        txt = '<{:s}:  DB_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
-                                            self.db_file, len(self.cat))
+        txt = '<{:s}:  Catalog has {:d} sources\n'.format(self.__class__.__name__,
+                                            len(self.cat))
         # Surveys
-        txt += '   Loaded surveys are {} \n'.format(self.surveys)
+        txt += '   Loaded groups are {} \n'.format(self.groups)
         txt += '>'
         return (txt)
