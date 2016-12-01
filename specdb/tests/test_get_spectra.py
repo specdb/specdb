@@ -33,6 +33,12 @@ def test_allspec_from_coord(igmsp):
     spec_list, meta_list = igmsp.allspec_at_coord((0.0019, 17.7737))
     assert len(spec_list) == 1
     assert meta_list[0]['PLATE'][0] == 6173
+    # Multiple matches and spectra
+    from astropy.table import Table
+    ggg = Table(igmsp.idb.hdf['GGG/meta'].value)
+    hdlls = Table(igmsp.idb.hdf['HD-LLS_DR1/meta'].value)
+    pytest.set_trace()
+
 
 
 def test_coords_to_spec(igmsp):

@@ -43,7 +43,7 @@ def igmspec_file(version='v02', nspec=30):
         # Grab data
         if dset == '2QZ':
             pdb.set_trace()
-        spec, meta = igmsp.idb.grab_spec(dset, keep)
+        spec, meta = igmsp.idb.grab_spec(dset, keep)  # Only grabs the first spectrum in table for each ID
         # Group
         grp = hdf.create_group(dset)
         spec_set = hdf[dset].create_dataset('spec', data=spec.data, chunks=True, compression='gzip')

@@ -78,103 +78,79 @@ class InterfaceDB(object):
         if self.verbose:
             print("Available surveys: {}".format(self.surveys))
 
-    def grab_ids(self, survey, IDs, meta=None, match_meta=None,
-                 private=False):
-        """ Grab the rows in a survey matching input IDs
+    def meta_rows_from_ids(self, meta, IDs):
+        """ Grab the rows in a dataset matching input IDs
         All IDs *must* occur within the survey
+        All of the rows matching the input IDs are returned
 
         Parameters
         ----------
-        survey : str
-          Name of the Survey
+        meta : Table
+          Meta data for the dataset (taken previously from hdf DB file)
         IDs : int or ndarray
           ID values
           Converted to array if int
-        meta : Table, optional
-          Meta data for the survey (usually read from hdf)
-        match_meta : dict, optional
-          key/value to filter spec with, e.g. {'INSTR': HIRES}
-        private : bool, optional
-          Private DB?
 
         Returns
         ------
         match_survey : ndarray
           bool array of meta rows from the survey matching IDs
+        indices :
         Also fills self.meta and self.indices and self.survey_bool
 
         """
         # For checking
         if isinstance(IDs, int):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
-        # Check
-        if survey not in self.hdf.keys():
-            raise IOError("Survey {:s} not in your DB file {:s}".format(survey, self.db_file))
-        # Find IGMS_IDs indices in survey
-        if meta is None:
-            meta = Table(self.hdf[survey]['meta'].value)  # This could be too slow..
-            meta.meta = dict(survey=survey)
         # Check that input IDs are all covered
         chk_survey = np.in1d(IDs, meta[self.idkey])
         if np.sum(chk_survey) != IDs.size:
-            pdb.set_trace()
-            raise IOError("Not all input IDs are located in survey - {:s}".format(survey))
+            raise IOError("Not all of the input IDs are located in your survey")
         # Find rows to grab (bool array)
         match_survey = np.in1d(meta[self.idkey], IDs)
-        # Match meta?
-        if match_meta is not None:
-            for key,value in match_meta.items():
-                match_survey = match_survey & (meta[key] == value)
-        # Find indices of input IDs in meta table
+        # Find indices of input IDs in meta table -- first instance in meta only!
         gdi = meta[self.idkey].data[match_survey]
         xsorted = np.argsort(gdi)
         ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
         indices = xsorted[ypos] # Location in subset of meta table (spectra to be grabbed) of the input IDs
         # Store and return
         self.survey_bool = match_survey
-        self.meta = meta[match_survey][indices]
+        self.meta = meta[match_survey][indices] # only the first entry in table
         self.indices = indices
         return match_survey
 
-    def grab_meta(self, survey, IDs=None, show=True):
+    def grab_meta(self, survey, IDs=None, reformat=True):
         """ Grab meta data for survey
         Parameters
         ----------
-        survey : str or list
+        survey : str
         IDs : int or array, optional
           Return full table if None
-        show : bool, optional
-          Show the Meta table (print) in addition to returning
 
         Returns
         -------
         meta : Table(s)
 
         """
-        #
-        if isinstance(survey, list):
-            all_meta = []
-            for isurvey in survey:
-                all_meta.append(self.grab_meta(isurvey, IDs))
-            return all_meta
-        # Grab IDs then cut
+        # Grab meta table
         meta = Table(self.hdf[survey]['meta'].value)
+        # Cut on IDs?
         if IDs is not None:
-            _ = self.grab_ids(survey, IDs)
+            _ = self.meta_rows_from_ids(meta, IDs)
             meta = meta[self.survey_bool]
-        else:
-            return meta
         self.meta = meta
-        self.meta['RA'].format = '7.3f'
-        self.meta['DEC'].format = '7.3f'
-        self.meta['zem'].format = '6.3f'
-        self.meta['WV_MIN'].format = '6.1f'
-        self.meta['WV_MAX'].format = '6.1f'
+        if reformat:
+            self.meta['RA'].format = '7.3f'
+            self.meta['DEC'].format = '7.3f'
+            self.meta['zem'].format = '6.3f'
+            self.meta['WV_MIN'].format = '6.1f'
+            self.meta['WV_MAX'].format = '6.1f'
 
-        # Load and return
         return meta
 
     def grab_spec(self, survey, IDs, verbose=None, **kwargs):
+
+    def loop_grab_spec(self, survey, IDs, verbose=None, **kwargs):
         """ Grab spectra using staged IDs
         All IDs must occur in each of the surveys listed
 

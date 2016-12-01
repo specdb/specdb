@@ -113,37 +113,48 @@ class QueryCatalog(object):
         # Return
         return fsurveys
 
-    def cutid_on_surveys(self, surveys, IDs):
-        """ Find the subset of IDs within a survey list
+    def ids_in_surveys(self, surveys, IDs=None, in_all=False):
+        """ Return a list of IDs of sources located in
+        one or more surveys.  If IDs is input, the subset
+        within the surveys is returned.
+
+        Default is to require the source occur in at least
+        one of the surveys.  Use in_all=True to require the
+        source be in each of the surveys.
 
         Parameters
         ----------
         surveys : list
           List of surveys to consider, e.g. ['BOSS-DR12', 'SDSS_DR7']
-        IDs : int array
+        IDs : ndarray, optional
+          If not input, use the entire catalog of IDs
+        in_all : bool, optional
+          Require that the source be within *all* of the input surveys
+          Default is to require it be within at least one survey
 
         Returns
         -------
-
-        msk : bool array
-          True indicates in survey
-
+        gdIDs : int array
         """
-        good = np.in1d(self.cat[self.idkey], IDs)
-        cut_cat = self.cat[good]
+        # Init
+        nsurvey = len(surveys)
+        if IDs is None:
+            IDs = self.cat[self.idkey].data
         # Flags
-        fs = cut_cat['flag_survey']
-        msk = np.array([False]*len(cut_cat))
+        fs = self.cat['flag_survey'][IDs].data
+        msk = np.zeros_like(fs).astype(int)
         for survey in surveys:
             flag = self.survey_dict[survey]
             # In the survey?
             query = (fs % (flag*2)) >= flag
-            if np.sum(query) > 0:
-                msk[query] = True
-        gdIDs = cut_cat[self.idkey][msk]
+            msk[query] += 1
+        if in_all:
+            gd = msk == nsurvey
+        else:
+            gd = msk >= 1
+        gdIDs = IDs[gd]
         # Return
-        final = np.in1d(IDs, gdIDs)
-        return final
+        return gdIDs
 
     def match_coord(self, coords, dataset=None, toler=0.5*u.arcsec, verbose=True):
         """ Match an input set of SkyCoords to the catalog within a given radius
@@ -154,6 +165,8 @@ class QueryCatalog(object):
           Single or array
         toler : Angle or Quantity, optional
           Tolerance for a match
+        dataset : str, optional
+          Restrict to matches within a specific dataset
         verbose : bool, optional
 
         Returns
@@ -161,6 +174,7 @@ class QueryCatalog(object):
         indices : int array
           ID values
           -1 if no match within toler
+          -2 if within tol but not within input dataset
 
         """
         # Checks
@@ -168,16 +182,25 @@ class QueryCatalog(object):
             raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
         # Match
         idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
-        IDs = self.cat[self.idkey][idx]
+        # Generate
         if len(d2d) == 1:
-            IDs = np.array([IDs])
-        good = d2d < toler
-        if verbose:
-            print("Your search yielded {:d} matches".format(np.sum(good)))
-        # Deal with out of tolerance
-        IDs[~good] = -1
+            IDs = np.array([self.cat[self.idkey][idx]])
+        else:
+            IDs = self.cat[self.idkey][idx].data
+        close = d2d < toler
         # Restrict to dataset?
+        if dataset is not None:
+            sflag = self.survey_dict[dataset]
+            flags = self.cat['flag_survey'][IDs]
+            query = (flags % (sflag*2)) >= sflag
+            IDs[~query] = -2
+        # Deal with out of tolerance (after dataset)
+        IDs[~close] = -1
         # Finish
+        if verbose:
+            gd = IDs >= 0
+            print("Your search yielded {:d} matches from {:d} input coordinates".format(np.sum(gd),
+                                                                                        IDs.size))
         return IDs
 
     def pairs(self, sep, dv):

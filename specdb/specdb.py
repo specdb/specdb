@@ -7,6 +7,7 @@ import numpy as np
 import warnings
 
 from astropy import units as u
+from astropy.table import Table
 
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_db import InterfaceDB
@@ -59,41 +60,51 @@ class SpecDB(object):
                     print("Missing {:s}".format(survey))
                     raise IOError
 
-    def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, **kwargs):
+    def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, all_spec=False, **kwargs):
         """ Grab spectra for input coords from input dataset
+        Default mode is to grab the first spectrum that appears in the dataset
+        of a given source (i.e. in cases where more than 1 spectrum exists).
+        Use all_spec=True to return a list of XSpectrum1D objects and meta tables,
+        one per input source, of all the spectra for each source.
+
 
         Parameters
         ----------
         coords : SkyCoord
           Typically more than 1
         dataset : str
+        all_spec : bool, optional
         tol
         kwargs
 
         Returns
         -------
-        spec : XSpectrum1D
-          One object containing all of the spectra, in order of input coords
-        meta : Table
-          Meta data related to spectra
+        if all_spec:
+        else:
+          spec : XSpectrum1D
+            One object containing all of the spectra, in order of input coords
+          meta : Table
+            Meta data related to spectra
         """
-        # Match to catalog
-        ids = self.qcat.match_coord(coords, tol, **kwargs)
-        # Check for bad matches
-        bad = ids < 0
-        if np.sum(bad) > 0:
-            print("These input coords have no match in the main catalog")
-            print(coords[bad])
-            raise IOError("Increase the tolerance for the search or reconsider your query")
-        # Check that all are within the dataset
-        sflag = self.idb.survey_dict[dataset]
-        flags = self.qcat.cat['flag_survey'][ids]
-        query = (flags % (sflag*2)) >= sflag
-        if np.sum(query) != len(coords):
-            print("All of your input IDs are not in the input survey {:s}".format(dataset))
-            raise IOError("Try again")
-        # Grab and return
-        return self.idb.grab_spec(dataset, ids)
+        if all_spec:
+            meta = Table(self.hdf[dataset]['meta'].value)  # This could be too slow..
+            meta.meta = dict(survey=survey)
+        else:
+            # Match to catalog
+            ids = self.qcat.match_coord(coords, tol, dataset=dataset, **kwargs)
+            # Check for bad matches
+            bad_tol = ids == -1
+            if np.sum(bad_tol) > 0:
+                print("These input coords have no match in the main catalog")
+                print(coords[bad_tol])
+                raise IOError("Increase the tolerance for the search or reconsider your query")
+            bad_query = ids == -2
+            if np.sum(bad_query) > 0:
+                print("These input coords are not in the input survey {:s}".format(dataset))
+                print(coords[bad_query])
+                raise IOError("Try again")
+            # Grab and return
+            return self.idb.grab_spec(dataset, ids)
 
     def allspec_at_coord(self, coord, tol=0.5*u.arcsec, isurvey=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
@@ -114,9 +125,9 @@ class SpecDB(object):
 
         Returns
         -------
-        spec : list of XSpectrum1D
+        speclist : list of XSpectrum1D
           One spectrum per survey containing the source
-        meta : list of Tables
+        metalist : list of Tables
           Meta data related to spec
 
         """
@@ -139,8 +150,8 @@ class SpecDB(object):
         gd_surveys = self.qcat.surveys_with_IDs(idv, isurvey=surveys)
 
         # Load spectra
-        spec, meta = self.idb.grab_spec(gd_surveys, idv, **kwargs)
-        return spec, meta
+        speclist, metalist = self.idb.grab_spec(gd_surveys, idv, **kwargs)
+        return speclist, metalist
 
     def __getattr__(self, k):
         """ Overload attributes using the underlying classes
