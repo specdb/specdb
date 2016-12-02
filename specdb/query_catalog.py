@@ -157,7 +157,7 @@ class QueryCatalog(object):
         # Return
         return gdIDs
 
-    def match_coord(self, coords, dataset=None, toler=0.5*u.arcsec, verbose=True):
+    def match_coord(self, coords, group=None, toler=0.5*u.arcsec, verbose=True):
         """ Match an input set of SkyCoords to the catalog within a given radius
 
         Parameters
@@ -166,8 +166,8 @@ class QueryCatalog(object):
           Single or array
         toler : Angle or Quantity, optional
           Tolerance for a match
-        dataset : str, optional
-          Restrict to matches within a specific dataset
+        group : str, optional
+          Restrict to matches within a specific group
         verbose : bool, optional
 
         Returns
@@ -190,9 +190,10 @@ class QueryCatalog(object):
             IDs = self.cat[self.idkey][idx].data
         close = d2d < toler
         # Restrict to dataset?
-        if dataset is not None:
-            sflag = self.group_dict[dataset]
-            flags = self.cat['flag_survey'][IDs]
+        if group is not None:
+            sflag = self.group_dict[group]
+            cat_rows = match_ids(IDs, self.cat[self.idkey].data)
+            flags = self.cat['flag_survey'][cat_rows]
             query = (flags % (sflag*2)) >= sflag
             IDs[~query] = -2
         # Deal with out of tolerance (after dataset)
@@ -349,13 +350,13 @@ class QueryCatalog(object):
 
         """
         if isinstance(IDs,int):
-            nIDs = 1
-        else:
-            nIDs = IDs.size
+            IDs = np.array([IDs])
+        nIDs = IDs.size
         if igroup is None:
             igroup = self.groups
         #
-        flags = self.cat['flag_survey'][IDs]
+        cat_rows = match_ids(IDs, self.cat[self.idkey])
+        flags = self.cat['flag_survey'][cat_rows]
         gd_groups = []
         for group in igroup:
             sflag = self.group_dict[group]

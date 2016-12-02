@@ -95,7 +95,7 @@ class SpecDB(object):
         self.db_file = db_file
         #
 
-    def coords_to_spectra(self, coords, dataset, tol=0.5*u.arcsec, all_spec=False, **kwargs):
+    def coords_to_spectra(self, coords, group, tol=0.5*u.arcsec, all_spec=False, **kwargs):
         """ Grab spectra for input coords from input dataset
         Default mode is to grab the first spectrum that appears in the dataset
         of a given source (i.e. in cases where more than 1 spectrum exists).
@@ -107,7 +107,7 @@ class SpecDB(object):
         ----------
         coords : SkyCoord
           Typically more than 1
-        dataset : str
+        group : str
         all_spec : bool, optional
         tol
         kwargs
@@ -121,25 +121,26 @@ class SpecDB(object):
           meta : Table
             Meta data related to spectra
         """
+        # Match to catalog
+        ids = self.qcat.match_coord(coords, toler=tol, group=group, **kwargs)
+        # Check for bad matches
+        bad_tol = ids == -1
+        if np.sum(bad_tol) > 0:
+            print("These input coords have no match in the main catalog")
+            print(coords[bad_tol])
+            raise IOError("Increase the tolerance for the search or reconsider your query")
+        bad_query = ids == -2
+        if np.sum(bad_query) > 0:
+            print("These input coords are not in the input group {:s}".format(dataset))
+            print(coords[bad_query])
+            raise IOError("Try again")
+        # Rows
         if all_spec:
-            meta = Table(self.hdf[dataset]['meta'].value)  # This could be too slow..
-            meta.meta = dict(group=group)
+            rows = self[group].ids_to_allrows(ids)
         else:
-            # Match to catalog
-            ids = self.qcat.match_coord(coords, tol, dataset=dataset, **kwargs)
-            # Check for bad matches
-            bad_tol = ids == -1
-            if np.sum(bad_tol) > 0:
-                print("These input coords have no match in the main catalog")
-                print(coords[bad_tol])
-                raise IOError("Increase the tolerance for the search or reconsider your query")
-            bad_query = ids == -2
-            if np.sum(bad_query) > 0:
-                print("These input coords are not in the input group {:s}".format(dataset))
-                print(coords[bad_query])
-                raise IOError("Try again")
-            # Grab and return
-            return self.idb.grab_spec(dataset, ids)
+            rows = self[group].ids_to_firstrow(ids)
+        # Grab and return
+        return self[group].grab_specmeta(rows)
 
     def allspec_at_coord(self, coord, tol=0.5*u.arcsec, igroup=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
@@ -187,10 +188,11 @@ class SpecDB(object):
         # Load spectra
         speclist, metalist = [], []
         for group in gd_groups:
-            rows = self[group].ids_to_rows(idv)
-            spec, meta = self[group].grab_spec(rows, **kwargs)
+            rows = self[group].ids_to_allrows(idv)
+            spec, meta = self[group].grab_specmeta(rows, **kwargs)
             # Fill
             speclist.append(spec)
+            meta.group = group
             metalist.append(meta)
         return speclist, metalist
 

@@ -65,8 +65,8 @@ class InterfaceGroup(object):
         self.meta = Table(self.hdf[group+'/meta'].value)
         # Reformat
         if reformat:
-            self.meta['RA'].format = '7.3f'
-            self.meta['DEC'].format = '7.3f'
+            self.meta['RA'].format = '8.4f'
+            self.meta['DEC'].format = '8.4f'
             self.meta['zem'].format = '6.3f'
             self.meta['WV_MIN'].format = '6.1f'
             self.meta['WV_MAX'].format = '6.1f'

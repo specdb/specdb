@@ -34,11 +34,9 @@ def test_allspec_from_coord(igmsp):
     assert len(spec_list) == 1
     assert meta_list[0]['PLATE'][0] == 6173
     # Multiple matches and spectra
-    from astropy.table import Table
-    ggg = Table(igmsp.idb.hdf['GGG/meta'].value)
-    hdlls = Table(igmsp.idb.hdf['HD-LLS_DR1/meta'].value)
-    pytest.set_trace()
-
+    spec_list, meta_list = igmsp.allspec_at_coord('001115.23+144601.8',
+                                                  igroup=['GGG']) # Not in debug file for BOSS or SDSS
+    assert spec_list[0].nspec == 2
 
 
 def test_coords_to_spec(igmsp):
@@ -47,3 +45,7 @@ def test_coords_to_spec(igmsp):
     # Test
     assert spec.nspec == 2
     assert meta['PLATE'][0] == 6177
+    # Multiple spectra per group
+    coords = SkyCoord(ra=[2.8135, 16.5802], dec=[14.7672, 0.8065], unit='deg')
+    spec, meta = igmsp.coords_to_spectra(coords, 'GGG', all_spec=True)
+    assert spec.nspec == 4
