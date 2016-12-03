@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import h5py
 import numpy as np
 import pdb
+import warnings
 
 
 from astropy.table import Table
@@ -79,14 +80,77 @@ class QueryCatalog(object):
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
-    def find_ids_in_groups(self, groups, IDs=None, in_all=False):
+    def chk_in_group(self, IDs, group):
+        """ Check whether a set of IDs are in a specified group
+        Parameters
+        ----------
+        IDs : int ndarray
+        group : str
+
+        Returns
+        -------
+        answer : bool
+          True if all in group
+        in_out : bool ndarray
+          True/False for each ID
+
+        """
+        # Find rows in catalog
+        cat_rows = match_ids(IDs, self.cat[self.idkey].data)
+        # Flags
+        sflag = self.group_dict[group]
+        flags = self.cat['flag_survey'][cat_rows]
+        # Query on binary
+        query = (flags % (sflag*2)) >= sflag
+        # Answer
+        answer = np.sum(query) == IDs.size
+        # Return
+        return answer, query
+
+    def coord_to_ID(self, coord, tol=0.5*u.arcsec, closest=True, **kwargs):
+        """ Convert an input coord to an ID if matched within a
+        given tolerance.  If multiple sources are identified, return
+        the closest unless closest=False
+
+        Parameters
+        ----------
+        coord : str or tuple or SkyCoord
+          See linetools.utils.radec_to_coord
+          Single coordinate
+        tol : Quantity
+          Angle
+        closest : bool, optional
+          If False, raise an error if multiple sources are within tol
+
+        Returns
+        -------
+        ID : int
+          ID of the closest source to the input coord
+          within the given tolerance
+
+        """
+        # Catalog
+        ids = self.radial_search(coord, tol, **kwargs)
+        if len(ids) == 0:
+            warnings.warn("No sources found at your coordinate within tol={:g}.  Returning None".format(tol))
+            return None, None
+        elif len(ids) > 1:
+            if closest:
+                warnings.warn("Found multiple sources in the catalog. Taking the closest one")
+            else:
+                raise IOError("Multiple sources within tol={:g}.  Refine".format(tol))
+        # Finish
+        ID = ids[0]
+        return ID
+
+    def find_ids_in_groups(self, groups, IDs=None, in_all=True):
         """ Return a list of IDs of sources located in
         one or more groups.  If IDs is input, the subset that are
         within the input groups is returned.
 
-        Default is to require the source occur in at least
-        one of the groups.  Use in_all=True to require the
-        source be in each of the groups.
+        Default is to require the source occur in all of the input
+        the groups.  Use in_all=False to only require the
+        source be in at least one of the groups.
 
         Parameters
         ----------
@@ -101,6 +165,10 @@ class QueryCatalog(object):
         Returns
         -------
         gdIDs : int array
+          IDs in the group(s)
+        good : bool array
+          True/False for ID within group(s)
+          Mainly useful if user inputs a set of IDs
         """
         # Init
         ngroup = len(groups)
@@ -116,12 +184,12 @@ class QueryCatalog(object):
             query = (fs % (flag*2)) >= flag
             msk[query] += 1
         if in_all:
-            gd = msk == ngroup
+            good = msk == ngroup
         else:
-            gd = msk >= 1
-        gdIDs = IDs[gd]
+            good = msk >= 1
+        gdIDs = IDs[good]
         # Return
-        return gdIDs
+        return gdIDs, good
 
     def match_coord(self, coords, group=None, toler=0.5*u.arcsec, verbose=True):
         """ Match an input set of SkyCoords to the catalog within a given radius
@@ -141,7 +209,7 @@ class QueryCatalog(object):
         indices : int array
           ID values
           -1 if no match within toler
-          -2 if within tol but not within input dataset
+          -2 if within tol but not within input group
 
         """
         # Checks
@@ -155,14 +223,11 @@ class QueryCatalog(object):
         else:
             IDs = self.cat[self.idkey][idx].data
         close = d2d < toler
-        # Restrict to dataset?
+        # Restrict to group?
         if group is not None:
-            sflag = self.group_dict[group]
-            cat_rows = match_ids(IDs, self.cat[self.idkey].data)
-            flags = self.cat['flag_survey'][cat_rows]
-            query = (flags % (sflag*2)) >= sflag
+            answer, query = self.chk_in_group(IDs, group)
             IDs[~query] = -2
-        # Deal with out of tolerance (after dataset)
+        # Deal with out of tolerance (after group)
         IDs[~close] = -1
         # Finish
         if verbose:
@@ -206,7 +271,7 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def radial_search(self, inp, radius, max=None, verbose=True, private=False):
+    def radial_search(self, inp, radius, max=None, verbose=True, private=False, **kwargs):
         """ Search for sources in a radius around the input coord
 
         Parameters

@@ -87,21 +87,43 @@ class SpecDB(object):
         -------
 
         """
-        import json
         #
         if self.verbose:
             print("Using {:s} for the DB file".format(db_file))
         self.hdf = h5py.File(db_file,'r')
         self.db_file = db_file
-        #
 
-    def coords_to_spectra(self, coords, group, tol=0.5*u.arcsec, all_spec=False, **kwargs):
-        """ Grab spectra for input coords from input dataset
+    def ids_to_spectra(self, IDs, group, all_spec=False, chk_group=True, **kwargs):
+        """ Grab spectra for input IDs from input dataset
         Default mode is to grab the first spectrum that appears in the dataset
         of a given source (i.e. in cases where more than 1 spectrum exists).
         Use all_spec=True to return a list of XSpectrum1D objects and meta tables,
         one per input source, of all the spectra for each source.
 
+        Parameters
+        ----------
+        IDs : int ndarray
+        group : str
+        chk_group : bool, optional
+          Check that the IDs are in the group
+        all_spec : bool, optional
+          Return all spectra for the input coords, un-ordered
+        """
+        # Check
+        if chk_group:
+            if not self.qcat.chk_in_group(IDs, group):
+                raise IOError("On ore more IDs are not in the input group: {:s}".format(group))
+        # Rows
+        if all_spec:
+            rows = self[group].ids_to_allrows(IDs)
+        else:
+            rows = self[group].ids_to_firstrow(IDs)
+        # Grab and return
+        return self[group].grab_specmeta(rows)
+
+    def coords_to_spectra(self, coords, group, tol=0.5*u.arcsec, all_spec=False, **kwargs):
+        """ Grab spectra for input coords from input dataset
+        Wrapper to ids_to_spectra
 
         Parameters
         ----------
@@ -109,6 +131,7 @@ class SpecDB(object):
           Typically more than 1
         group : str
         all_spec : bool, optional
+          Return all spectra for the input coords, un-ordered
         tol
         kwargs
 
@@ -132,13 +155,43 @@ class SpecDB(object):
             print("These input coords are not in the input group {:s}".format(group))
             print(coords[bad_query])
             raise IOError("Try again")
-        # Rows
-        if all_spec:
-            rows = self[group].ids_to_allrows(ids)
-        else:
-            rows = self[group].ids_to_firstrow(ids)
-        # Grab and return
-        return self[group].grab_specmeta(rows)
+        #
+        return self.ids_to_spectra(ids, group, chk_group=False,
+                                   all_spec=all_spec, **kwargs)
+
+    def allspec_of_ID(self, ID, groups=None, **kwargs):
+        """ Grab all spectra in the database for a given source ID
+        Parameters
+        ----------
+        ID : int
+        groups : list, optional
+          One or more groups to restrict DB search
+        kwargs
+          fed to grab_specmeta
+
+        Returns
+        -------
+
+        """
+        # Restrict groups searched according to user input
+        if groups is None:
+            groups = self.groups
+
+        # Overlapping groups
+        gd_groups = self.qcat.groups_containing_IDs(ID, igroup=groups)
+
+        # Load spectra and meta
+        speclist, metalist = [], []
+        for group in gd_groups:
+            rows = self[group].ids_to_allrows(ID)
+            spec, meta = self[group].grab_specmeta(rows, **kwargs)
+            # Fill
+            speclist.append(spec)
+            meta.group = group
+            metalist.append(meta)
+
+        # Return
+        return speclist, metalist
 
     def allspec_at_coord(self, coord, tol=0.5*u.arcsec, groups=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
@@ -151,11 +204,10 @@ class SpecDB(object):
           Only one coord may be input
         tol : Angle or Quantity, optional
           Search radius
-        groups : str or list, optional
+        groups : list, optional
           One or more groups to restrict to
         kwargs :
-          fed to grab_spec
-
+          fed to grab_specmeta
 
         Returns
         -------
@@ -165,32 +217,10 @@ class SpecDB(object):
           Meta data related to spec
 
         """
-        # Catalog
-        ids = self.qcat.radial_search(coord, tol, **kwargs)
-        if len(ids) == 0:
-            warnings.warn("No sources found at your coordinate within tol={:g}.  Returning None".format(tol))
-            return None, None
-        elif len(ids) > 1:
-            warnings.warn("Found multiple sources in the catalog. Taking the closest one")
-        idv = ids[0]
+        # Grab ID (will find closest within tol)
+        ID = self.qcat.coord_to_ID(coord, tol=tol, **kwargs)
 
-        # Restrict groups searched according to user input
-        if groups is None:
-            groups = self.groups
-
-        # Overlapping groups
-        gd_groups = self.qcat.groups_containing_IDs(idv, igroup=groups)
-
-        # Load spectra
-        speclist, metalist = [], []
-        for group in gd_groups:
-            rows = self[group].ids_to_allrows(idv)
-            spec, meta = self[group].grab_specmeta(rows, **kwargs)
-            # Fill
-            speclist.append(spec)
-            meta.group = group
-            metalist.append(meta)
-        return speclist, metalist
+        return self.allspec_of_ID(ID, groups=groups, **kwargs)
 
     def __getitem__(self, key):
         """ Access the DB groups

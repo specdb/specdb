@@ -15,6 +15,7 @@ from astropy.table import Table
 from linetools.spectra.xspectrum1d import XSpectrum1D
 
 from specdb.cat_utils import match_ids
+from specdb.group_utils import show_group_meta
 
 
 class InterfaceGroup(object):
@@ -70,6 +71,8 @@ class InterfaceGroup(object):
             self.meta['zem'].format = '6.3f'
             self.meta['WV_MIN'].format = '6.1f'
             self.meta['WV_MAX'].format = '6.1f'
+        # Add group
+        self.meta.meta['group'] = group
 
     def ids_to_firstrow(self, IDs):
         """ Given an input set of IDs, pass back the array of rows that
@@ -266,16 +269,8 @@ class InterfaceGroup(object):
         """
         if imeta is None:
             imeta = self.meta
-        if meta_keys is None:
-            mkeys = [self.idkey, 'RA', 'DEC', 'zem', 'SPEC_FILE']
-        else:
-            mkeys = meta_keys
-        #
-        for key in imeta.keys():
-            if key not in mkeys:
-                mkeys += [key]
-        imeta[mkeys].pprint(max_width=120)
-        return
+        # Show
+        show_group_meta()
 
     def stage_data(self, rows, verbose=None, **kwargs):
         """ Stage the spectra for serving
