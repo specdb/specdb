@@ -114,12 +114,10 @@ class SpecDB(object):
 
         Returns
         -------
-        if all_spec:
-        else:
-          spec : XSpectrum1D
-            One object containing all of the spectra, in order of input coords
-          meta : Table
-            Meta data related to spectra
+        spec : XSpectrum1D
+          One object containing all of the spectra, in order of input coords
+        meta : Table
+          Meta data related to spectra
         """
         # Match to catalog
         ids = self.qcat.match_coord(coords, toler=tol, group=group, **kwargs)
@@ -131,7 +129,7 @@ class SpecDB(object):
             raise IOError("Increase the tolerance for the search or reconsider your query")
         bad_query = ids == -2
         if np.sum(bad_query) > 0:
-            print("These input coords are not in the input group {:s}".format(dataset))
+            print("These input coords are not in the input group {:s}".format(group))
             print(coords[bad_query])
             raise IOError("Try again")
         # Rows
@@ -142,7 +140,7 @@ class SpecDB(object):
         # Grab and return
         return self[group].grab_specmeta(rows)
 
-    def allspec_at_coord(self, coord, tol=0.5*u.arcsec, igroup=None, **kwargs):
+    def allspec_at_coord(self, coord, tol=0.5*u.arcsec, groups=None, **kwargs):
         """ Radial search for spectra from all data sets for a given coordinate
         Best for single searches (i.e. slower than other approaches)
 
@@ -153,7 +151,7 @@ class SpecDB(object):
           Only one coord may be input
         tol : Angle or Quantity, optional
           Search radius
-        igroup : str or list, optional
+        groups : str or list, optional
           One or more groups to restrict to
         kwargs :
           fed to grab_spec
@@ -177,13 +175,11 @@ class SpecDB(object):
         idv = ids[0]
 
         # Restrict groups searched according to user input
-        if igroup is None:
-            groups = self.qcat.groups
-        else:
-            groups = self.qcat.in_groups(igroup)
+        if groups is None:
+            groups = self.groups
 
         # Overlapping groups
-        gd_groups = self.qcat.groups_with_IDs(idv, igroup=groups)
+        gd_groups = self.qcat.groups_containing_IDs(idv, igroup=groups)
 
         # Load spectra
         speclist, metalist = [], []

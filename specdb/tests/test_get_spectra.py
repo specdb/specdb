@@ -35,7 +35,7 @@ def test_allspec_from_coord(igmsp):
     assert meta_list[0]['PLATE'][0] == 6173
     # Multiple matches and spectra
     spec_list, meta_list = igmsp.allspec_at_coord('001115.23+144601.8',
-                                                  igroup=['GGG']) # Not in debug file for BOSS or SDSS
+                                                  igroup='GGG') # Not in debug file for BOSS or SDSS
     assert spec_list[0].nspec == 2
 
 

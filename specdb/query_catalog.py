@@ -79,44 +79,10 @@ class QueryCatalog(object):
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
-    def in_groups(self, input_groups, return_list=True):
-        """ Return a list of input groups that are in the DB
-
-        Parameters
-        ----------
-        in_groups : list or str
-          List of one or more groups
-          If str, converted to list
-        groups : list
-          List of groups to compare against
-        return_list : bool, optional
-          Return input group(s) as a list?
-
-        Returns
-        -------
-        out_groups : list
-          List of overlapping groups between input and DB
-
-        """
-        # Checks
-        if not isinstance(input_groups, basestring):
-            igroups = [input_groups]
-        elif isinstance(input_groups, list):
-            igroups = input_groups
-        else:
-            raise IOError("input_groups must be str or list")
-        #
-        fgroups = []
-        for igroup in input_groups:
-            if igroup in self.groups:
-                fgroups.append(igroup)
-        # Return
-        return fgroups
-
-    def ids_in_groups(self, groups, IDs=None, in_all=False):
+    def find_ids_in_groups(self, groups, IDs=None, in_all=False):
         """ Return a list of IDs of sources located in
-        one or more groups.  If IDs is input, the subset
-        within the groups is returned.
+        one or more groups.  If IDs is input, the subset that are
+        within the input groups is returned.
 
         Default is to require the source occur in at least
         one of the groups.  Use in_all=True to require the
@@ -129,7 +95,7 @@ class QueryCatalog(object):
         IDs : ndarray, optional
           If not input, use the entire catalog of IDs
         in_all : bool, optional
-          Require that the source be within *all* of the input groups
+          Require that the source(s) be within *all* of the input groups
           Default is to require it be within at least one group
 
         Returns
@@ -277,22 +243,6 @@ class QueryCatalog(object):
         # Return
         return self.cat[self.idkey][good][asort]
 
-    def get_cat(self, IDs):
-        """ Grab catalog rows corresponding to the input IDs
-
-        Parameters
-        ----------
-        IDs : int array
-
-        Returns
-        -------
-        rows : Table
-          Rows of the catalog
-
-        """
-        good = np.in1d(self.cat[self.idkey], IDs)
-        return self.cat[good]
-
     def show_cat(self, IDs):
         """  Show the catalog
 
@@ -334,14 +284,15 @@ class QueryCatalog(object):
         self.cat['zem'].format = '6.3f'
         self.cat['sig_zem'].format = '5.3f'
 
-    def groups_with_IDs(self, IDs, igroup=None):
-        """
+    def groups_containing_IDs(self, IDs, igroup=None):
+        """ Return a list of all groups that contain all of the input IDs
+
         Parameters
         ----------
         IDs: int or ndarray
         igroup : list, optional
           List of groups to consider
-          Default is the full list of groups
+          Default is the full list of DB groups
 
         Returns
         -------

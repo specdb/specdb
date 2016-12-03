@@ -67,23 +67,29 @@ def test_match_coord(igmsp):
     idxs = igmsp.qcat.match_coord(coords)
     assert len(idxs) == 2
     # Dataset
-    idxs2 = igmsp.qcat.match_coord(coords, dataset='BOSS_DR12')
+    idxs2 = igmsp.qcat.match_coord(coords, group='BOSS_DR12')
     assert np.sum(idxs2 >= 0) == 2
-    idxs3 = igmsp.qcat.match_coord(coords, dataset='HD-LLS_DR1')
+    idxs3 = igmsp.qcat.match_coord(coords, group='HD-LLS_DR1')
     assert np.sum(idxs3 >= 0) == 0
 
+def test_in_group(igmsp):
+    # BOSS
+    fgr = igmsp.qcat.in_groups(['BOSS_DR12'])
+    assert fgr[0] == 'BOSS_DR12'
+    fgr = igmsp.qcat.in_groups('BOSS_DR12')
+    assert fgr[0] == 'BOSS_DR12'
 
 def test_ids_in_groups(igmsp):
     # BOSS
     IDs = igmsp.qcat.ids_in_groups(['BOSS_DR12'])
-    assert IDs.size == 119
+    assert IDs.size == 19
     assert IDs[0] == 0
     # BOSS and HD-LLS -- Both
     IDs2 = igmsp.qcat.ids_in_groups(['HD-LLS_DR1', 'GGG'], in_all=True)
     assert IDs2.size == 1
     # BOSS and HD-LLS -- Either
     IDs3 = igmsp.qcat.ids_in_groups(['HD-LLS_DR1', 'GGG'])
-    assert IDs3.size == 59
+    assert IDs3.size == 9
     # With input IDs
     IDs4 = igmsp.qcat.ids_in_groups(['BOSS_DR12'], np.array([0,1]))
     assert IDs4.size == 2
