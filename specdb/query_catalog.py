@@ -75,7 +75,7 @@ class QueryCatalog(object):
                         raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
                     self.idkey = key
         # Survey dict
-        self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
+        self.group_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
         self.groups = list(self.group_dict.keys())
         if self.verbose:
             print("Available groups: {}".format(self.groups))
@@ -99,7 +99,7 @@ class QueryCatalog(object):
         cat_rows = match_ids(IDs, self.cat[self.idkey].data)
         # Flags
         sflag = self.group_dict[group]
-        flags = self.cat['flag_survey'][cat_rows]
+        flags = self.cat['flag_group'][cat_rows]
         # Query on binary
         query = (flags % (sflag*2)) >= sflag
         # Answer
@@ -176,7 +176,7 @@ class QueryCatalog(object):
             IDs = self.cat[self.idkey].data
         # Flags
         cat_rows = match_ids(IDs, self.cat[self.idkey].data)
-        fs = self.cat['flag_survey'][cat_rows].data
+        fs = self.cat['flag_group'][cat_rows].data
         msk = np.zeros_like(fs).astype(int)
         for group in groups:
             flag = self.group_dict[group]
@@ -323,7 +323,7 @@ class QueryCatalog(object):
         good = np.in1d(self.cat[self.idkey], IDs)
 
         # Catalog keys
-        cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_survey']
+        cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_group']
         for key in self.cat.keys():
             if key not in cat_keys:
                 cat_keys += [key]
