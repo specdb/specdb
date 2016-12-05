@@ -135,7 +135,7 @@ class QueryCatalog(object):
         good = np.in1d(self.cat[self.idkey], IDs)
         cut_cat = self.cat[good]
         # Flags
-        fs = cut_cat['flag_survey']
+        fs = cut_cat['flag_group']
         msk = np.array([False]*len(cut_cat))
         for survey in surveys:
             flag = self.survey_dict[survey]
@@ -278,7 +278,7 @@ class QueryCatalog(object):
         good = np.in1d(self.cat[self.idkey], IDs)
 
         # Catalog keys
-        cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_survey']
+        cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_group']
         for key in self.cat.keys():
             if key not in cat_keys:
                 cat_keys += [key]
@@ -305,7 +305,7 @@ class QueryCatalog(object):
         self.cat['zem'].format = '6.3f'
         self.cat['sig_zem'].format = '5.3f'
         # Surveys
-        unif = np.unique(self.cat['flag_survey'])
+        unif = np.unique(self.cat['flag_group'])
         all_surveys = []
         for ifs in unif:
             all_surveys += icu.flag_to_surveys(ifs, self.survey_dict)
