@@ -76,7 +76,10 @@ class QueryCatalog(object):
                     self.idkey = key
         self.db_file = db_file
         # Survey dict
-        self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
+        try:
+            self.survey_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
+        except KeyError:
+            self.survey_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
         hdf.close()
 
     def in_surveys(self, input_surveys, return_list=True):

@@ -88,7 +88,7 @@ def chk_for_duplicates(maindb):
 
 
 def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
-    """ Generate new IGM_IDs for an input DB
+    """ Generate new CAT_IDs for an input DB
 
     Parameters
     ----------
@@ -138,6 +138,7 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
 
 def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     """ Set the new IDs
+
     Parameters
     ----------
     maindb
@@ -163,6 +164,7 @@ def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     cut_db.add_column(Column(ids[new], name=idkey))
     # Reset IDs to all positive
     ids = np.abs(ids)
+    newdb[idkey] = ids
     #
     return cut_db, new, ids
 

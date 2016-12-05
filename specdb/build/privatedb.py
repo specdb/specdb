@@ -30,11 +30,26 @@ except NameError:  # For Python 3
 
 
 def add_ids(maindb, meta, flag_s, tkeys, first=False):
+    """
+    Input meta table has its PRIV_ID values set
+
+    Parameters
+    ----------
+    maindb
+    meta
+    flag_s
+    tkeys
+    first
+
+    Returns
+    -------
+
+    """
     if first:
         ids = np.arange(len(meta), dtype=int)
         meta['PRIV_ID'] = ids
-        meta['flag_group'] = flag_s
         cut = meta.copy()
+        cut['flag_group'] = flag_s
     else:
         cut, new, ids = spbu.set_new_ids(maindb, meta, idkey='PRIV_ID')
         cut['flag_group'] = [flag_s]*len(cut)
@@ -550,25 +565,6 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
         sdict[group_name] = flag_s
         # IDs
         maindb = add_ids(maindb, full_meta, flag_s, tkeys, first=(ss==0))
-        '''
-        if ss == 0:
-            ids = np.arange(len(full_meta), dtype=int)
-            full_meta['PRIV_ID'] = ids
-            full_meta['flag_group'] = flag_s
-            cut = full_meta
-        else:
-            cut, new, ids = spbu.set_new_ids(maindb, full_meta, idkey='PRIV_ID')
-            cut['flag_group'] = [flag_s]*len(cut)
-            midx = np.array(maindb['PRIV_ID'][ids[~new]])
-            maindb['flag_group'][midx] += flag_s   # ASSUMES NOT SET ALREADY
-        # Catalog
-        cat_meta = cut[tkeys]
-        assert spbu.chk_maindb_join(maindb, cat_meta)
-        # Append
-        maindb = vstack([maindb,cat_meta], join_type='exact')
-        if ss == 0:
-            maindb = maindb[1:]  # Eliminate dummy line
-        '''
         # Ingest
         ingest_spectra(hdf, group_name, full_meta, max_npix=maxpix, **kwargs)
 
