@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
 
 from specdb import defs
+from specdb.cat_utils import match_ids
 #from linetools import utils as ltu
 
 
@@ -41,23 +42,24 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
       Updated catalog table
 
     """
-    if first:
-        newcut, new, ids = set_new_ids(maindb, meta, idkey, first=True, **kwargs)
-    else:
-        newcut, new, ids = set_new_ids(maindb, meta, idkey, **kwargs)
-        midx = np.array(maindb[idkey][ids[~new]])
-        maindb['flag_group'][midx] += flag_g   # ASSUMES NOT SET ALREADY
+    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, **kwargs)
+    # Add group and cut on keys
     newcut['flag_group'] = flag_g
-    # Catalog
     newcut.rename_column('RA_GROUP', 'RA')
     newcut.rename_column('DEC_GROUP', 'DEC')
     newcut.rename_column('zem_GROUP', 'zem')
     cat_meta = newcut[tkeys]
-    assert chk_maindb_join(maindb, cat_meta)
-    # Append
-    maindb = vstack([maindb,cat_meta], join_type='exact')
+    # Set or append
     if first:
-        maindb = maindb[1:]  # Eliminate dummy line
+        maindb = cat_meta
+    else:
+        old_ids = ids[~new]
+        midx = match_ids(old_ids, maindb[idkey].data) # np.array(maindb[idkey][ids[~new]])
+        maindb['flag_group'][midx] += flag_g   # ASSUMES NOT SET ALREADY
+        # Catalog
+        assert chk_maindb_join(maindb, cat_meta)
+        # Append
+        maindb = vstack([maindb,cat_meta], join_type='exact')
     # Return
     return maindb
 
@@ -260,22 +262,22 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     # Check for pairs in the new list
     pidx1, pidx2, pd2d, _ = c_new.search_around_sky(c_new, mtch_toler)
     pairs = pd2d > pair_sep
-    if close_pairs:
-        # Check against catalog
-        pidx, pd2d, _ = match_coordinates_sky(c_new[pairs], c_main, nthneighbor=1)
-        pair_match = pd2d < mtch_toler
-        if np.sum(pair_match) > 0:
-            print("Not ready for a pair match to the standing catalog..")
-            raise IOError("Bad things may happen..")
-    else:
-        if np.sum(pairs):
-            print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
-            raise IOError("Use close_pairs=True if appropriate")
-    # Find new sources
+    if np.sum(pairs) and (not close_pairs):
+        pdb.set_trace()
+        print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
+        raise IOError("Use close_pairs=True if appropriate")
+    # Find new sources (ignoring pairs at first)
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
     new = d2d > mtch_toler
     # Old IDs
     IDs[~new] = -1 * maindb[idkey][idx[~new]]
+    # Now deal with pairs
+    if np.sum(pairs) > 0:
+        # Check against catalog
+        pidx, pd2d, _ = match_coordinates_sky(c_new[pidx1][pairs], c_main, nthneighbor=1)
+        not_pair_match = pd2d > pair_sep
+        # Reset new -- It will get a new ID below -- np.where is needed to actually set new
+        new[pidx1[pairs][np.where(not_pair_match)[0]]] = True
     nnew = np.sum(new)
     # New IDs
     if nnew > 0:
@@ -284,34 +286,65 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
 
         sub_c_new = c_new[new]
         dup_idx, dup_d2d, _ = match_coordinates_sky(sub_c_new, sub_c_new, nthneighbor=2)
-        if not close_pairs:
+        if close_pairs:
+            dups = dup_d2d < pair_sep
+        else:
             dups = dup_d2d < mtch_toler
-            ndups = np.sum(dups)
-            # Not duplicates
-            IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
-            # Duplicates
-            if ndups > 0:
-                newID = np.max(IDs)
-                warnings.warn("We found {:d} duplicates (e.g. multiple spectra). Hope this was expected".format(ndups//2))
-                # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
-                dup_idx = np.where(dups)[0]
-                dup_filled = np.array([False]*len(sub_c_new))
-                for idup in dup_idx: # Ugly loop..
-                    if dup_filled[idup]:  # Already filled as a duplicate
-                        continue
-                    dcoord = sub_c_new[idup]
-                    sep = dcoord.separation(sub_c_new)
-                    isep = np.where(sep < mtch_toler)[0]
-                    # ID
-                    newID += 1
-                    IDs[new_idx[isep]] = newID
-                    dup_filled[isep] = True  # Avoids the other dup(s)
+        ndups = np.sum(dups)
+        # Not duplicates
+        IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
+        # Duplicates
+        if ndups > 0:
+            newID = np.max(IDs)
+            warnings.warn("We found {:d} duplicates (e.g. multiple spectra). Hope this was expected".format(ndups//2))
+            # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
+            dup_idx = np.where(dups)[0]
+            dup_filled = np.array([False]*len(sub_c_new))
+            for idup in dup_idx: # Ugly loop..
+                if dup_filled[idup]:  # Already filled as a duplicate
+                    continue
+                dcoord = sub_c_new[idup]
+                sep = dcoord.separation(sub_c_new)
+                isep = np.where(sep < mtch_toler)[0]
+                # ID
+                newID += 1
+                IDs[new_idx[isep]] = newID
+                dup_filled[isep] = True  # Avoids the other dup(s)
     if chk:
         print("The following sources were previously in the DB")
         print(newdb[~new])
+    '''
+    if close_pairs: # TEST SDSS
+        tc = SkyCoord(ra=210.053222, dec=31.581701, unit='deg')#, (210.053552, 31.58131)]>
+        isep = np.argmin(tc.separation(c_new))
+        pdb.set_trace()
+        IDs[isep]
+    '''
     # Return
     return IDs
 
+
+def init_data(npix, include_co=False):
+    """ Generate an empty masked array for a spectral dataset
+
+    Parameters
+    ----------
+    npix : int
+    include_co : bool, optional
+      Include a continuum?
+
+    Returns
+    -------
+    data : masked  ndarray
+    """
+    dtype = [(str('wave'), 'float64', (npix)),
+          (str('flux'), 'float32', (npix)),
+          (str('sig'),  'float32', (npix))]
+    if include_co:
+        dtype += [(str('co'),   'float32', (npix))]
+    data = np.ma.empty((1,), dtype=dtype)
+    # Return
+    return data
 
 def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
     """ Set the new IDs
@@ -331,7 +364,7 @@ def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
     cut_db : Table
       Cut to the new sources
     new : bool array
-    ids : ID values
+    ids : ID values of newdb
     """
     # IDs
     ids = get_new_ids(maindb, newdb, idkey, **kwargs) # Includes new and old
