@@ -8,7 +8,7 @@ import warnings
 import numbers
 import pdb
 
-from astropy.table import Table, Column
+from astropy.table import Table, Column, vstack
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
 
@@ -16,8 +16,53 @@ from specdb import defs
 #from linetools import utils as ltu
 
 
+def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
+    """ Add IDs to
+    Input meta table has its CAT_ID values set in place
+
+    Parameters
+    ----------
+    maindb : Table
+      Main catalog
+    meta : Table
+      Meta table being added
+    flag_g : int
+      Flag for the new group
+    tkeys : list
+      List of main keys for the catalog
+    ikdey : str
+      ID key
+    first : bool, optional
+      First call to the routine?
+
+    Returns
+    -------
+    maindb : Table
+      Updated catalog table
+
+    """
+    if first:
+        newcut, new, ids = set_new_ids(maindb, meta, idkey, first=True, **kwargs)
+    else:
+        newcut, new, ids = set_new_ids(maindb, meta, idkey, **kwargs)
+        midx = np.array(maindb[idkey][ids[~new]])
+        maindb['flag_group'][midx] += flag_g   # ASSUMES NOT SET ALREADY
+    newcut['flag_group'] = flag_g
+    # Catalog
+    newcut.rename_column('RA_GROUP', 'RA')
+    newcut.rename_column('DEC_GROUP', 'DEC')
+    newcut.rename_column('zem_GROUP', 'zem')
+    cat_meta = newcut[tkeys]
+    assert chk_maindb_join(maindb, cat_meta)
+    # Append
+    maindb = vstack([maindb,cat_meta], join_type='exact')
+    if first:
+        maindb = maindb[1:]  # Eliminate dummy line
+    # Return
+    return maindb
+
 def add_to_flag(cur_flag, add_flag):
-    """ Add a bitwise flag to an existing flat
+    """ Add a bitwise flag to an existing flag
 
     Parameters
     ----------
@@ -38,6 +83,34 @@ def add_to_flag(cur_flag, add_flag):
         upd = mods < (add_flag//2)
         cur_flag[upd] += add_flag
         return cur_flag
+
+
+def add_to_group_dict(group_name, gdict):
+    """ Add input group_name to the group dict
+    Done in place
+
+    Parameters
+    ----------
+    group_name : str
+    gdict : dict
+      Dict of data groups
+
+    Returns
+    -------
+    new_flag : int
+      New bitwise flag
+    """
+    if group_name in gdict.keys():
+        raise IOError("Group already exists in group dict.  Should not be here..")
+    # Find new flag
+    if len(list(gdict.keys())) == 0: # First one
+        new_flag = 1
+    else:
+        max_flag = max(gdict.values())
+        new_flag = 2*max_flag
+    # Insert
+    gdict[group_name] = new_flag
+    return new_flag
 
 
 def chk_maindb_join(maindb, newdb):
@@ -63,8 +136,8 @@ def chk_maindb_join(maindb, newdb):
     return True
 
 
-def chk_for_duplicates(maindb):
-    """ Generate new IGM_IDs for an input DB
+def chk_for_duplicates(maindb, tol=2*u.arcsec):
+    """ Check for duplicates in the catalog to within tol
 
     Parameters
     ----------
@@ -79,7 +152,7 @@ def chk_for_duplicates(maindb):
     c_main = SkyCoord(ra=maindb['RA'], dec=maindb['DEC'], unit='deg')
     # Find candidate dups
     idx, d2d, d3d = match_coordinates_sky(c_main, c_main, nthneighbor=2)
-    cand_dups = d2d < 2*u.arcsec
+    cand_dups = d2d < tol
     # Finish
     if np.sum(cand_dups) > 0:
         return False
@@ -87,20 +160,88 @@ def chk_for_duplicates(maindb):
         return True
 
 
-def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
+def chk_meta(meta, chk_cat_only=False):
+    """ Vettes a meta Table prior to its being ingested into the hdf
+
+    Parameters
+    ----------
+    meta
+    chk_cat_only : bool, optional
+      Check that the primary catalog keys are present
+      These should match well with the ones in sdbbu.start_maindb()
+
+    Returns
+    -------
+    chk : bool
+
+    """
+    from astropy.time import Time
+    from astropy.table import Column
+    # Init
+    inst_dict = defs.instruments()
+
+    chk = True
+    if chk_cat_only: # Only check for catalog generation
+        cat_dict = defs.get_db_table_format()
+        for key in cat_dict.keys():
+            if key in ['flag_group']:
+                continue
+            # RA/DEC are special
+            if key in ['RA', 'DEC', 'zem']:
+                akey = key+'_GROUP'
+            else:
+                akey = key
+            if akey not in meta.keys():
+                print("key={:s} not in meta table!".format(akey))
+                chk = False
+    else:
+        # Required columns for main meta
+        req_clms = defs.get_req_clms()
+        meta_keys = meta.keys()
+        for clm in req_clms:
+            if clm not in meta_keys:
+                chk = False
+                print("Missing column {:s} in meta".format(clm))
+        # Check date formatting
+        try:
+            tval = Time(list(meta['DATE-OBS'].data), format='iso')
+        except:
+            print("Bad DATE-OBS formatting")
+            chk = False
+        # Check for unicode
+        for key in meta_keys:
+            if 'unicode' in meta[key].dtype.name:
+                warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
+                tmp = Column(meta[key].data.astype(str), name=key)
+                meta.remove_column(key)
+                meta[key] = tmp
+        # Check instrument
+        meta_instr = meta['INSTR'].data
+        db_instr = np.array(inst_dict.keys()).astype(str)
+        if not np.all(np.in1d(meta_instr, db_instr)):
+            print("Bad instrument in meta data")
+            chk = False
+    # Return
+    return chk
+
+
+def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.arcsec,
+                close_pairs=False):
     """ Generate new CAT_IDs for an input DB
 
     Parameters
     ----------
     maindb : Table
     newdb : Table
-      RA, DEC assumed to be given by RA_SPEC and DEC_SPEC
+      RA, DEC assumed to be given by RA_GROUP and DEC_GROUP
     chk : bool, optional
       Perform some checks
-    idkey : str, optional
+    idkey : str
       Key for ID
     mtch_toler : Quantity, optional
       Matching tolerance;  typically taken from the default
+    close_pairs : bool, optional
+      Input list includes close pairs (i.e. within mtch_toler)
 
     Returns
     -------
@@ -115,7 +256,21 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     IDs = np.zeros(len(newdb), dtype=int)
     # Setup
     c_main = SkyCoord(ra=maindb['RA'], dec=maindb['DEC'], unit='deg')
-    c_new = SkyCoord(ra=newdb['RA_SPEC'], dec=newdb['DEC_SPEC'], unit='deg')
+    c_new = SkyCoord(ra=newdb['RA_GROUP'], dec=newdb['DEC_GROUP'], unit='deg')
+    # Check for pairs in the new list
+    pidx1, pidx2, pd2d, _ = c_new.search_around_sky(c_new, mtch_toler)
+    pairs = pd2d > pair_sep
+    if close_pairs:
+        # Check against catalog
+        pidx, pd2d, _ = match_coordinates_sky(c_new[pairs], c_main, nthneighbor=1)
+        pair_match = pd2d < mtch_toler
+        if np.sum(pair_match) > 0:
+            print("Not ready for a pair match to the standing catalog..")
+            raise IOError("Bad things may happen..")
+    else:
+        if np.sum(pairs):
+            print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
+            raise IOError("Use close_pairs=True if appropriate")
     # Find new sources
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
     new = d2d > mtch_toler
@@ -124,11 +279,33 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     nnew = np.sum(new)
     # New IDs
     if nnew > 0:
-        # Generate
-        newID = np.max(maindb[idkey]) + 1
-        newIDs = newID + np.arange(nnew, dtype=int)
-        # Insert
-        IDs[new] = newIDs
+        new_idx = np.where(new)[0]
+        newID = np.max(maindb[idkey])
+
+        sub_c_new = c_new[new]
+        dup_idx, dup_d2d, _ = match_coordinates_sky(sub_c_new, sub_c_new, nthneighbor=2)
+        if not close_pairs:
+            dups = dup_d2d < mtch_toler
+            ndups = np.sum(dups)
+            # Not duplicates
+            IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
+            # Duplicates
+            if ndups > 0:
+                newID = np.max(IDs)
+                warnings.warn("We found {:d} duplicates (e.g. multiple spectra). Hope this was expected".format(ndups//2))
+                # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
+                dup_idx = np.where(dups)[0]
+                dup_filled = np.array([False]*len(sub_c_new))
+                for idup in dup_idx: # Ugly loop..
+                    if dup_filled[idup]:  # Already filled as a duplicate
+                        continue
+                    dcoord = sub_c_new[idup]
+                    sep = dcoord.separation(sub_c_new)
+                    isep = np.where(sep < mtch_toler)[0]
+                    # ID
+                    newID += 1
+                    IDs[new_idx[isep]] = newID
+                    dup_filled[isep] = True  # Avoids the other dup(s)
     if chk:
         print("The following sources were previously in the DB")
         print(newdb[~new])
@@ -136,109 +313,44 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     return IDs
 
 
-def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
+def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
     """ Set the new IDs
 
     Parameters
     ----------
     maindb
     newdb
+    idkey : str
     toler
     chk
+    first : bool, optional
+      First call to setting the IDs
 
     Returns
     -------
     cut_db : Table
-      Cut to the new QSOs
+      Cut to the new sources
     new : bool array
     ids : ID values
-    mtch_toler : Quantity, optional
-      Match tolerance passed to get_new_ids
-
     """
     # IDs
-    ids = get_new_ids(maindb, newdb, idkey=idkey, mtch_toler=mtch_toler)  # Includes new and old
-    # Truncate
-    new = ids > 0
-    cut_db = newdb[new]
-    cut_db.add_column(Column(ids[new], name=idkey))
+    ids = get_new_ids(maindb, newdb, idkey, **kwargs) # Includes new and old
+    # Crop to rows with new IDs
+    if first:
+        new = ids >= 0
+    else:
+        new = ids > 0  # -1 * 0 = 0
+    newi = np.where(new)[0]
+    # Need unique
+    uni, idx_uni = np.unique(ids[newi], return_index=True)
+    #
+    cut_db = newdb[newi[idx_uni]]
+    cut_db.add_column(Column(ids[newi[idx_uni]], name=idkey))  # Assumes ordered by ID which is true
     # Reset IDs to all positive
     ids = np.abs(ids)
     newdb[idkey] = ids
     #
     return cut_db, new, ids
-
-
-def start_maindb(private=False, **kwargs):
-    """ Start the main DB catalog
-
-    Returns
-    -------
-    maindb : Table
-    tkeys : list
-      List of columns in the table
-    private : bool, optional
-      Private DB?
-
-    """
-    idict = defs.get_db_table_format(**kwargs)
-    tkeys = idict.keys()
-    lst = [[idict[tkey]] for tkey in tkeys]
-    maindb = Table(lst, names=tkeys)
-    # Private?
-    if private:
-        maindb['PRIV_ID'] = -1  # To get the indexing right
-        tkeys += ['PRIV_ID']
-    # Return
-    return maindb, tkeys
-
-
-def chk_meta(meta):#, skip_igmid=False):
-    """ Vettes a meta Table prior to its being ingested into the hdf
-
-    Parameters
-    ----------
-    meta
-
-    Returns
-    -------
-    chk : bool
-
-    """
-    from astropy.time import Time
-    from astropy.table import Column
-    # Init
-    inst_dict = defs.instruments()
-
-    chk = True
-    # Required columns
-    req_clms = defs.get_req_clms()
-    meta_keys = meta.keys()
-    for clm in req_clms:
-        if clm not in meta_keys:
-            chk = False
-            print("Missing column {:s} in meta".format(clm))
-    # Check date formatting
-    try:
-        tval = Time(list(meta['DATE-OBS'].data), format='iso')
-    except:
-        print("Bad DATE-OBS formatting")
-        chk = False
-    # Check for unicode
-    for key in meta_keys:
-        if 'unicode' in meta[key].dtype.name:
-            warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
-            tmp = Column(meta[key].data.astype(str), name=key)
-            meta.remove_column(key)
-            meta[key] = tmp
-    # Check instrument
-    meta_instr = meta['INSTR'].data
-    db_instr = np.array(inst_dict.keys()).astype(str)
-    if not np.all(np.in1d(meta_instr, db_instr)):
-        print("Bad instrument in meta data")
-        chk = False
-    # Return
-    return chk
 
 
 def set_resolution(head, instr=None):
@@ -384,3 +496,28 @@ def set_resolution(head, instr=None):
             return res/swidth
     else:
         raise IOError("Not read for this instrument")
+
+
+def start_maindb(idkey, **kwargs):
+    """ Start the main DB catalog
+
+    Returns
+    -------
+    maindb : Table
+    tkeys : list
+      List of columns in the table
+
+    """
+    idict = defs.get_db_table_format(**kwargs)
+    tkeys = idict.keys()
+    lst = [[idict[tkey]] for tkey in tkeys]
+    maindb = Table(lst, names=tkeys)
+    # ID_key -- should be unique to the database
+    maindb[idkey] = -1  # To get the indexing right
+    tkeys += [idkey]
+    # Return
+    return maindb, tkeys
+
+
+
+
