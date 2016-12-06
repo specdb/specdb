@@ -21,13 +21,13 @@ def data_path(filename):
 def test_plot_spec():
     db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
     # Various inputs
-    pargs = plot_specdb.parser(['J000345.00-232346.5', 'priv', '--db_file={:s}'.format(db_file)])
+    pargs = plot_specdb.parser(['000000.45+174625.4', 'priv', '--db_file={:s}'.format(db_file)])
     plot_specdb.main(pargs, unit_test=True)
     #
-    pargs = plot_specdb.parser(['00:03:45.00,-23:23:46.5', 'priv', '--db_file={:s}'.format(db_file)])
+    pargs = plot_specdb.parser(['00:00:00.45,+17:46:25.4', 'priv', '--db_file={:s}'.format(db_file)])
     plot_specdb.main(pargs, unit_test=True)
     #
-    pargs = plot_specdb.parser(['0.937500,-23.396250', 'priv', '--db_file={:s}'.format(db_file)])
+    pargs = plot_specdb.parser(['0.00189828518376,17.7737391299', 'priv', '--db_file={:s}'.format(db_file)])
     plot_specdb.main(pargs, unit_test=True)
 
 

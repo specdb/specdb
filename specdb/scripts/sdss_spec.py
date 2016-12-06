@@ -29,10 +29,12 @@ def main(args, unit_test=False, **kwargs):
     """ Run
     """
     import numpy as np
-    from astropy.table import vstack, Table
+    from astropy.table import vstack
     from astropy.coordinates import SkyCoord
     from astropy import units as u
+
     from specdb.utils import load_db
+    from specdb import group_utils
 
     # init
     Specdb = load_db(args.dbase, **kwargs)
@@ -43,13 +45,13 @@ def main(args, unit_test=False, **kwargs):
     else:
         surveys = [args.survey]
     for kk,survey in enumerate(surveys):
-        itbl = Table(Specdb.idb.hdf[survey]['meta'].value)
-        if 'FIBERID' not in itbl.keys():
-            itbl.rename_column('FIBER','FIBERID')
+        meta = Specdb[survey].meta
+        if 'FIBERID' not in meta.keys():
+            meta.rename_column('FIBER','FIBERID')
         if kk > 0:
-            mtbl = vstack([mtbl, itbl], join_type='inner')
+            mtbl = vstack([mtbl, meta], join_type='inner')
         else:
-            mtbl = itbl
+            mtbl = meta
 
     # Find plate/fiber
     imt = np.where((mtbl['PLATE'] == args.plate) & (mtbl['FIBERID'] == args.fiberid))[0]
@@ -63,7 +65,7 @@ def main(args, unit_test=False, **kwargs):
     # Grab
     print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
                                               scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
-    all_spec, all_meta = Specdb.spec_from_coord(scoord, isurvey=surveys)
+    all_spec, all_meta = Specdb.allspec_at_coord(scoord, groups=surveys)
 
     # Outcome
     if len(all_meta) == 0:
@@ -76,13 +78,12 @@ def main(args, unit_test=False, **kwargs):
         idx = 0
         spec = all_spec[idx]
         meta = all_meta[idx]
-        surveys = [meta.meta['survey'] for meta in all_meta]
-        print("Source located in more than one survey")
-        print("Using survey {:s}.  You can choose from this list {}".format(surveys[idx], surveys))
+        surveys = [meta.meta['group'] for meta in all_meta]
+        print("Source located in more than one SDSS survey")
+        print("Using survey {:s}".format(surveys[idx]))
+        print("You can choose from this list {}".format(surveys))
 
-        #print("Choose another survey from this list (as you wish): {}".format(surveys))
-
-    Specdb.idb.show_meta()
+    group_utils.show_group_meta(meta)
 
     # Load spectra
     spec.select = args.select
