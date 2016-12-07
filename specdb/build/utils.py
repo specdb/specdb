@@ -12,9 +12,10 @@ from astropy.table import Table, Column, vstack
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
 
+from linetools import utils as ltu
+
 from specdb import defs
 from specdb.cat_utils import match_ids
-#from linetools import utils as ltu
 
 
 def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
@@ -43,25 +44,29 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
 
     """
     newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, **kwargs)
-    # Add group and cut on keys
-    newcut['flag_group'] = flag_g
-    newcut.rename_column('RA_GROUP', 'RA')
-    newcut.rename_column('DEC_GROUP', 'DEC')
-    newcut.rename_column('zem_GROUP', 'zem')
-    cat_meta = newcut[tkeys]
+    # If new sources
+    if np.sum(new) > 0:
+        newcut['flag_group'] = flag_g
+        newcut.rename_column('RA_GROUP', 'RA')
+        newcut.rename_column('DEC_GROUP', 'DEC')
+        newcut.rename_column('zem_GROUP', 'zem')
+        cat_meta = newcut[tkeys]
     # Set or append
     if first:
         maindb = cat_meta
     else:
+        # Update group flags
         old_ids = ids[~new]
         midx = match_ids(old_ids, maindb[idkey].data) # np.array(maindb[idkey][ids[~new]])
         maindb['flag_group'][midx] += flag_g   # ASSUMES NOT SET ALREADY
-        # Catalog
-        assert chk_maindb_join(maindb, cat_meta)
-        # Append
-        maindb = vstack([maindb,cat_meta], join_type='exact')
+        if np.sum(new) > 0:
+            # Catalog
+            assert chk_maindb_join(maindb, cat_meta)
+            # Append
+            maindb = vstack([maindb,cat_meta], join_type='exact')
     # Return
     return maindb
+
 
 def add_to_flag(cur_flag, add_flag):
     """ Add a bitwise flag to an existing flag
@@ -138,7 +143,7 @@ def chk_maindb_join(maindb, newdb):
     return True
 
 
-def chk_for_duplicates(maindb, tol=2*u.arcsec):
+def chk_for_duplicates(maindb, tol=2*u.arcsec, dup_lim=0):
     """ Check for duplicates in the catalog to within tol
 
     Parameters
@@ -156,7 +161,8 @@ def chk_for_duplicates(maindb, tol=2*u.arcsec):
     idx, d2d, d3d = match_coordinates_sky(c_main, c_main, nthneighbor=2)
     cand_dups = d2d < tol
     # Finish
-    if np.sum(cand_dups) > 0:
+    if np.sum(cand_dups) > dup_lim:
+        pdb.set_trace()
         return False
     else:
         return True
@@ -552,5 +558,31 @@ def start_maindb(idkey, **kwargs):
     return maindb, tkeys
 
 
+def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
+    """
+    Parameters
+    ----------
+    hdf
+    dbname
+    maindb
+    zpri
+    gdict
+    version
+
+    Returns
+    -------
+
+    """
+    import json
+    import datetime
+    # Write
+    hdf['catalog'] = maindb
+    hdf['catalog'].attrs['NAME'] = str(dbname)
+    hdf['catalog'].attrs['EPOCH'] = epoch
+    hdf['catalog'].attrs['Z_PRIORITY'] = zpri
+    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(gdict))
+    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
+    hdf['catalog'].attrs['VERSION'] = version
+    hdf.close()
 
 

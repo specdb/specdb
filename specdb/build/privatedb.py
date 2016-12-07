@@ -533,28 +533,4 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
     write_hdf(hdf, dbname, maindb, zpri, gdict, version)
     print("Wrote {:s} DB file".format(outfil))
 
-def write_hdf(hdf, dbname, maindb, zpri, gdict, version):
-    """
-    Parameters
-    ----------
-    hdf
-    dbname
-    maindb
-    zpri
-    gdict
-    version
-
-    Returns
-    -------
-
-    """
-    # Write
-    hdf['catalog'] = maindb
-    hdf['catalog'].attrs['NAME'] = str(dbname)
-    hdf['catalog'].attrs['EPOCH'] = 2000.
-    hdf['catalog'].attrs['Z_PRIORITY'] = zpri
-    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(gdict))
-    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
-    hdf['catalog'].attrs['VERSION'] = version
-    hdf.close()
 
