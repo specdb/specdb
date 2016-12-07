@@ -22,7 +22,7 @@ from linetools.spectra.xspectrum1d import XSpectrum1D
 from specdb.build import utils as spbu
 from specdb.zem import utils as spzu
 from specdb import defs
-from specdb.build.utils import add_ids
+from specdb.build.utils import add_ids, write_hdf
 
 try:
     basestring
