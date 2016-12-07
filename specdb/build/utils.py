@@ -88,12 +88,13 @@ def chk_for_duplicates(maindb):
 
 
 def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
-    """ Generate new IGM_IDs for an input DB
+    """ Generate new CAT_IDs for an input DB
 
     Parameters
     ----------
     maindb : Table
     newdb : Table
+      RA, DEC assumed to be given by RA_SPEC and DEC_SPEC
     chk : bool, optional
       Perform some checks
     idkey : str, optional
@@ -114,7 +115,7 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     IDs = np.zeros(len(newdb), dtype=int)
     # Setup
     c_main = SkyCoord(ra=maindb['RA'], dec=maindb['DEC'], unit='deg')
-    c_new = SkyCoord(ra=newdb['RA'], dec=newdb['DEC'], unit='deg')
+    c_new = SkyCoord(ra=newdb['RA_SPEC'], dec=newdb['DEC_SPEC'], unit='deg')
     # Find new sources
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
     new = d2d > mtch_toler
@@ -137,6 +138,7 @@ def get_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
 
 def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     """ Set the new IDs
+
     Parameters
     ----------
     maindb
@@ -162,6 +164,7 @@ def set_new_ids(maindb, newdb, chk=True, idkey='IGM_ID', mtch_toler=None):
     cut_db.add_column(Column(ids[new], name=idkey))
     # Reset IDs to all positive
     ids = np.abs(ids)
+    newdb[idkey] = ids
     #
     return cut_db, new, ids
 
@@ -179,12 +182,13 @@ def start_maindb(private=False, **kwargs):
 
     """
     idict = defs.get_db_table_format(**kwargs)
-    #if private:
-    #    idict['PRIV_ID'] = 0
-        #idict.pop('IGM_ID')
     tkeys = idict.keys()
     lst = [[idict[tkey]] for tkey in tkeys]
     maindb = Table(lst, names=tkeys)
+    # Private?
+    if private:
+        maindb['PRIV_ID'] = -1  # To get the indexing right
+        tkeys += ['PRIV_ID']
     # Return
     return maindb, tkeys
 

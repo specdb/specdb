@@ -28,6 +28,45 @@ try:
 except NameError:  # For Python 3
     basestring = str
 
+
+def add_ids(maindb, meta, flag_s, tkeys, first=False):
+    """
+    Input meta table has its PRIV_ID values set
+
+    Parameters
+    ----------
+    maindb
+    meta
+    flag_s
+    tkeys
+    first
+
+    Returns
+    -------
+
+    """
+    if first:
+        ids = np.arange(len(meta), dtype=int)
+        meta['PRIV_ID'] = ids
+        cut = meta.copy()
+        cut['flag_group'] = flag_s
+    else:
+        cut, new, ids = spbu.set_new_ids(maindb, meta, idkey='PRIV_ID')
+        cut['flag_group'] = [flag_s]*len(cut)
+        midx = np.array(maindb['PRIV_ID'][ids[~new]])
+        maindb['flag_group'][midx] += flag_s   # ASSUMES NOT SET ALREADY
+    # Catalog
+    cut.rename_column('RA_SPEC', 'RA')
+    cut.rename_column('DEC_SPEC', 'DEC')
+    cat_meta = cut[tkeys]
+    assert spbu.chk_maindb_join(maindb, cat_meta)
+    # Append
+    maindb = vstack([maindb,cat_meta], join_type='exact')
+    if first:
+        maindb = maindb[1:]  # Eliminate dummy line
+    # Return
+    return maindb
+
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
                only_conti=False, skip_folders=[]):
@@ -50,7 +89,6 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
       List of FITS files
     meta_file : str or None
       Name of meta file in tree_root
-
     """
     walk = os.walk(branch)
     folders = ['/.']
@@ -174,17 +212,16 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     decs= np.array([coord.dec.degree for coord in coordlist])
     coords = SkyCoord(ra=ras, dec=decs, unit='deg')
 
-    # Generate Meta Table
-    maindb, tkeys = spbu.start_maindb(private=True)
+    # Generate maindb Table
+    #maindb, tkeys = spbu.start_maindb(private=True)
 
     # Fill
     meta = Table()
-    meta['RA'] = coords.ra.deg
-    meta['DEC'] = coords.dec.deg
+    meta['RA_SPEC'] = coords.ra.deg
+    meta['DEC_SPEC'] = coords.dec.deg
     meta['STYPE'] = [str(stype)]*len(meta)
-    meta['flag_survey'] = [1]*len(meta)
 
-    zem, zsource = spzu.zem_from_radec(meta['RA'], meta['DEC'], ztbl)
+    zem, zsource = spzu.zem_from_radec(meta['RA_SPEC'], meta['DEC_SPEC'], ztbl)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
@@ -205,10 +242,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     # specdb IDs
     if sdb_key is not None:
         meta[sdb_key] = [-9999]*len(meta)
-        if sdb_key not in maindb.keys():
-            maindb[sdb_key] = [-9999]*len(maindb)
+        if sdb_key not in meta.keys():
+            meta[sdb_key] = [-9999]*len(meta)
         c_igmsp = SkyCoord(ra=specdb.qcat.cat['RA'], dec=specdb.qcat.cat['DEC'], unit='deg')
-        c_new = SkyCoord(ra=meta['RA'], dec=meta['DEC'], unit='deg')
+        c_new = SkyCoord(ra=meta['RA_SPEC'], dec=meta['DEC_SPEC'], unit='deg')
         # Find new sources
         idx, d2d, d3d = match_coordinates_sky(c_new, c_igmsp, nthneighbor=1)
         cdict = defs.get_cat_dict()
@@ -216,14 +253,15 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         meta[sdb_key][mtch] = specdb.qcat.cat[sdb_key][idx[mtch]]
 
     # Stack (primarily as a test)
+    '''
     try:
         maindb = vstack([maindb,meta], join_type='exact')
     except:
         pdb.set_trace()
-    maindb = maindb[1:]
+    '''
 
     # SPEC_FILE
-    maindb['SPEC_FILE'] = np.array(files)[~badz]
+    meta['SPEC_FILE'] = np.array(files)[~badz]
 
     # Try Header?
     if parse_head is not None:
@@ -232,7 +270,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for key in parse_head.keys():
             plist[key] = []
         # Loop on files
-        for sfile in maindb['SPEC_FILE']:
+        for sfile in meta['SPEC_FILE']:
             if verbose:
                 print('Parsing {:s}'.format(sfile))
             head = fits.open(sfile)[0].header
@@ -292,37 +330,37 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 plist['R'].append(res/swidth)
         # Finish
         for key in plist.keys():
-            maindb[key] = plist[key]
+            meta[key] = plist[key]
     # mdict
     if mdict is not None:
         for key,item in mdict.items():
-            maindb[key] = [item]*len(meta)
+            meta[key] = [item]*len(meta)
 
     # EPOCH
-    if 'EPOCH' not in maindb.keys():
+    if 'EPOCH' not in meta.keys():
         warnings.warn("EPOCH not defined.  Filling with 2000.")
-        maindb['EPOCH'] = 2000.
+        meta['EPOCH'] = 2000.
 
-    # Survey ID
-    maindb['SURVEY_ID'] = np.arange(len(maindb)).astype(int)
+    # GROUP ID
+    meta['GROUP_ID'] = np.arange(len(meta)).astype(int)
 
     # Fill in empty columns with warning
-    mkeys = maindb.keys()
+    mkeys = meta.keys()
     req_clms = defs.get_req_clms(sdb_key=sdb_key)
     for clm in req_clms:
         if clm not in mkeys:
             if clm not in ['NPIX','WV_MIN','WV_MAX']:  # File in ingest_spec
                 warnings.warn("Meta Column {:s} not defined.  Filling with DUMMY".format(clm))
                 if clm == 'DATE-OBS':
-                    maindb[clm] = ['9999-1-1']*len(maindb)
+                    meta[clm] = ['9999-1-1']*len(meta)
                 else:
-                    maindb[clm] = ['DUMMY']*len(maindb)
+                    meta[clm] = ['DUMMY']*len(meta)
 
     # Return
     if debug:
-        maindb[['RA', 'DEC', 'SPEC_FILE']].pprint(max_width=120)
+        meta[['RA_SPEC', 'DEC_SPEC', 'SPEC_FILE']].pprint(max_width=120)
         pdb.set_trace()
-    return maindb
+    return meta
 
 
 def dumb_spec():
@@ -364,7 +402,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
 
     """
     # Add Survey
-    print("Adding {:s} survey to DB".format(sname))
+    print("Adding {:s} group to DB".format(sname))
     grp = hdf.create_group(sname)
     # Spectra
     nspec = len(meta)
@@ -493,8 +531,6 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
 
     # Main DB Table
     maindb, tkeys = spbu.start_maindb(private=True)
-    maindb['PRIV_ID'] = -1  # To get the indexing right
-    tkeys += ['PRIV_ID']
 
     # MAIN LOOP
     for ss,branch in enumerate(branches):
@@ -522,39 +558,41 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
                 mdict = meta_dict['meta_dict']
         full_meta = mk_meta(fits_files, ztbl,
                             parse_head=phead, mdict=mdict, **kwargs)
-        # Survey IDs
+        # Update group dict
         flag_s = 2**ss
-        branch_name = branch.split('/')[-1]
-        sdict[branch_name] = flag_s
-        if ss == 0:
-            ids = np.arange(len(full_meta), dtype=int)
-            full_meta['PRIV_ID'] = ids
-            full_meta['flag_survey'] = flag_s
-            cut = full_meta
-        else:
-            cut, new, ids = spbu.set_new_ids(maindb, full_meta, idkey='PRIV_ID')
-            cut['flag_survey'] = [flag_s]*len(cut)
-            midx = np.array(maindb['PRIV_ID'][ids[~new]])
-            maindb['flag_survey'][midx] += flag_s   # ASSUMES NOT SET ALREADY
-        # Catalog
-        cat_meta = cut[tkeys]
-        assert spbu.chk_maindb_join(maindb, cat_meta)
-        # Append
-        maindb = vstack([maindb,cat_meta], join_type='exact')
-        if ss == 0:
-            maindb = maindb[1:]  # Eliminate dummy line
+        group_name = branch.split('/')[-1]
+        sdict[group_name] = flag_s
+        # IDs
+        maindb = add_ids(maindb, full_meta, flag_s, tkeys, first=(ss==0))
         # Ingest
-        ingest_spectra(hdf, branch_name, full_meta, max_npix=maxpix, **kwargs)
+        ingest_spectra(hdf, group_name, full_meta, max_npix=maxpix, **kwargs)
 
+    # Write
+    write_hdf(hdf, dbname, maindb, zpri, sdict, version)
+    print("Wrote {:s} DB file".format(outfil))
+
+def write_hdf(hdf, dbname, maindb, zpri, sdict, version):
+    """
+    Parameters
+    ----------
+    hdf
+    dbname
+    maindb
+    zpri
+    sdict
+    version
+
+    Returns
+    -------
+
+    """
     # Write
     hdf['catalog'] = maindb
     hdf['catalog'].attrs['NAME'] = str(dbname)
     hdf['catalog'].attrs['EPOCH'] = 2000.
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
-    hdf['catalog'].attrs['SURVEY_DICT'] = json.dumps(ltu.jsonify(sdict))
+    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(sdict))
     hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
     hdf['catalog'].attrs['VERSION'] = version
     hdf.close()
-    print("Wrote {:s} DB file".format(outfil))
-
 
