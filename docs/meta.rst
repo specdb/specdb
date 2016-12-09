@@ -4,7 +4,7 @@
 Meta Data
 *********
 
-Each dataset in specdb includes a meta data table
+Each group in specdb includes a meta data table
 with each row describing each ingested spectrum.
 
 Here are the required columns:
@@ -22,7 +22,7 @@ R           float    Instrument resolution, :math:`\lambda/\Delta\lambda` (FWHM)
 WV_MIN      float    Minimum wavelength of the spectrum
 WV_MAX      float    Maximum wavelength of the spectrum
 NPIX        int      Number of pixels in the spectrum; may include null values
-SURVEY_ID   int      Unique identifier for the survey [not well implemented yet]
+GROUP_ID    int      Unique identifier for each row in the meta table
 SPEC_FILE   str      Spectrum file name
 INSTR       str      Instrument file name (see `Instruments and Gratings`_ below for definitions)
 GRATING     str      Grating name (see `Instruments and Gratings`_ below for definitions)
@@ -55,6 +55,7 @@ FOS         G160L        HST/FOS spectrometer
  ..         G130H        ..
  ..         G190H        ..
  ..         G270H        ..
+FUSE        LWRS         FUSE spectrometer
 GMOS-N      R400         Gemini North GMOS spectrometer
  ..         B600         ..
 GMOS-S      R400         Gemini South GMOS spectrometer
