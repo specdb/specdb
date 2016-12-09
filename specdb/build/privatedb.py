@@ -89,7 +89,6 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
       List of FITS files
     meta_file : str or None
       Name of meta file in tree_root
-
     """
     walk = os.walk(branch)
     folders = ['/.']

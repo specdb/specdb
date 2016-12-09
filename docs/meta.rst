@@ -55,6 +55,7 @@ FOS         G160L        HST/FOS spectrometer
  ..         G130H        ..
  ..         G190H        ..
  ..         G270H        ..
+FUSE        LWRS         FUSE spectrometer
 GMOS-N      R400         Gemini North GMOS spectrometer
  ..         B600         ..
 GMOS-S      R400         Gemini South GMOS spectrometer

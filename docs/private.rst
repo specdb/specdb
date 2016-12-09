@@ -72,7 +72,7 @@ Here is an example file::
          "DATE-OBS": "DATE",
          "GRATING": "OPT_ELEM",
          "INSTR": "INSTRUME",
-         "R": True
+         "R": true
       }
    }
 
@@ -144,6 +144,7 @@ script. Here is the current usage::
       -h, --help         show this help message and exit
       --ztbl ZTBL        Name of data file containing redshift info
       --zspecdb ZSPECDB  Name of specdb DB to use for redshifts
+      --version VERSION  Version of the DB; default is `v00`
 
 And here is an example of running it on the test DB::
 
