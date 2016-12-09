@@ -31,7 +31,7 @@ def igmspec_file(version='v02', nspec=5):
     igmsp = IgmSpec()
     # Grab 100 sources from several datasets
     dsets = ['BOSS_DR12', 'HD-LLS_DR1', 'SDSS_DR7', 'GGG']#, '2QZ']
-    flags = igmsp.cat['flag_survey'].data
+    flags = igmsp.cat['flag_group'].data
     all_IDs = []
     for dset in dsets:
         sflag = igmsp.group_dict[dset]
@@ -63,7 +63,7 @@ def igmspec_file(version='v02', nspec=5):
     for dkey in sdict.keys():
         if dkey not in hdfkeys:
             sdict.pop(dkey, None)
-    hdf['catalog'].attrs['SURVEY_DICT'] = json.dumps(ltu.jsonify(sdict))
+    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(sdict))
     hdf.close()
     print("Wrote {:s} DB file".format(outfil))
 

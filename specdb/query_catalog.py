@@ -75,7 +75,10 @@ class QueryCatalog(object):
                         raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
                     self.idkey = key
         # Survey dict
-        self.group_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
+        try:
+            self.group_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
+        except KeyError:
+            self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
         self.groups = list(self.group_dict.keys())
         if self.verbose:
             print("Available groups: {}".format(self.groups))
