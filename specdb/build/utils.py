@@ -162,7 +162,6 @@ def chk_for_duplicates(maindb, tol=2*u.arcsec, dup_lim=0):
     cand_dups = d2d < tol
     # Finish
     if np.sum(cand_dups) > dup_lim:
-        pdb.set_trace()
         return False
     else:
         return True
