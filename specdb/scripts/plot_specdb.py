@@ -14,7 +14,7 @@ def parser(options=None):
     parser.add_argument("dbase", type=str, help="Database [igmspec,all,priv]")
     parser.add_argument("--tol", default=5., type=float, help="Maximum offset in arcsec [default=5.]")
     parser.add_argument("--meta", default=True, help="Show meta data? [default: True]", action="store_true")
-    parser.add_argument("-s", "--survey", help="Name of Survey to use")
+    parser.add_argument("-g", "--group", help="Name of Group to use (e.g. BOSS_DR12)")
     parser.add_argument("--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
     parser.add_argument("--mplot", default=False, help="Use simple matplotlib plot [default: False]")
     parser.add_argument("--db_file", help="Full path of db_file")
@@ -32,6 +32,7 @@ def main(args, unit_test=False, **kwargs):
 
     from astropy import units as u
     from specdb.utils import load_db
+    from specdb import group_utils
     from linetools.scripts.utils import coord_arg_to_coord
 
     # init
@@ -39,27 +40,26 @@ def main(args, unit_test=False, **kwargs):
 
     # Grab
     icoord = coord_arg_to_coord(args.coord)
-    all_spec, all_meta = Specdb.spec_from_coord(icoord, tol=args.tol*u.arcsec, isurvey=args.survey)
+    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, group=args.group)
 
     # Outcome
     if len(all_meta) == 0:
         print("No source found, try another location or a larger tolerance.")
         return
-    elif len(all_meta) == 1:  # One survey hit
+    elif len(all_meta) == 1:  # One group hit
         spec = all_spec[0]
-        meta = all_spec[0]
-    else:  # More than 1 survey
+        meta = all_meta[0]
+        print("Source located in group: {:s}".format(meta.meta['group']))
+    else:  # More than 1 group
         idx = 0
         spec = all_spec[idx]
         meta = all_meta[idx]
-        surveys = [meta.meta['survey'] for meta in all_meta]
-        print("Source located in more than one survey")
-        print("Using survey {:s}.  You can choose from this list {}".format(surveys[idx], surveys))
-
-        #print("Choose another survey from this list (as you wish): {}".format(surveys))
+        groups = [meta.meta['survey'] for meta in all_meta]
+        print("Source located in more than one group")
+        print("Using group {:s}.  You can choose from this list {}".format(groups[idx], groups))
 
     if args.meta:
-        Specdb.idb.show_meta()
+        group_utils.show_group_meta(meta)
 
     # Load spectra
     spec.select = args.select

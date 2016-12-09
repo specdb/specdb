@@ -2,6 +2,10 @@
 Ingesting Private Datasets (v1.1)
 =================================
 
+:download:`Download <nb/Private_Ingest.ipynb>` this notebook.
+
+:download:`Download <nb/Private_Ingest.ipynb>` this notebook.
+
 :download:`Download <examples/Private_Ingest.ipynb>` this notebook.
 
 .. code:: python
