@@ -42,7 +42,7 @@ def test_getrows_one_source():
     assert rows.size == 1
     # One source for multiple spectra
     ggg_group = InterfaceGroup(hdf, 'GGG', 'IGM_ID')
-    ID = 17666
+    ID = 17656
     rows = ggg_group.ids_to_allrows(ID)
     assert rows.size == 2
     # One source, first spectrum
@@ -61,7 +61,7 @@ def test_getrows_sources():
     assert rows.size == 2
     # Dealing with multiple spectra
     ggg_group = InterfaceGroup(hdf, 'GGG', 'IGM_ID')
-    IDs = np.array([32759,17666])
+    IDs = np.array([32720,17656])
     rows = ggg_group.ids_to_allrows(IDs)
     assert rows.size == 4
     rows = ggg_group.ids_to_firstrow(IDs)

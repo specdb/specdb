@@ -37,7 +37,7 @@ class QueryCatalog(object):
       List of groups included in the catalog
     """
 
-    def __init__(self, hdf, maximum_ram=10., verbose=False):
+    def __init__(self, hdf, maximum_ram=10., verbose=False, **kwargs):
         """
         Returns
         -------

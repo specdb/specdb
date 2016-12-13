@@ -17,7 +17,6 @@ from linetools import utils as ltu
 from specdb import defs
 from specdb.cat_utils import match_ids
 
-
 def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
     """ Add IDs to
     Input meta table has its CAT_ID values set in place
@@ -227,6 +226,10 @@ def chk_meta(meta, chk_cat_only=False):
         db_instr = np.array(inst_dict.keys()).astype(str)
         if not np.all(np.in1d(meta_instr, db_instr)):
             print("Bad instrument in meta data")
+            chk = False
+        # ID key
+        if sv_idkey not in meta_keys:
+            print("Missing ID key: {:s}".format(sv_idkey))
             chk = False
     # Return
     return chk
@@ -546,6 +549,10 @@ def start_maindb(idkey, **kwargs):
       List of columns in the table
 
     """
+    # For checking later
+    global sv_idkey
+    sv_idkey = idkey
+    #
     idict = defs.get_db_table_format(**kwargs)
     tkeys = idict.keys()
     lst = [[idict[tkey]] for tkey in tkeys]
