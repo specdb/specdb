@@ -83,6 +83,27 @@ class QueryCatalog(object):
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
+    def cat_from_coords(self, coords, toler=0.5*u.arcsec, verbose=True):
+        """ Return a cut-out of the catalog matched to input coordinates
+        within a tolerance.  Ordered by the input coordinate list.
+        Entries without a match are Null with ID<0.
+
+        Parameters
+        ----------
+        coords : SkyCoord
+          Single or array
+        toler : Angle, optional
+        verbose : bool, optional
+
+        Returns
+        -------
+        matched_cat : Table
+
+        """
+        # Generate the dummy table
+        matched_cat = Table(np.zeros_like(self.cat[0]), len(coords))
+        pdb.set_trace()
+
     def chk_in_group(self, IDs, group):
         """ Check whether a set of IDs are in a specified group
         Parameters
@@ -109,6 +130,7 @@ class QueryCatalog(object):
         answer = np.sum(query) == IDs.size
         # Return
         return answer, query
+
 
     def coord_to_ID(self, coord, tol=0.5*u.arcsec, closest=True, **kwargs):
         """ Convert an input coord to an ID if matched within a
@@ -212,7 +234,7 @@ class QueryCatalog(object):
         indices : int array
           ID values
           -1 if no match within toler
-          -2 if within tol but not within input group
+          -2 is within tol but not within input group
 
         """
         # Checks
