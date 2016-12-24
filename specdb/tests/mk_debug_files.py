@@ -25,10 +25,11 @@ def igmspec_file(version='v02', nspec=5):
     -------
 
     """
+    # Load IGMSpec
+    igmsp = IgmSpec(version='v01')  # Will advance as needed
+    #
     outfil = specdb.__path__[0]+'/tests/files/IGMspec_DB_{:s}_debug.hdf5'.format(version)
     hdf = h5py.File(outfil,'w')
-    # Load IGMSpec
-    igmsp = IgmSpec()
     # Grab 100 sources from several datasets
     dsets = ['BOSS_DR12', 'HD-LLS_DR1', 'SDSS_DR7', 'GGG']#, '2QZ']
     flags = igmsp.cat['flag_group'].data

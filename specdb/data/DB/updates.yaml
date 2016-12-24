@@ -2,8 +2,8 @@
 'igmspec':
   'latest_version': 'v02'
   'v01':
-    'oldest_ok_date': '2016-10-10'
-    'newest_date': '2016-10-10'
+    'oldest_ok_date': '2016-12-12'
+    'newest_date': '2016-12-12'
   'v02':
-    'oldest_ok_date': '2016-10-10'
-    'newest_date': '2016-10-25'
+    'oldest_ok_date': '2016-12-13'
+    'newest_date': '2016-12-13'

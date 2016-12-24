@@ -66,9 +66,15 @@ class InterfaceGroup(object):
         self.meta = Table(self.hdf[group+'/meta'].value)
         # Reformat
         if reformat:
-            self.meta['RA_SPEC'].format = '8.4f'
-            self.meta['DEC_SPEC'].format = '8.4f'
-            self.meta['zem'].format = '6.3f'
+            try:
+                self.meta['RA_GROUP'].format = '8.4f'
+            except KeyError:  # Backwards compatible, will deprecate
+                self.meta['RA'].format = '8.4f'
+                self.meta['DEC'].format = '8.4f'
+                self.meta['zem'].format = '6.3f'
+            else:
+                self.meta['DEC_GROUP'].format = '8.4f'
+                self.meta['zem_GROUP'].format = '6.3f'
             self.meta['WV_MIN'].format = '6.1f'
             self.meta['WV_MAX'].format = '6.1f'
         # Add group
@@ -134,7 +140,10 @@ class InterfaceGroup(object):
         if isinstance(IDs, int):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check that input IDs are all covered
-        chk_survey = np.in1d(IDs, self.meta[self.idkey])
+        try:
+            chk_survey = np.in1d(IDs, self.meta[self.idkey])
+        except:
+            pdb.set_trace()
         if np.sum(chk_survey) != IDs.size:
             raise IOError("Not all of the input IDs are located in requested group: {:s}".format(self.group))
         # Find rows (bool array)

@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 
 
-def zem_from_radec(ra, dec, catalog, qtoler=2*u.arcsec, debug=False):
+def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
     """ Parse input catalog (e.g. Myers) for zem
 
     Parameters
@@ -35,7 +35,7 @@ def zem_from_radec(ra, dec, catalog, qtoler=2*u.arcsec, debug=False):
     qcoord = SkyCoord(ra=catalog['RA'], dec=catalog['DEC'], unit='deg')
     # Match
     idx, d2d, d3d = match_coordinates_sky(icoord, qcoord, nthneighbor=1)
-    good = d2d < qtoler
+    good = d2d < toler
     if debug:
         pdb.set_trace()
     # Finish

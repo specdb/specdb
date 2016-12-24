@@ -306,7 +306,7 @@ def get_req_clms(sdb_key=None):
     req_clms : list
       List of required columns for meta data
     """
-    req_clms = ['RA_SPEC', 'DEC_SPEC', 'EPOCH', 'zem', 'R', 'WV_MIN',
+    req_clms = ['RA_GROUP', 'DEC_GROUP', 'EPOCH', 'zem_GROUP', 'R', 'WV_MIN',
             'WV_MAX', 'DATE-OBS', 'GROUP_ID', 'NPIX', 'SPEC_FILE',
             'INSTR', 'GRATING', 'TELESCOPE']
     if sdb_key is not None:

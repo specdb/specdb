@@ -38,7 +38,7 @@ class SpecDB(object):
         """
         if db_file is None:
             try:
-                db_file = self.grab_dbfile()
+                db_file = self.grab_dbfile(**kwargs)
             except:
                 raise IOError("DB not found. Please either check the corresponding environmental "
                               "variable or directly provide the db_file")
@@ -274,8 +274,13 @@ class IgmSpec(SpecDB):
         # db_file
         SpecDB.__init__(self, db_file=db_file, skip_test=skip_test, **kwargs)
 
-    def grab_dbfile(self):
+    def grab_dbfile(self, version=None, **kwargs):
         """ Grabs the DB file
+        Parameters
+        ----------
+        version : str, optional
+          Restrict search to input version
+
         Returns
         -------
         db_file : str
@@ -290,7 +295,10 @@ class IgmSpec(SpecDB):
         else:
             db_dir = os.getenv('IGMSPEC_DB')
         #
-        fils = glob.glob(db_dir+'/IGMspec_DB_*hdf5')
+        if version is not None:
+            fils = glob.glob(db_dir+'/IGMspec_DB_*{:s}*hdf5'.format(version))
+        else:
+            fils = glob.glob(db_dir+'/IGMspec_DB_*hdf5')
         fils.sort()
         db_file = fils[-1]  # Should grab the latest
         # Return
