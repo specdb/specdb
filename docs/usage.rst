@@ -39,6 +39,22 @@ Querying the Catalog
 There are several methods that interface with the primary
 source catalog.
 
+cat_from_coords
+---------------
+
+This method returns a Table drawn from the catalog matching
+the size and order of an input set of coordinates.  Sources
+that are not matched within the tolerance (default = 0.5 arcsec)
+have entries filled with zero values and ID<0.
+
+Here is an example call::
+
+    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
+    sub_cat = igmsp.qcat.cat_from_coords(coords)
+
+The user can then analyze the catalog for this subset of
+sources (if any matched).
+
 radial_search
 -------------
 
@@ -54,7 +70,7 @@ match_coord
 
 This method matches a set of input coordinates (a SkyCoord object)
 to the source catalog within an optional tolerance (default=0.5").  It returns
-an ndarray of IDs with shape matching the input list.
+an ndarray of IDs with shape and order matching the input list.
 Coordinates without a match within the tolerance
 have -1 values .  Here is an example::
 
