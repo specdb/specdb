@@ -10,7 +10,7 @@ import warnings
 import pdb
 import datetime
 
-from astropy.table import Table, vstack, Column
+from astropy.table import Table, Column
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy.time import Time
@@ -22,50 +22,13 @@ from linetools.spectra.xspectrum1d import XSpectrum1D
 from specdb.build import utils as spbu
 from specdb.zem import utils as spzu
 from specdb import defs
+from specdb.build.utils import add_ids, write_hdf
 
 try:
     basestring
 except NameError:  # For Python 3
     basestring = str
 
-
-def add_ids(maindb, meta, flag_s, tkeys, first=False):
-    """
-    Input meta table has its PRIV_ID values set
-
-    Parameters
-    ----------
-    maindb
-    meta
-    flag_s
-    tkeys
-    first
-
-    Returns
-    -------
-
-    """
-    if first:
-        ids = np.arange(len(meta), dtype=int)
-        meta['PRIV_ID'] = ids
-        cut = meta.copy()
-        cut['flag_group'] = flag_s
-    else:
-        cut, new, ids = spbu.set_new_ids(maindb, meta, idkey='PRIV_ID')
-        cut['flag_group'] = [flag_s]*len(cut)
-        midx = np.array(maindb['PRIV_ID'][ids[~new]])
-        maindb['flag_group'][midx] += flag_s   # ASSUMES NOT SET ALREADY
-    # Catalog
-    cut.rename_column('RA_SPEC', 'RA')
-    cut.rename_column('DEC_SPEC', 'DEC')
-    cat_meta = cut[tkeys]
-    assert spbu.chk_maindb_join(maindb, cat_meta)
-    # Append
-    maindb = vstack([maindb,cat_meta], join_type='exact')
-    if first:
-        maindb = maindb[1:]  # Eliminate dummy line
-    # Return
-    return maindb
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
@@ -217,11 +180,11 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
 
     # Fill
     meta = Table()
-    meta['RA_SPEC'] = coords.ra.deg
-    meta['DEC_SPEC'] = coords.dec.deg
+    meta['RA_GROUP'] = coords.ra.deg
+    meta['DEC_GROUP'] = coords.dec.deg
     meta['STYPE'] = [str(stype)]*len(meta)
 
-    zem, zsource = spzu.zem_from_radec(meta['RA_SPEC'], meta['DEC_SPEC'], ztbl)
+    zem, zsource = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
@@ -245,7 +208,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         if sdb_key not in meta.keys():
             meta[sdb_key] = [-9999]*len(meta)
         c_igmsp = SkyCoord(ra=specdb.qcat.cat['RA'], dec=specdb.qcat.cat['DEC'], unit='deg')
-        c_new = SkyCoord(ra=meta['RA_SPEC'], dec=meta['DEC_SPEC'], unit='deg')
+        c_new = SkyCoord(ra=meta['RA_GROUP'], dec=meta['DEC_GROUP'], unit='deg')
         # Find new sources
         idx, d2d, d3d = match_coordinates_sky(c_new, c_igmsp, nthneighbor=1)
         cdict = defs.get_cat_dict()
@@ -358,7 +321,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
 
     # Return
     if debug:
-        meta[['RA_SPEC', 'DEC_SPEC', 'SPEC_FILE']].pprint(max_width=120)
+        meta[['RA_GROUP', 'DEC_GROUP', 'SPEC_FILE']].pprint(max_width=120)
         pdb.set_trace()
     return meta
 
@@ -527,10 +490,10 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
 
     # Defs
     zpri = defs.z_priority()
-    sdict = {}
+    gdict = {}
 
     # Main DB Table
-    maindb, tkeys = spbu.start_maindb(private=True)
+    maindb, tkeys = spbu.start_maindb('PRIV_ID')
 
     # MAIN LOOP
     for ss,branch in enumerate(branches):
@@ -559,40 +522,15 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', **kwargs):
         full_meta = mk_meta(fits_files, ztbl,
                             parse_head=phead, mdict=mdict, **kwargs)
         # Update group dict
-        flag_s = 2**ss
         group_name = branch.split('/')[-1]
-        sdict[group_name] = flag_s
+        flag_g = spbu.add_to_group_dict(group_name, gdict)
         # IDs
-        maindb = add_ids(maindb, full_meta, flag_s, tkeys, first=(ss==0))
+        maindb = add_ids(maindb, full_meta, flag_g, tkeys, 'PRIV_ID', first=(flag_g==1))
         # Ingest
         ingest_spectra(hdf, group_name, full_meta, max_npix=maxpix, **kwargs)
 
     # Write
-    write_hdf(hdf, dbname, maindb, zpri, sdict, version)
+    write_hdf(hdf, dbname, maindb, zpri, gdict, version)
     print("Wrote {:s} DB file".format(outfil))
 
-def write_hdf(hdf, dbname, maindb, zpri, sdict, version):
-    """
-    Parameters
-    ----------
-    hdf
-    dbname
-    maindb
-    zpri
-    sdict
-    version
-
-    Returns
-    -------
-
-    """
-    # Write
-    hdf['catalog'] = maindb
-    hdf['catalog'].attrs['NAME'] = str(dbname)
-    hdf['catalog'].attrs['EPOCH'] = 2000.
-    hdf['catalog'].attrs['Z_PRIORITY'] = zpri
-    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(sdict))
-    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
-    hdf['catalog'].attrs['VERSION'] = version
-    hdf.close()
 

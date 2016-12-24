@@ -83,17 +83,17 @@ def test_chk_in_group(igmsp):
 
 def test_ids_in_groups(igmsp):
     # BOSS
-    IDs = igmsp.qcat.find_ids_in_groups(['BOSS_DR12'])
+    IDs, mask = igmsp.qcat.find_ids_in_groups(['BOSS_DR12'])
     assert IDs.size == 19
     assert IDs[0] == 0
     # BOSS and HD-LLS -- Both
-    IDs2 = igmsp.qcat.find_ids_in_groups(['HD-LLS_DR1', 'GGG'], in_all=True)
+    IDs2, _ = igmsp.qcat.find_ids_in_groups(['HD-LLS_DR1', 'GGG'])
     assert IDs2.size == 1
     # BOSS and HD-LLS -- Either
-    IDs3 = igmsp.qcat.find_ids_in_groups(['HD-LLS_DR1', 'GGG'])
+    IDs3, _ = igmsp.qcat.find_ids_in_groups(['HD-LLS_DR1', 'GGG'], in_all=False)
     assert IDs3.size == 9
     # With input IDs
-    IDs4 = igmsp.qcat.find_ids_in_groups(['BOSS_DR12'], np.array([0,1]))
+    IDs4, _ = igmsp.qcat.find_ids_in_groups(['BOSS_DR12'], np.array([0,1]))
     assert IDs4.size == 2
 
 

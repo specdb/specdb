@@ -37,7 +37,7 @@ class QueryCatalog(object):
       List of groups included in the catalog
     """
 
-    def __init__(self, hdf, maximum_ram=10., verbose=False):
+    def __init__(self, hdf, maximum_ram=10., verbose=False, **kwargs):
         """
         Returns
         -------
@@ -74,11 +74,13 @@ class QueryCatalog(object):
                     if self.idkey is not None:
                         raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
                     self.idkey = key
-        # Survey dict
+        # Group dict
         try:
             self.group_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
         except KeyError:
-            self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])
+            self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])  # Backwards compatible, will remove
+            self.cat['flag_group'] = self.cat['flag_survey']
+
         self.groups = list(self.group_dict.keys())
         if self.verbose:
             print("Available groups: {}".format(self.groups))
@@ -375,7 +377,7 @@ class QueryCatalog(object):
             igroup = self.groups
         #
         cat_rows = match_ids(IDs, self.cat[self.idkey])
-        flags = self.cat['flag_survey'][cat_rows]
+        flags = self.cat['flag_group'][cat_rows]
         gd_groups = []
         for group in igroup:
             sflag = self.group_dict[group]
