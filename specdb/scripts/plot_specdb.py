@@ -40,7 +40,7 @@ def main(args, unit_test=False, **kwargs):
 
     # Grab
     icoord = coord_arg_to_coord(args.coord)
-    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, group=args.group)
+    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, groups=[args.group])
 
     # Outcome
     if len(all_meta) == 0:
@@ -54,7 +54,7 @@ def main(args, unit_test=False, **kwargs):
         idx = 0
         spec = all_spec[idx]
         meta = all_meta[idx]
-        groups = [meta.meta['survey'] for meta in all_meta]
+        groups = [meta.meta['group'] for meta in all_meta]
         print("Source located in more than one group")
         print("Using group {:s}.  You can choose from this list {}".format(groups[idx], groups))
 
@@ -65,7 +65,7 @@ def main(args, unit_test=False, **kwargs):
     spec.select = args.select
     if unit_test:
         return
-    # Show  [may transition to xspec]
+    # Show
     if args.mplot:
         spec.plot()
     else:

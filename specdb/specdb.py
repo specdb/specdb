@@ -97,6 +97,7 @@ class SpecDB(object):
         """ Grab spectra for input IDs from input dataset
         Default mode is to grab the first spectrum that appears in the dataset
         of a given source (i.e. in cases where more than 1 spectrum exists).
+
         Use all_spec=True to return a list of XSpectrum1D objects and meta tables,
         one per input source, of all the spectra for each source.
 

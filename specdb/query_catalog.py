@@ -85,6 +85,41 @@ class QueryCatalog(object):
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
+    def cat_from_coords(self, coords, toler=0.5*u.arcsec, **kwargs):
+        """ Return a cut-out of the catalog matched to input coordinates
+        within a tolerance.  Ordered by the input coordinate list.
+        Entries without a match are Null with ID<0.
+
+        Parameters
+        ----------
+        coords : SkyCoord
+          Single or array
+        toler : Angle, optional
+        verbose : bool, optional
+
+        Returns
+        -------
+        matched_cat : Table
+
+        """
+        # Generate the dummy table
+        if len(coords.shape) == 0:
+            ncoord = 1
+        else:
+            ncoord = coords.shape[0]
+        matched_cat = Table(np.repeat(np.zeros_like(self.cat[0]), ncoord))
+        # Grab IDs
+        IDs = self.match_coord(coords, toler=toler, **kwargs)
+        # Find rows in catalog
+        rows = match_ids(IDs, self.cat[self.idkey], require_in_match=False)
+        # Fill
+        gd_rows = rows >= 0
+        matched_cat[np.where(gd_rows)] = self.cat[rows[gd_rows]]
+        # Null the rest
+        matched_cat[self.idkey][np.where(~gd_rows)] = IDs[~gd_rows]
+        # Return
+        return matched_cat
+
     def chk_in_group(self, IDs, group):
         """ Check whether a set of IDs are in a specified group
         Parameters
@@ -111,6 +146,7 @@ class QueryCatalog(object):
         answer = np.sum(query) == IDs.size
         # Return
         return answer, query
+
 
     def coord_to_ID(self, coord, tol=0.5*u.arcsec, closest=True, **kwargs):
         """ Convert an input coord to an ID if matched within a
@@ -214,7 +250,9 @@ class QueryCatalog(object):
         indices : int array
           ID values
           -1 if no match within toler
-          -2 if within tol but not within input group
+          -2 is within tol but not within input group
+
+        Returned IDs are aligned with coord array
 
         """
         # Checks

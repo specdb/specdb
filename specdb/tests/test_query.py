@@ -72,6 +72,24 @@ def test_match_coord(igmsp):
     idxs3 = igmsp.qcat.match_coord(coords, group='HD-LLS_DR1')
     assert np.sum(idxs3 >= 0) == 0
 
+
+def test_cat_from_coord(igmsp):
+    # Single
+    coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
+    #
+    ccat = igmsp.qcat.cat_from_coords(coord)
+    assert ccat['IGM_ID'][0] == 0
+    # Multiple
+    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
+    ccat2 = igmsp.qcat.cat_from_coords(coords)
+    assert len(ccat2) == 2
+    assert ccat2['IGM_ID'][0] == 1
+    # One miss
+    coords3 = SkyCoord(ra=[9.0028,0.0019], dec=[-14.9747,17.7737], unit='deg')
+    ccat3 = igmsp.qcat.cat_from_coords(coords3)
+    assert ccat3['IGM_ID'][0] == -1
+
+
 def test_chk_in_group(igmsp):
     # BOSS
     answer, query = igmsp.qcat.chk_in_group(np.array([0,1,2]), 'BOSS_DR12')
@@ -80,6 +98,7 @@ def test_chk_in_group(igmsp):
     #
     answer, query = igmsp.qcat.chk_in_group(np.array([0,1,2]), 'GGG')
     assert not answer
+
 
 def test_ids_in_groups(igmsp):
     # BOSS

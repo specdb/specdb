@@ -41,6 +41,7 @@ def match_ids(IDs, match_IDs, require_in_match=True):
     rows[in_match] = indices
     return rows
 
+
 def flag_to_surveys(flag, survey_dict):
     """ Convert flag_survey to list of surveys
 
