@@ -60,7 +60,7 @@ def main(args, unit_test=False, **kwargs):
         return
     else:
         mt = imt[0]
-        scoord = SkyCoord(ra=mtbl['RA'][mt], dec=mtbl['DEC'][mt], unit='deg')
+        scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
 
     # Grab
     print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
@@ -83,7 +83,7 @@ def main(args, unit_test=False, **kwargs):
         print("Using survey {:s}".format(surveys[idx]))
         print("You can choose from this list {}".format(surveys))
 
-    group_utils.show_group_meta(meta)
+    #group_utils.show_group_meta(meta)
 
     # Load spectra
     spec.select = args.select
