@@ -6,7 +6,7 @@ Private Database
 
 It is possible within `specdb` to generate a private
 database that can be used in tandem with the public
-database(s). The following describes the procedure.
+database(s). The following document describes the procedure.
 
 Notebooks
 =========
@@ -24,8 +24,8 @@ Directory Tree
 
 The main input is a simple directory tree containing the
 FITS files of individual spectra.  Each branch off the main
-tree generates a unique dataset in the database.  It is also
-expected (although not strictly required) that each branch
+tree generates a unique group in the database.  It is also
+expected (although not required) that each branch
 contains FITS files from a single instrument.  One is
 allowed to have sub-folders in a branch, although this is
 also not recommended.
@@ -52,13 +52,13 @@ Here is an example of a directory tree
 Meta parameter file
 -------------------
 
-Every dataset in `specdb` must include a meta table and there
+Every group in `specdb` includes a meta table and there
 is a required set of columns (see :doc:`meta`) for the list
 and descriptions.
 
-The code can automatically generated the meta table from the
-data files, but it highly recommended that you guide this process
-by providing a meta parameter file in each branch of the tree.
+The code can automatically generate the meta table from the
+data files alone, but it is highly recommended that you
+guide this process by providing a meta parameter file in each branch of the tree.
 It must be a JSON file and it must end in _meta.json.
 
 Here is an example file::
