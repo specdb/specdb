@@ -539,6 +539,18 @@ def set_resolution(head, instr=None):
         raise IOError("Not read for this instrument")
 
 
+def set_sv_idkey(idkey):
+    """ Set the idkey in the event that it was not set by
+     calling start_maindb
+
+    Parameters
+    ----------
+    idkey : str
+
+    """
+    global sv_idkey
+    sv_idkey = idkey
+
 def start_maindb(idkey, **kwargs):
     """ Start the main DB catalog
 
