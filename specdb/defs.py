@@ -155,7 +155,7 @@ def get_db_table_format(extras=None):
 
     # Dict for Table
     idict = dict(RA=0., DEC=0., zem=0., sig_zem=0.,
-                 flag_zem=dummyf, flag_survey=0, STYPE=dummys)
+                 flag_zem=dummyf, flag_group=0, STYPE=dummys)
     # Extras
     if extras is not None:
         for key,item in extras.items():
@@ -306,8 +306,8 @@ def get_req_clms(sdb_key=None):
     req_clms : list
       List of required columns for meta data
     """
-    req_clms = ['RA', 'DEC', 'EPOCH', 'zem', 'R', 'WV_MIN',
-            'WV_MAX', 'DATE-OBS', 'SURVEY_ID', 'NPIX', 'SPEC_FILE',
+    req_clms = ['RA_GROUP', 'DEC_GROUP', 'EPOCH', 'zem_GROUP', 'R', 'WV_MIN',
+            'WV_MAX', 'DATE-OBS', 'GROUP_ID', 'NPIX', 'SPEC_FILE',
             'INSTR', 'GRATING', 'TELESCOPE']
     if sdb_key is not None:
         req_clms += [sdb_key]
