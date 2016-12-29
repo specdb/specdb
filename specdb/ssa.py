@@ -76,7 +76,7 @@ class SSAInterface(object):
 
         # Default Infos
         def_infos = []
-        def_infos.append(Info(name='SERVICE_PROTOCOL', value=1.0, content="SSAP"))
+        def_infos.append(Info(name='SERVICE_PROTOCOL', value=1.1, content="SSAP"))
         def_infos.append(Info(name='REQUEST', value='queryData'))
         def_infos.append(Info(name='serviceName', value='ssap'))
         def_infos.append(Info(name='POS', value=POS))
@@ -96,7 +96,7 @@ class SSAInterface(object):
         if coord_sys not in ['ICRS']:
             status = 'ERROR'
             qinfos.append(Info(name='QUERY_STATUS', value="ERROR", content="Coordinate system {:s} not implemented".format(coord_sys)))
-            raise IOError("Coordinate system {:s} not implemented".format(coord_sys))
+            #raise IOError("Coordinate system {:s} not implemented".format(coord_sys))
 
         # Return if failed
         if status != 'OK':
@@ -130,11 +130,18 @@ class SSAInterface(object):
         if IDs.size > 0:
             # Grab sub-catalog
             subcat = self.specdb.qcat.cat_from_ids(IDs)
+            # Add Units
+            subcat['RA'].unit = u.deg
+            subcat['DEC'].unit = u.deg
+            #
             votable = from_table(subcat)
-            # Add Parameters
             tbl = votable.resources[0].tables[0]
+            # Add description text to Fields
+            tbl.get_field_by_id("RA").description = 'Right Ascension (J2000)'
+            # Add Parameters
             pub_param = Param(tbl, name="Publisher", utype="ssa:Curation.Publisher", ucd=" meta.curation",
                               datatype="char", arraysize="*", value="JXP")
+            tbl.params.append(pub_param)
         else:  # Generate a dummy table
             votable = empty_vo()
 
