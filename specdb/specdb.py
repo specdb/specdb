@@ -172,7 +172,10 @@ class SpecDB(object):
 
         Returns
         -------
-
+        speclist : list
+          List of XSpectrum1D objects
+        metalist : list
+          List of meta Table objects
         """
         # Restrict groups searched according to user input
         if groups is None:
