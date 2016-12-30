@@ -50,6 +50,9 @@ def igmspec_file(version='v02', nspec=5):
         grp = hdf.create_group(dset)
         spec_set = hdf[dset].create_dataset('spec', data=spec.data, chunks=True, compression='gzip')
         hdf[dset]['meta'] = meta
+        # Add SSA -- read from igmspec later
+        ssa_dict = dict(Title='BOSS DR12 Quasars')
+        hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
     IDs = np.unique(np.array(all_IDs))
     # Catalog
     hdf['catalog'] = igmsp.qcat.cat[IDs]
