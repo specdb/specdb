@@ -40,7 +40,11 @@ def main(args, unit_test=False, **kwargs):
 
     # Grab
     icoord = coord_arg_to_coord(args.coord)
-    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, groups=[args.group])
+    if args.group is not None:
+        groups=[args.group]
+    else:
+        groups = None
+    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, groups=groups)
 
     # Outcome
     if len(all_meta) == 0:

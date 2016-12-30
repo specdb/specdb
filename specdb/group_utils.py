@@ -23,7 +23,7 @@ def show_group_meta(meta, meta_keys=None, show_all_keys=True):
         for key in meta.keys():
             if '_ID' in key:
                 mkeys += [key]
-        mkeys += ['RA', 'DEC', 'zem', 'SPEC_FILE']
+        mkeys += ['RA_GROUP', 'DEC_GROUP', 'zem_GROUP', 'SPEC_FILE']
     else:
         mkeys = meta_keys
     # Add in the rest

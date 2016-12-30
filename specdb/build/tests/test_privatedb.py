@@ -7,6 +7,7 @@ import h5py
 
 from astropy.table import Table
 from specdb.build import privatedb as pbuild
+from specdb.build import utils as spbu
 
 
 def data_path(filename):
@@ -16,7 +17,7 @@ def data_path(filename):
 
 def test_grab_files():
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles, _ = pbuild.grab_files(data_dir)
+    ffiles, _, _ = pbuild.grab_files(data_dir)
     #
     assert len(ffiles) == 2
 
@@ -24,17 +25,26 @@ def test_grab_files():
 def test_meta():
     ztbl = Table.read(os.path.join(os.path.dirname(__file__), 'files', 'ztbl_E.fits'))
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles,_ = pbuild.grab_files(data_dir)
+    ffiles,_,_ = pbuild.grab_files(data_dir)
     meta = pbuild.mk_meta(ffiles, ztbl, fname=True, skip_badz=True, mdict=dict(INSTR='HIRES'))
     #
-    np.testing.assert_allclose(meta['zem'].data, (2.39499998093, 2.59719920158))
+    np.testing.assert_allclose(meta['zem_GROUP'].data, (2.39499998093, 2.59719920158))
 
 
 def test_ingest():
+    # Begin
+    id_key = 'TEST_ID'
+    maindb, tkeys = spbu.start_maindb(id_key)
+    #
     ztbl = Table.read(os.path.join(os.path.dirname(__file__), 'files', 'ztbl_E.fits'))
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
-    ffiles,_ = pbuild.grab_files(data_dir)
+    ffiles,_,_ = pbuild.grab_files(data_dir)
     meta = pbuild.mk_meta(ffiles, ztbl, fname=True, skip_badz=True, mdict=dict(INSTR='HIRES'))
+    # Group and IDs
+    gdict = {}
+    flag_g = spbu.add_to_group_dict('COS', gdict)
+    maindb = pbuild.add_ids(maindb, meta, flag_g, tkeys, id_key, first=(flag_g==1))
+    #
     hdf = h5py.File('tmp.hdf5','w')
     pbuild.ingest_spectra(hdf, 'test', meta)
     hdf.close()
