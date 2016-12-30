@@ -26,7 +26,7 @@ def igmspec_file(version='v02', nspec=5):
 
     """
     # Load IGMSpec
-    igmsp = IgmSpec(version='v01')  # Will advance as needed
+    igmsp = IgmSpec(version='v02')  # Will advance as needed
     #
     outfil = specdb.__path__[0]+'/tests/files/IGMspec_DB_{:s}_debug.hdf5'.format(version)
     hdf = h5py.File(outfil,'w')
@@ -50,17 +50,28 @@ def igmspec_file(version='v02', nspec=5):
         grp = hdf.create_group(dset)
         spec_set = hdf[dset].create_dataset('spec', data=spec.data, chunks=True, compression='gzip')
         hdf[dset]['meta'] = meta
-        # Add SSA -- read from igmspec later
-        ssa_dict = dict(Title='BOSS DR12 Quasars')
-        hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
-    IDs = np.unique(np.array(all_IDs))
+        # Add attrs :: SSA -- read from igmspec later
+        for key in igmsp[dset].hdf[dset+'/meta'].attrs.keys():
+            hdf[dset]['meta'].attrs[key] = igmsp[dset].hdf[dset+'/meta'].attrs[key]
+        if 'SSA' not in hdf[dset]['meta'].attrs.keys():
+            ssa_dict = dict(Title='BOSS DR12 Quasars', Publisher='JXP',
+                            FluxUcd='phot.fluDens;em.wl',
+                            FluxUnit='erg s**(-1) angstrom**(-1)',
+                            SpecUcd='em.wl',
+                            SpecUnit='Angstrom',
+                            )
+            hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
     # Catalog
+    IDs = np.unique(np.array(all_IDs))
     hdf['catalog'] = igmsp.qcat.cat[IDs]
     hdf['catalog'].attrs['NAME'] = 'igmspec'
     hdf['catalog'].attrs['EPOCH'] = 2000.
+    hdf['catalog'].attrs['EQUINOX'] = 2000.
+    hdf['catalog'].attrs['SpaceFrame'] = str('ICRS')
     zpri = igmsp.hdf['catalog'].attrs['Z_PRIORITY']
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['VERSION'] = version
+    hdf['catalog'].attrs['Publisher'] = str('JXP')
     hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
     hdfkeys = hdf.keys()
     sdict = igmsp.group_dict.copy()

@@ -64,8 +64,11 @@ class QueryCatalog(object):
 
         """
         import json
-        #
+        # Catalog and attributes
         self.cat = Table(hdf['catalog'].value)
+        self.cat_attr = {}
+        for key in hdf['catalog'].attrs.keys():
+            self.cat_attr[key] = hdf['catalog'].attrs[key]
         # Set ID key
         self.idkey = idkey
         if idkey is None:

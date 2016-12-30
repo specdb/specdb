@@ -63,11 +63,15 @@ class InterfaceGroup(object):
         ----------
         group : str
         """
+        import json
         self.meta = Table(self.hdf[group+'/meta'].value)
         # Attributes
         self.meta_attr = {}
         for key in self.hdf[group+'/meta'].attrs.keys():
-            self.meta_attr[key] = self.hdf[group+'/meta'].attrs[key]
+            if key in ['SSA']:
+                self.meta_attr[key] = json.loads(self.hdf[group+'/meta'].attrs[key])
+            else:
+                self.meta_attr[key] = self.hdf[group+'/meta'].attrs[key]
         # Reformat
         if reformat:
             try:

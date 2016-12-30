@@ -119,8 +119,7 @@ class SSAInterface(object):
 
         if IDs.size > 0:
             # Grab meta params
-            evotbl = empty_vo(rtype='meta')
-            metaparams, pdict, pIDs = self.metaquery_response(evotbl)
+            metaparams, pdict, pIDs = metaquery_param()
 
             # Grab sub-catalog
             subcat = self.specdb.qcat.cat_from_ids(IDs)
@@ -134,9 +133,10 @@ class SSAInterface(object):
                 gdID = np.where(subcat['flag_group'].data & flag_group)[0]
                 meta_group = self.specdb[group].cut_meta(IDs[gdID], first=False)
                 meta_attr = self.specdb[group].meta_attr
-                meta_attr['SSA'] = None
-                vo_meta = meta_to_ssa_vo(meta_group, meta_attr['SSA'], subcat[gdID])
-                all_vometa.append(vo_meta)
+                # Convert to SSA VO
+                ssavo_meta = meta_to_ssa_vo(meta_group, meta_attr, subcat[gdID],
+                                            self.specdb.qcat.cat_attr)
+                all_vometa.append(ssavo_meta)
             vometa = vstack(all_vometa)
             # Generate true VOTable
             votable = from_table(vometa)
@@ -151,6 +151,8 @@ class SSAInterface(object):
                     field.utype = param.utype
                     if hasattr(param, 'ucd'):
                         field.ucd = param.ucd
+                    if hasattr(param, 'unit'):
+                        field.unit = param.unit
             # Add Parameters
             #pub_param = Param(tbl, name="Publisher", utype="ssa:Curation.Publisher", ucd=" meta.curation",
             #                  datatype="char", arraysize="*", value="JXP")
@@ -179,7 +181,7 @@ def ssa_defs():
 
     """
     ssa_dict = {}
-    ssa_dict['DataModel'] = str('Spectrum-1.0')
+    ssa_dict['DataModel'] = str('Spectrum-1.2')
     ssa_dict['DatasetType'] = str('Spectrum')
 
     return ssa_dict
@@ -204,7 +206,7 @@ def empty_vo(rtype='results'):
     return evotable
 
 
-def meta_to_ssa_vo(meta, ssa_attr, subcat):
+def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
     """
     Parameters
     ----------
@@ -220,9 +222,23 @@ def meta_to_ssa_vo(meta, ssa_attr, subcat):
     ssa_dict = ssa_defs()
     # Get started
     votbl = Table()
+    # Dataset
     votbl['DataModel'] = [ssa_dict['DataModel']]*len(meta)
     votbl['DatasetType'] = ssa_dict['DatasetType']
-    #
+    # DataID
+    votbl['Title'] = str(meta_attr['SSA']['Title'])
+    votbl['Instrument'] = meta['INSTR']
+    # Curation
+    votbl['Publisher'] = str(cat_attr['Publisher'])
+    # Coord sys
+    votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
+    votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
+    # FluxAxis
+    votbl['FluxAxisUcd'] = str(meta_attr['SSA']['FluxUcd'])
+    votbl['FluxAxisUnit'] = str(meta_attr['SSA']['FluxUnit'])
+    # SpectraAxis
+    votbl['SpectralAxisUcd'] = str(meta_attr['SSA']['SpecUcd'])
+    votbl['SpectralAxisUnit'] = str(meta_attr['SSA']['SpecUnit'])
     # RA,DEC
     radec = np.zeros((len(meta),2))
     radec[:,0] = subcat['RA']
@@ -260,6 +276,41 @@ def metaquery_param(evotbl=None):
                   datatype="char", ucd="meta.title;meta.dataset", utype="ssa:DataID.Title", arraysize="*", value="")
     title.description = 'Dataset Title'
     all_params.append(title)
+    instr = Param(evotbl, ID="Instrument", name="OUTPUT:Instrument",
+                  datatype="char", ucd="meta.id;instr", utype="ssa:DataID.Title", arraysize="*", value="")
+    instr.description = 'Instrument name'
+    all_params.append(instr)
+
+    # data model metadata: Curation.*
+    pub_param = Param(evotbl, ID="Publisher", name="OUTPUT:Publisher", utype="ssa:Curation.Publisher", ucd=" meta.curation",
+                      datatype="char", arraysize="*", value="")
+    all_params.append(pub_param)
+
+    # data model metadata: CoordSys.*
+    space_frame = Param(evotbl, ID="SpaceFrameName", name="OUTPUT:SpaceFrameName",
+                        datatype="char", utype="ssa:CoordSys.SpaceFrame.Name", arraysize="*", value="")
+    space_frame.description = 'Spatial coordinate frame name'
+    all_params.append(space_frame)
+    equinox = Param(evotbl, ID="SpaceFrameEquinox", name="OUTPUT:SpaceFrameEquinox", datatype="double",
+                    ucd="time.equinox;pos.frame", utype="ssa:CoordSys.SpaceFrame.Equinox", unit="yr", value="")
+    all_params.append(equinox)
+
+    # characterization metadata: FluxAxis
+    flux_axis_ucd = Param(evotbl, ID="FluxAxisUcd", name="OUTPUT:FluxAxisUcd",
+                      datatype="char", utype="ssa:Char.FluxAxis.ucd", arraysize="*", value="")
+    # arith.ratio;phot.flux.density for normalized
+    all_params.append(flux_axis_ucd)
+    flux_axis_unit = Param(evotbl, ID="FluxAxisUnit", name="OUTPUT:FluxAxisUnit",
+                          datatype="char", utype="ssa:Char.FluxAxis.unit", arraysize="*", value="")
+    all_params.append(flux_axis_unit)
+
+    # characterization metadata: SpectralAxis
+    spec_axis_ucd = Param(evotbl, ID="SpectralAxisUcd", name="OUTPUT:SpectralAxisUcd",
+                          datatype="char", utype="ssa:Char.SpectralAxis.ucd", arraysize="*", value="")
+    all_params.append(spec_axis_ucd)
+    spec_axis_unit = Param(evotbl, ID="SpectralAxisUnit", name="OUTPUT:SpectralAxisUnit",
+                          datatype="char", utype="ssa:Char.SpectralAxis.unit", arraysize="*", value="")
+    all_params.append(spec_axis_unit)
 
     # characterization metadata: Char.*.Coverage
     sp_loc = Param(evotbl, ID="SpatialLocation", name="OUTPUT:SpatialLocation", datatype="double", ucd="pos.eq", utype="ssa:Char.SpatialAxis.Coverage.Location.Value", arraysize="2", unit="deg", value="", config=cdict)
@@ -268,8 +319,6 @@ def metaquery_param(evotbl=None):
     param_dict['SpatialLocation'] = ['RA','DEC']
 
 
-    pub_param = Param(evotbl, ID="Publisher", name="OUTPUT:Publisher", utype="ssa:Curation.Publisher", ucd=" meta.curation",
-                      datatype="char", arraysize="*", value="")
     # IDs
     pIDs = []
     for param in all_params:
