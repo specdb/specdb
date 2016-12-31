@@ -219,6 +219,8 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
       Ready for conversion to VO
 
     """
+    from astropy.time import Time
+
     ssa_dict = ssa_defs()
     # Get started
     votbl = Table()
@@ -236,9 +238,14 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
     # FluxAxis
     votbl['FluxAxisUcd'] = str(meta_attr['SSA']['FluxUcd'])
     votbl['FluxAxisUnit'] = str(meta_attr['SSA']['FluxUnit'])
+    votbl['FluxAxisCalibration'] = str(meta_attr['SSA']['FluxCalib'])
     # SpectraAxis
     votbl['SpectralAxisUcd'] = str(meta_attr['SSA']['SpecUcd'])
     votbl['SpectralAxisUnit'] = str(meta_attr['SSA']['SpecUnit'])
+    # Date (MJD)
+    dates = Time(meta['DATE-OBS'])
+    dates.format = 'mjd'
+    votbl['TimeLocation'] = dates.value
     # RA,DEC
     radec = np.zeros((len(meta),2))
     radec[:,0] = subcat['RA']
@@ -298,11 +305,13 @@ def metaquery_param(evotbl=None):
     # characterization metadata: FluxAxis
     flux_axis_ucd = Param(evotbl, ID="FluxAxisUcd", name="OUTPUT:FluxAxisUcd",
                       datatype="char", utype="ssa:Char.FluxAxis.ucd", arraysize="*", value="")
-    # arith.ratio;phot.flux.density for normalized
     all_params.append(flux_axis_ucd)
     flux_axis_unit = Param(evotbl, ID="FluxAxisUnit", name="OUTPUT:FluxAxisUnit",
                           datatype="char", utype="ssa:Char.FluxAxis.unit", arraysize="*", value="")
     all_params.append(flux_axis_unit)
+    flux_axis_calib = Param(evotbl, ID="FluxAxisCalibration", name="OUTPUT:FluxAxisCalibration",
+                           datatype="char", utype="ssa:Char.FluxAxis.Calibration", arraysize="*", value="")
+    all_params.append(flux_axis_calib)
 
     # characterization metadata: SpectralAxis
     spec_axis_ucd = Param(evotbl, ID="SpectralAxisUcd", name="OUTPUT:SpectralAxisUcd",
@@ -313,6 +322,11 @@ def metaquery_param(evotbl=None):
     all_params.append(spec_axis_unit)
 
     # characterization metadata: Char.*.Coverage
+    time_loc = Param(evotbl, ID="TimeLocation", name="OUTPUT:TimeLocation", datatype="double",
+                    ucd="time.epoch", utype="ssa:Char.TimeAxis.Coverage.Location.Value", unit="d", value="")
+    time_loc.description = "Estimated UT day of observations"
+    all_params.append(time_loc)
+
     sp_loc = Param(evotbl, ID="SpatialLocation", name="OUTPUT:SpatialLocation", datatype="double", ucd="pos.eq", utype="ssa:Char.SpatialAxis.Coverage.Location.Value", arraysize="2", unit="deg", value="", config=cdict)
     sp_loc.description = 'Spatial Position'
     all_params.append(sp_loc)
@@ -324,3 +338,30 @@ def metaquery_param(evotbl=None):
     for param in all_params:
         pIDs.append(param.ID)
     return all_params, param_dict, pIDs
+
+def default_fields(flux='normalized'):
+    """
+    Parameters
+    ----------
+    flux
+
+    Returns
+    -------
+    def_ssa_dict : dict
+
+    """
+
+    def_ssa_dict = dict(
+                    SpecUcd='em.wl',
+                    SpecUnit='Angstrom',
+                    )
+    if flux == 'normalized':
+        def_ssa_dict['FluxUcd']='arith.ratio;phot.flux.density'
+        def_ssa_dict['FluxUnit']=''
+        def_ssa_dict['FluxCalib']='NORMALIZED'
+    elif flux == 'flambda':
+        def_ssa_dict['FluxUcd']='phot.fluDens;em.wl'
+        def_ssa_dict['FluxUnit']='erg s**(-1) angstrom**(-1)'
+        def_ssa_dict['FluxCalib']='RELATIVE'
+    # Return
+    return def_ssa_dict
