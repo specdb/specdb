@@ -225,14 +225,14 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
     ssa_list = [key for key in meta_attr.keys() if 'SSA_' in key]
     if len(ssa_list) > 0:
         votbls = []
-        instr = key.split('_')[-1]
-        # Cut on Instr
-        gd_i = meta['INSTR'] == instr
-        if np.sum(gd_i) > 0:
-            tdict = {}
-            tdict['SSA'] = meta_attr[ssa_list].copy()
-            votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat[gd_i], cat_attr))
-	pdb.set_trace()
+        for key in ssa_list:
+            instr = key.split('_')[-1]
+            # Cut on Instr
+            gd_i = meta['INSTR'] == instr
+            if np.sum(gd_i) > 0:
+                tdict = {}
+                tdict['SSA'] = meta_attr[ssa_list].copy()
+                votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat[gd_i], cat_attr))
         votbl = vstack(votbls)
     else:
         ssa_dict = ssa_defs()
