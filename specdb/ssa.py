@@ -221,42 +221,55 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
     """
     from astropy.time import Time
 
-    ssa_dict = ssa_defs()
-    # Get started
-    votbl = Table()
-    # Dataset
-    votbl['DataModel'] = [ssa_dict['DataModel']]*len(meta)
-    votbl['DatasetType'] = ssa_dict['DatasetType']
-    # DataID
-    votbl['Title'] = str(meta_attr['SSA']['Title'])
-    votbl['Instrument'] = meta['INSTR']
-    # Curation
-    votbl['Publisher'] = str(cat_attr['Publisher'])
-    # Coord sys
-    votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
-    votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
-    # FluxAxis
-    votbl['FluxAxisUcd'] = str(meta_attr['SSA']['FluxUcd'])
-    votbl['FluxAxisUnit'] = str(meta_attr['SSA']['FluxUnit'])
-    votbl['FluxAxisCalibration'] = str(meta_attr['SSA']['FluxCalib'])
-    # SpectraAxis
-    votbl['SpectralAxisUcd'] = str(meta_attr['SSA']['SpecUcd'])
-    votbl['SpectralAxisUnit'] = str(meta_attr['SSA']['SpecUnit'])
-    # Date (MJD)
-    dates = Time(meta['DATE-OBS'])
-    dates.format = 'mjd'
-    votbl['TimeLocation'] = dates.value
-    # RA,DEC
-    radec = np.zeros((len(meta),2))
-    radec[:,0] = subcat['RA']
-    radec[:,1] = subcat['DEC']
-    votbl['SpatialLocation'] = radec
+    # Allow for multiple entries in meta_attr (one per instrument)
+    ssa_list = [key for key in meta_attr.keys() if 'SSA_' in key]
+    if ssa_list > 0:
+        votbls = []
+        instr = key.split('_')[-1]
+        # Cut on Instr
+        gd_i = meta['INSTR'] == instr
+        if np.sum(gd_i) > 0:
+            tdict = {}
+            tdict['SSA'] = meta_attr[ssa_list].copy()
+            votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat[gd_i], cat_attr))
+        votbl = vstack(votbls)
+    else:
+        ssa_dict = ssa_defs()
+        # Get started
+        votbl = Table()
+        # Dataset
+        votbl['DataModel'] = [ssa_dict['DataModel']]*len(meta)
+        votbl['DatasetType'] = ssa_dict['DatasetType']
+        # DataID
+        votbl['Title'] = str(meta_attr['SSA']['Title'])
+        votbl['Instrument'] = meta['INSTR']
+        # Curation
+        votbl['Publisher'] = str(cat_attr['Publisher'])
+        # Coord sys
+        votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
+        votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
+        # FluxAxis
+        votbl['FluxAxisUcd'] = str(meta_attr['SSA']['FluxUcd'])
+        votbl['FluxAxisUnit'] = str(meta_attr['SSA']['FluxUnit'])
+        votbl['FluxAxisCalibration'] = str(meta_attr['SSA']['FluxCalib'])
+        # SpectraAxis
+        votbl['SpectralAxisUcd'] = str(meta_attr['SSA']['SpecUcd'])
+        votbl['SpectralAxisUnit'] = str(meta_attr['SSA']['SpecUnit'])
+        # Date (MJD)
+        dates = Time(meta['DATE-OBS'])
+        dates.format = 'mjd'
+        votbl['TimeLocation'] = dates.value
+        # RA,DEC
+        radec = np.zeros((len(meta),2))
+        radec[:,0] = subcat['RA']
+        radec[:,1] = subcat['DEC']
+        votbl['SpatialLocation'] = radec
 
-    # Check against parameters -- Order too
-    all_params, param_dict, pIDs = metaquery_param()
-    vo_keys = votbl.keys()
-    for vokey,pID in zip(vo_keys,pIDs):
-        assert vokey == pID
+        # Check against parameters -- Order too
+        all_params, param_dict, pIDs = metaquery_param()
+        vo_keys = votbl.keys()
+        for vokey,pID in zip(vo_keys,pIDs):
+            assert vokey == pID
     # Return
     return votbl
 
