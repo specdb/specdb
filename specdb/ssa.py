@@ -223,7 +223,7 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
 
     # Allow for multiple entries in meta_attr (one per instrument)
     ssa_list = [key for key in meta_attr.keys() if 'SSA_' in key]
-    if ssa_list > 0:
+    if len(ssa_list) > 0:
         votbls = []
         instr = key.split('_')[-1]
         # Cut on Instr
@@ -232,6 +232,7 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
             tdict = {}
             tdict['SSA'] = meta_attr[ssa_list].copy()
             votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat[gd_i], cat_attr))
+	pdb.set_trace()
         votbl = vstack(votbls)
     else:
         ssa_dict = ssa_defs()
