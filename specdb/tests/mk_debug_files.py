@@ -56,28 +56,18 @@ def igmspec_file(version='v02', nspec=5):
             hdf[dset]['meta'].attrs[key] = igmsp[dset].hdf[dset+'/meta'].attrs[key]
         if 'SSA' not in hdf[dset]['meta'].attrs.keys():
             from specdb.ssa import default_fields
-            ssa_dict = default_fields(flux='flambda')
-            ssa_dict['FluxCalib']='ABSOLUTE'
-            ssa_dict['Title']='BOSS DR12 Quasars'
+            Title='BOSS DR12 Quasars'
+            ssa_dict = default_fields(Title, flux='flambda', fxcalib='ABSOLUTE')
             hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
     # Catalog
     IDs = np.unique(np.array(all_IDs))
-    #hdf['catalog'] = igmsp.qcat.cat[IDs]
-    #hdf['catalog'].attrs['NAME'] = 'igmspec_debug'
-    #hdf['catalog'].attrs['EPOCH'] = 2000.
-    #hdf['catalog'].attrs['EQUINOX'] = 2000.
-    #hdf['catalog'].attrs['SpaceFrame'] = str('ICRS')
     zpri = igmsp.hdf['catalog'].attrs['Z_PRIORITY']
-    #hdf['catalog'].attrs['Z_PRIORITY'] = zpri
-    #hdf['catalog'].attrs['VERSION'] = version
-    #hdf['catalog'].attrs['Publisher'] = str('JXP')
-    #hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
+    # Strip out unused groups
     hdfkeys = hdf.keys()
     sdict = igmsp.group_dict.copy()
     for dkey in sdict.keys():
         if dkey not in hdfkeys:
             sdict.pop(dkey, None)
-    #hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(sdict))
     sdbbu.write_hdf(hdf, str('igmspec'), igmsp.qcat.cat[IDs], zpri,
                     sdict, version, Publisher=str('specdb'))
     print("Wrote {:s} DB file".format(outfil))

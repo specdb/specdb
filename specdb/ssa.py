@@ -15,8 +15,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, vstack
 
-from linetools import utils as ltu
-
 try:
     basestring
 except NameError:  # For Python 3
@@ -41,6 +39,8 @@ class SSAInterface(object):
         self.verbose = verbose
         # Pointer
         self.specdb = specdb
+        # Name
+        self.name = 'SSAI_'+specdb.name
 
     def querydata(self, POS=None, SIZE=None, TIME=None, BAND=None, FORMAT='HDF5',
                   TOP=None, MAXREC=5000, TARGETCLASS='QSO'):
@@ -185,7 +185,7 @@ class SSAInterface(object):
 
 
     def __repr__(self):
-        txt = '<{:s}:  SSA Interface to specdb>'
+        txt = '<{:s}:  SSA Interface to specdb>'.format(self.name)
         return (txt)
 
 def ssa_defs():
@@ -342,6 +342,7 @@ def input_params(votbl=None):
                        'specified in list format (comma separated) in decimal degrees with '+
                        'no embedded white space followed by an optional coord. system.  '+
                        'Allowed systems are (ICRS) and the default is ICRS.')
+    all_params.append(pos)
     # SIZE
     size = Param(votbl, name="INPUT:SIZE", value="0.1", datatype="double", unit="deg")
     size.description = ('The radius of the circular region of interest in decimal degrees.'+
