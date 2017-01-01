@@ -42,13 +42,13 @@ class SSAInterface(object):
         # Pointer
         self.specdb = specdb
 
-    def querydata(self, POS, SIZE=None, TIME=None, BAND=None, FORMAT='HDF5',
+    def querydata(self, POS=None, SIZE=None, TIME=None, BAND=None, FORMAT='HDF5',
                   TOP=None, MAXREC=5000, TARGETCLASS='QSO'):
         """ Perform an SSA-like query on the specdb catalog
 
         Parameters
         ----------
-        POS : str
+        POS : str, optional
           position on the sky RA,DEC;coordinate system
           Only ICRS is accepted for now
         SIZE : float, optional
@@ -68,17 +68,41 @@ class SSAInterface(object):
         # Default Infos
         def_infos = []
         def_infos.append(Info(name='SERVICE_PROTOCOL', value=1.1, content="SSAP"))
+
+        # METADATA??
+        if FORMAT == 'METADATA':
+            votable = build_metaquery(def_infos)
+            return votable
+
         def_infos.append(Info(name='REQUEST', value='queryData'))
         def_infos.append(Info(name='serviceName', value='ssap'))
-        def_infos.append(Info(name='POS', value=POS))
         def_infos.append(Info(name='FORMAT', value=FORMAT))
+
+        # SIZE
+        size_unit = u.deg
+        if SIZE is None:
+            SIZE = 1e-3  # deg
+        def_infos.append(Info(name='SIZE', value=SIZE, content="Search radius adopted (deg)"))
+
+        # Other
+        if TIME is not None:
+            warnings.warn("TIME parameter is not yet implemented")
+        if BAND is not None:
+            warnings.warn("BAND parameter is not yet implemented")
 
         status = 'OK'
         query_status = []
         qinfos = []
+
         # Parse POS
-        spl = POS.split(';')
-        scoord = spl[0]
+        if POS is None:
+            status = 'ERROR'
+            qinfos.append(Info(name='QUERY_STATUS', value="ERROR", content="POS not provided and not a METADATA query"))
+            spl = []
+        else:
+            spl = POS.split(';')
+            scoord = spl[0]
+        def_infos.append(Info(name='POS', value=POS))
 
         if len(spl) > 1:
             coord_sys = spl[1]
@@ -102,17 +126,6 @@ class SSAInterface(object):
         ra,dec = scoord.split(',')
         coord = SkyCoord(ra=ra, dec=dec, unit='deg')
 
-        # SIZE
-        size_unit = u.deg
-        if SIZE is None:
-            SIZE = 1e-3  # deg
-        def_infos.append(Info(name='SIZE', value=SIZE, content="Search radius adopted (deg)"))
-
-        # Other
-        if TIME is not None:
-            warnings.warn("TIME parameter is not yet implemented")
-        if BAND is not None:
-            warnings.warn("BAND parameter is not yet implemented")
 
         # Perform query
         IDs = self.specdb.qcat.radial_search(coord, SIZE*size_unit, mt_max=MAXREC)
@@ -278,7 +291,80 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
     # Return
     return votbl
 
+def build_metaquery(def_infos):
+    # Begin
+    votable = empty_vo(rtype='results')
+    resource = votable.resources[0]
+    # Info
+    sinfo = Info(name='QUERY_STATUS', value="OK", content="Successful search")
+    resource.infos.append(sinfo)
+    for dinfo in def_infos:
+        resource.infos.append(dinfo)
+    # Input Params
+    iparams = input_params(votable)
+    for iparam in iparams:
+        resource.params.append(iparam)
+    # Output Param
+    output_params, _, _ = metaquery_param(votable)
+    for oparam in output_params:
+        resource.params.append(oparam)
+    # Return
+    return votable
+
+
+def input_params(votbl=None):
+    """
+    Parameters
+    ----------
+    votbl
+
+    Returns
+    -------
+
+    """
+    if votbl is None:
+        votbl = empty_vo(rtype='meta')
+    all_params = []
+    # POS
+    pos = Param(votbl, name="INPUT:POS", value="", datatype="char", arraysize="*")
+    pos.description = ('The center of the region of interest. The coordinate values are '+
+                       'specified in list format (comma separated) in decimal degrees with '+
+                       'no embedded white space followed by an optional coord. system.  '+
+                       'Allowed systems are (ICRS) and the default is ICRS.')
+    # SIZE
+    size = Param(votbl, name="INPUT:SIZE", value="0.1", datatype="double", unit="deg")
+    size.description = ('The radius of the circular region of interest in decimal degrees.'+
+                        'Default sized radius is 0.001 degrees')
+    all_params.append(size)
+    # BAND
+    band = Param(votbl, name="INPUT:BAND", value="ALL", datatype="char", arraysize="*")
+    band.description = 'Not currently implemented'
+    all_params.append(band)
+    # TIME
+    ptime = Param(votbl, name="INPUT:TIME", value="", datatype="char", arraysize="*")
+    ptime.description = 'Not currently implemented'
+    all_params.append(ptime)
+    # FORMAT
+    format = Param(votbl, name="INPUT:FORMAT", value="ALL", datatype="char", arraysize="*")
+    format.description = ('Desired format of retrieved data. \n'+
+                          'Allowed values are HDF5, METADATA')
+    all_params.append(format)
+    # Return
+    return all_params
+
 def metaquery_param(evotbl=None):
+    """
+    Parameters
+    ----------
+    evotbl
+
+    Returns
+    -------
+    all_params : list
+    param_dict : dict
+    pIDs : list
+
+    """
     if evotbl is None:
         evotbl = empty_vo(rtype='meta')
     all_params = []
@@ -317,7 +403,7 @@ def metaquery_param(evotbl=None):
     space_frame.description = 'Spatial coordinate frame name'
     all_params.append(space_frame)
     equinox = Param(evotbl, ID="SpaceFrameEquinox", name="OUTPUT:SpaceFrameEquinox", datatype="double",
-                    ucd="time.equinox;pos.frame", utype="ssa:CoordSys.SpaceFrame.Equinox", unit="yr", value="")
+                    ucd="time.equinox;pos.frame", utype="ssa:CoordSys.SpaceFrame.Equinox", unit="yr", value=0.)
     all_params.append(equinox)
 
     # characterization metadata: FluxAxis
@@ -341,11 +427,13 @@ def metaquery_param(evotbl=None):
 
     # characterization metadata: Char.*.Coverage
     time_loc = Param(evotbl, ID="TimeLocation", name="OUTPUT:TimeLocation", datatype="double",
-                    ucd="time.epoch", utype="ssa:Char.TimeAxis.Coverage.Location.Value", unit="d", value="")
+                    ucd="time.epoch", utype="ssa:Char.TimeAxis.Coverage.Location.Value", unit="d", value=0.)
     time_loc.description = "Estimated UT day of observations"
     all_params.append(time_loc)
 
-    sp_loc = Param(evotbl, ID="SpatialLocation", name="OUTPUT:SpatialLocation", datatype="double", ucd="pos.eq", utype="ssa:Char.SpatialAxis.Coverage.Location.Value", arraysize="2", unit="deg", value="", config=cdict)
+    sp_loc = Param(evotbl, ID="SpatialLocation", name="OUTPUT:SpatialLocation",
+                   datatype="double", ucd="pos.eq", utype="ssa:Char.SpatialAxis.Coverage.Location.Value",
+                   arraysize="2", unit="deg", value="", config=cdict)
     sp_loc.description = 'Spatial Position'
     all_params.append(sp_loc)
     param_dict['SpatialLocation'] = ['RA','DEC']
