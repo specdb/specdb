@@ -68,7 +68,7 @@ class InterfaceGroup(object):
         # Attributes
         self.meta_attr = {}
         for key in self.hdf[group+'/meta'].attrs.keys():
-            if key in ['SSA']:
+            if 'SSA' in key:
                 self.meta_attr[key] = json.loads(self.hdf[group+'/meta'].attrs[key])
             else:
                 self.meta_attr[key] = self.hdf[group+'/meta'].attrs[key]
