@@ -135,6 +135,7 @@ class SSAInterface(object):
                 meta_attr = self.specdb[group].meta_attr
                 # Convert to SSA VO
                 ssavo_meta = meta_to_ssa_vo(meta_group, meta_attr, subcat[gdID],
+                                            self.specdb.idkey,
                                             self.specdb.qcat.cat_attr)
                 all_vometa.append(ssavo_meta)
             vometa = vstack(all_vometa)
@@ -206,12 +207,13 @@ def empty_vo(rtype='results'):
     return evotable
 
 
-def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
+def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
     """
     Parameters
     ----------
     meta : Table
     ssa_attr : dict
+    idkey : str
 
     Returns
     -------
@@ -260,10 +262,12 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
         dates = Time(meta['DATE-OBS'])
         dates.format = 'mjd'
         votbl['TimeLocation'] = dates.value
-        # RA,DEC
+        # Pull RA,DEC from main catalog
         radec = np.zeros((len(meta),2))
-        radec[:,0] = subcat['RA']
-        radec[:,1] = subcat['DEC']
+        for kk,row in enumerate(meta):
+            mt = np.where(subcat[idkey] == row[idkey])[0]
+            radec[kk,0] = subcat['RA'][mt[0]]
+            radec[kk,1] = subcat['DEC'][mt[0]]
         votbl['SpatialLocation'] = radec
 
         # Check against parameters -- Order too
