@@ -21,12 +21,12 @@ def test_show_meta():
     meta = Table()
     meta['IGM_ID'] = [134,2234,211]
     meta['GROUP_ID'] = [0,1,2]
-    meta['RA'] = [122.2234, 200.22222, 9.938444]
-    meta['DEC'] = [-13.22333, 23.211199, 55.2323232]
-    meta['zem'] = [1.23244, 2.220848, 10.188888]
+    meta['RA_GROUP'] = [122.2234, 200.22222, 9.938444]
+    meta['DEC_GROUP'] = [-13.22333, 23.211199, 55.2323232]
+    meta['zem_GROUP'] = [1.23244, 2.220848, 10.188888]
     meta['SPEC_FILE'] = ['J1.fits', 'J2.fits', 'J3.fits']
     # Show
     group_utils.show_group_meta(meta)
     # Now with keys
-    group_utils.show_group_meta(meta, meta_keys=['IGM_ID', 'RA', 'zem'])
+    group_utils.show_group_meta(meta, meta_keys=['IGM_ID', 'RA_GROUP', 'zem_GROUP'])
 

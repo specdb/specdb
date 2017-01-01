@@ -8,7 +8,7 @@ matplotlib.use('agg')  # For Travis
 import pytest
 import os
 
-from ..scripts import plot_specdb, sdss_spec
+from ..scripts import plot_specdb
 
 #version = 'v01'
 version = 'v02'

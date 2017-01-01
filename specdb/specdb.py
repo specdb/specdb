@@ -46,7 +46,7 @@ class SpecDB(object):
         self.verbose = verbose
         self.open_db(db_file)
         # Catalog
-        self.qcat = QueryCatalog(self.hdf, **kwargs)
+        self.qcat = QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
         self.cat = self.qcat.cat # For convenience
         self.qcat.verbose = verbose
         self.groups = self.qcat.groups
