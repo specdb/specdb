@@ -231,7 +231,7 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, cat_attr):
             gd_i = meta['INSTR'] == instr
             if np.sum(gd_i) > 0:
                 tdict = {}
-                tdict['SSA'] = meta_attr[ssa_list].copy()
+                tdict['SSA'] = meta_attr[key].copy()
                 votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat[gd_i], cat_attr))
         votbl = vstack(votbls)
     else:
