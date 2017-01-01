@@ -357,7 +357,7 @@ def metaquery_param(evotbl=None):
         pIDs.append(param.ID)
     return all_params, param_dict, pIDs
 
-def default_fields(flux='normalized'):
+def default_fields(title, flux='normalized', fxcalib=None):
     """
     Parameters
     ----------
@@ -369,7 +369,7 @@ def default_fields(flux='normalized'):
 
     """
 
-    def_ssa_dict = dict(
+    def_ssa_dict = dict( Title=title,
                     SpecUcd='em.wl',
                     SpecUnit='Angstrom',
                     )
@@ -381,5 +381,8 @@ def default_fields(flux='normalized'):
         def_ssa_dict['FluxUcd']='phot.fluDens;em.wl'
         def_ssa_dict['FluxUnit']='erg s**(-1) angstrom**(-1)'
         def_ssa_dict['FluxCalib']='RELATIVE'
+    # Over-ride
+    if fxcalib is not None:
+        def_ssa_dict['FluxCalib'] = fxcalib
     # Return
     return def_ssa_dict
