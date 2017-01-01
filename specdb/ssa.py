@@ -132,7 +132,7 @@ class SSAInterface(object):
 
         if IDs.size > 0:
             # Grab meta params
-            metaparams, pdict, pIDs = metaquery_param()
+            metaparams, pIDs = metaquery_param()
 
             # Grab sub-catalog
             subcat = self.specdb.qcat.cat_from_ids(IDs)
@@ -284,14 +284,25 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
         votbl['SpatialLocation'] = radec
 
         # Check against parameters -- Order too
-        all_params, param_dict, pIDs = metaquery_param()
+        all_params, pIDs = metaquery_param()
         vo_keys = votbl.keys()
         for vokey,pID in zip(vo_keys,pIDs):
             assert vokey == pID
     # Return
     return votbl
 
+
 def build_metaquery(def_infos):
+    """ Generate a VOTable for a METADATA query
+    Parameters
+    ----------
+    def_infos
+
+    Returns
+    -------
+    votable : VOTable
+
+    """
     # Begin
     votable = empty_vo(rtype='results')
     resource = votable.resources[0]
@@ -305,7 +316,7 @@ def build_metaquery(def_infos):
     for iparam in iparams:
         resource.params.append(iparam)
     # Output Param
-    output_params, _, _ = metaquery_param(votable)
+    output_params, _ = metaquery_param(votable)
     for oparam in output_params:
         resource.params.append(oparam)
     # Return
@@ -361,14 +372,12 @@ def metaquery_param(evotbl=None):
     Returns
     -------
     all_params : list
-    param_dict : dict
     pIDs : list
 
     """
     if evotbl is None:
         evotbl = empty_vo(rtype='meta')
     all_params = []
-    param_dict = {}  # Converts ID to specdb tag
     cdict = {'version_1_3_or_later': True}
     # Service metadata
 
@@ -436,14 +445,14 @@ def metaquery_param(evotbl=None):
                    arraysize="2", unit="deg", value="", config=cdict)
     sp_loc.description = 'Spatial Position'
     all_params.append(sp_loc)
-    param_dict['SpatialLocation'] = ['RA','DEC']
 
 
     # IDs
     pIDs = []
     for param in all_params:
         pIDs.append(param.ID)
-    return all_params, param_dict, pIDs
+    return all_params, pIDs
+
 
 def default_fields(title, flux='normalized', fxcalib=None):
     """
