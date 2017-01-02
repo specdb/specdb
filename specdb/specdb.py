@@ -46,35 +46,20 @@ class SpecDB(object):
         self.verbose = verbose
         self.open_db(db_file)
         # Catalog
-        self.qcat = QueryCatalog(self.hdf, **kwargs)
-        self.cat = self.qcat.cat # For convenience
+        self.qcat = QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
+        self.cat = self.qcat.cat  # For convenience
         self.qcat.verbose = verbose
         self.groups = self.qcat.groups
         self.group_dict = self.qcat.group_dict
         self.idkey = self.qcat.idkey
         # Groups
         self._gdict = {}
-        #self.idb = InterfaceDB(db_file, **kwargs)
-        #self.idb.idkey = self.qcat.idkey
-        #self.idb.verbose = verbose
         # Name, Creation date
-        try:
-            print("Database is {:s}".format(self.cat.attrs['NAME']))
-        except:
-            pass
-        else:
-            print("Created on {:s}".format(self.cat.attrs['CREATION_DATE']))
-        # Checks
-        '''
-        assert self.idb.db_file == self.qcat.db_file
-        if not skip_test:
-            for group in self.idb.groups:
-                try:
-                    assert group in self.qcat.groups
-                except AssertionError:
-                    print("Missing {:s}".format(group))
-                    raise IOError
-        '''
+        self.name = self.qcat.cat_attr['NAME']
+        print("Database is {:s}".format(self.name))
+        print("Created on {:s}".format(self.qcat.cat_attr['CREATION_DATE']))
+        # Return
+        return
 
     def open_db(self, db_file):
         """ Open the DB file

@@ -539,6 +539,18 @@ def set_resolution(head, instr=None):
         raise IOError("Not read for this instrument")
 
 
+def set_sv_idkey(idkey):
+    """ Set the idkey in the event that it was not set by
+     calling start_maindb
+
+    Parameters
+    ----------
+    idkey : str
+
+    """
+    global sv_idkey
+    sv_idkey = idkey
+
 def start_maindb(idkey, **kwargs):
     """ Start the main DB catalog
 
@@ -564,7 +576,8 @@ def start_maindb(idkey, **kwargs):
     return maindb, tkeys
 
 
-def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
+def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.,
+              spaceframe='ICRS', **kwargs):
     """
     Parameters
     ----------
@@ -573,7 +586,9 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
     maindb
     zpri
     gdict
-    version
+    version : str
+    epoch : float, optional
+    spaceframe : str, optional
 
     Returns
     -------
@@ -585,10 +600,16 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
     hdf['catalog'] = maindb
     hdf['catalog'].attrs['NAME'] = str(dbname)
     hdf['catalog'].attrs['EPOCH'] = epoch
+    hdf['catalog'].attrs['EQUINOX'] = epoch
+    hdf['catalog'].attrs['SpaceFrame'] = str(spaceframe)
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(gdict))
     hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
-    hdf['catalog'].attrs['VERSION'] = version
+    hdf['catalog'].attrs['VERSION'] = str(version)
+    # kwargs
+    for key in kwargs:
+        hdf['catalog'].attrs[str(key)] = kwargs[key]
+    # Close
     hdf.close()
 
 

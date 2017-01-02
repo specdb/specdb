@@ -15,6 +15,7 @@ from astropy import units as u
 from linetools import utils as ltu
 
 from specdb.specdb import IgmSpec
+from specdb.build import utils as sdbbu
 import specdb
 
 
@@ -26,7 +27,7 @@ def igmspec_file(version='v02', nspec=5):
 
     """
     # Load IGMSpec
-    igmsp = IgmSpec(version='v01')  # Will advance as needed
+    igmsp = IgmSpec(version='v02')  # Will advance as needed
     #
     outfil = specdb.__path__[0]+'/tests/files/IGMspec_DB_{:s}_debug.hdf5'.format(version)
     hdf = h5py.File(outfil,'w')
@@ -50,22 +51,28 @@ def igmspec_file(version='v02', nspec=5):
         grp = hdf.create_group(dset)
         spec_set = hdf[dset].create_dataset('spec', data=spec.data, chunks=True, compression='gzip')
         hdf[dset]['meta'] = meta
-    IDs = np.unique(np.array(all_IDs))
+        # Add attrs :: SSA -- read from igmspec later
+        for key in igmsp[dset].hdf[dset+'/meta'].attrs.keys():
+            hdf[dset]['meta'].attrs[key] = igmsp[dset].hdf[dset+'/meta'].attrs[key]
+        '''
+        if 'SSA' not in hdf[dset]['meta'].attrs.keys():
+            pdb.set_trace()
+            from specdb.ssa import default_fields
+            Title='BOSS DR12 Quasars'
+            ssa_dict = default_fields(Title, flux='flambda', fxcalib='ABSOLUTE')
+            hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
+        '''
     # Catalog
-    hdf['catalog'] = igmsp.qcat.cat[IDs]
-    hdf['catalog'].attrs['NAME'] = 'igmspec'
-    hdf['catalog'].attrs['EPOCH'] = 2000.
+    IDs = np.unique(np.array(all_IDs))
     zpri = igmsp.hdf['catalog'].attrs['Z_PRIORITY']
-    hdf['catalog'].attrs['Z_PRIORITY'] = zpri
-    hdf['catalog'].attrs['VERSION'] = version
-    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
+    # Strip out unused groups
     hdfkeys = hdf.keys()
     sdict = igmsp.group_dict.copy()
     for dkey in sdict.keys():
         if dkey not in hdfkeys:
             sdict.pop(dkey, None)
-    hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(sdict))
-    hdf.close()
+    sdbbu.write_hdf(hdf, str('igmspec'), igmsp.qcat.cat[IDs], zpri,
+                    sdict, version, Publisher=str('specdb'))
     print("Wrote {:s} DB file".format(outfil))
 
 def main(flg_file, sdss=None, ml_survey=None):

@@ -63,7 +63,15 @@ class InterfaceGroup(object):
         ----------
         group : str
         """
+        import json
         self.meta = Table(self.hdf[group+'/meta'].value)
+        # Attributes
+        self.meta_attr = {}
+        for key in self.hdf[group+'/meta'].attrs.keys():
+            if 'SSA' in key:
+                self.meta_attr[key] = json.loads(self.hdf[group+'/meta'].attrs[key])
+            else:
+                self.meta_attr[key] = self.hdf[group+'/meta'].attrs[key]
         # Reformat
         if reformat:
             try:
@@ -156,6 +164,8 @@ class InterfaceGroup(object):
         ----------
         IDs : int or array
           Return full table if None
+        first : bool, optional
+          Grab only the first row matching?
 
         Returns
         -------
