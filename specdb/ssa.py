@@ -283,6 +283,11 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
             radec[kk,0] = subcat['RA'][mt[0]]
             radec[kk,1] = subcat['DEC'][mt[0]]
         votbl['SpatialLocation'] = radec
+        # Spectral location and bounds
+        votbl['SpectralLocation'] = (meta['WV_MIN'] + meta['WV_MAX'])/2.
+        votbl['SpectralBoundsExtent'] = meta['WV_MAX'] - meta['WV_MIN']
+        votbl['SpectralBoundsStart'] = meta['WV_MIN']
+        votbl['SpectralBoundsStop'] = meta['WV_MAX']
 
         # Check against parameters -- Order too
         all_params, pIDs = metaquery_param()
@@ -447,6 +452,28 @@ def metaquery_param(evotbl=None):
                    arraysize="2", unit="deg", value="", config=cdict)
     sp_loc.description = 'Spatial Position'
     all_params.append(sp_loc)
+
+    spec_loc = Param(evotbl, ID="SpectralLocation", name="OUTPUT:SpectralLocation",
+                     datatype="double", ucd="instr.bandpass", utype="ssa:Char.Spectral.Coverage.Location.Value",
+                     unit="Angstrom", value=0.)
+    spec_loc.description = 'Midpoint of the spectral coverage in Angstroms'
+    all_params.append(spec_loc)
+    spec_bounds_ext = Param(evotbl, ID="SpectralBoundsExtent", name="OUTPUT:SpectralBoundsExtent",
+                   datatype="double", ucd="instr.bandwidth", utype="ssa:Char.Spectral.Coverage.Bounds.Extent",
+                   unit="Angstrom", value=0.)
+    spec_bounds_ext.description = 'Width of spectrum in Angstroms'
+    all_params.append(spec_bounds_ext)
+    spec_bounds_strt = Param(evotbl, ID="SpectralBoundsStart", name="OUTPUT:SpectralBoundsStart",
+                            datatype="double", ucd="em.wl;stat.min", utype="ssa:Char.Spectral.Coverage.Bounds.Start",
+                            unit="Angstrom", value=0.)
+    spec_bounds_strt.description = 'Start of spectral coordinate in Angstroms'
+    all_params.append(spec_bounds_strt)
+    spec_bounds_end = Param(evotbl, ID="SpectralBoundsStop", name="OUTPUT:SpectralBoundsStop",
+                             datatype="double", ucd="em.wl;stat.max", utype="ssa:Char.Spectral.Coverage.Bounds.Stop",
+                             unit="Angstrom", value=0.)
+    spec_bounds_end.description = 'End of spectral coordinate in Angstroms'
+    all_params.append(spec_bounds_end)
+
 
 
     # IDs
