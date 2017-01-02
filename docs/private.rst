@@ -37,6 +37,7 @@ Here is an example of a directory tree
    |  ├── testDB_ztbl.fits
    |  ├── ESI
    |  |  ├── ESI_meta.json
+   |  |  ├── ESI_meta.ascii
    |  |  ├── SDSSJ220758.30+125944.3_F.fits
    |  |  ├── SDSSJ220758.30+125944.3_E.fits
    |  ├── LRIS
@@ -45,6 +46,7 @@ Here is an example of a directory tree
    |  |  ├── SDSSJ230044.36+015541.7_b400_F.fits
    |  ├── COS
    |  |  ├── COS_meta.json
+   |  |  ├── COS_ssa.json
    |  |  ├── J095240.17+515250.03.fits.gz
    |  |  ├── J095243.05+515121.15.fits.gz
 
@@ -85,6 +87,54 @@ values may be different from file to file and this is a convenient way to get
 them directly from the headers of the FITS files. The spectral resolution (`R`) may
 be dynamically calculated within `specdb`.  That is the default and it is asserted
 with `True` in this example.
+
+Meta table
+----------
+
+It is *recommended* that one attempt to extract as much of the meta
+data from the spectra files as possible.  However, it is possible to
+include additional meta data (or to over-ride the meta data in the
+spectra) by including a meta data table.  The format is either
+ASCII or FITS with a .ascii or .fits extension that must be
+read by astropy.table.Table.read().
+
+SPEC_FILE is a required column which gives the name of the spectral
+file to match against the meta data.
+
+Here is an example from the test suite (ESI_meta.ascii)::
+
+   SPEC_FILE                         tGRB
+   SDSSJ172524.66+303803.9_F.fits    2009-11-23:10:12:13.2
+   SDSSJ220758.30+125944.3_F.fits    2007-08-13:10:22:23.3
+
+This will add the time of the GRB to the meta data table.
+
+SSA info
+--------
+
+*specdb* includes software to enable SSA queries of your
+database.  For this to work, however, one must provide
+a few additional fields for each data group.  These are
+provided with a JSON file in each branch with extension
+_ssa.json.
+
+The required keys are:
+
+==========  ======== ============================================
+Key         Type     Description
+==========  ======== ============================================
+Title       str      Title for the data group
+flux        str      Sets units and ucd for the flux.  Allowed values are
+                     flambda, normalized
+fxcalib     str      Sets Calibration field.  Allowed values are
+                     NORMALIZED, ABSOLUTE, RELATIVE
+==========  ======== ============================================
+
+See the COS_ssa.json file in the test suite for an example.
+
+One is also required to include a Publisher value.  This is defaulted
+to 'Unknown', but can be set in the call to mk_db() or with the
+--publisher keyword in the script.
 
 Redshift table
 --------------
