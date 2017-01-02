@@ -83,9 +83,11 @@ def test_query_data(igmsp):
     assert len(votable.resources[0].tables) == 1
     votable.to_xml(data_path('tst.xml'))
 
+
 def test_metadata(igmsp):
     ssai = spdb_ssa.SSAInterface(igmsp)
     votable = ssai.querydata(FORMAT='METADATA')
     # Test
     assert isinstance(votable, VOTableFile)
     assert len(votable.resources[0].tables) == 0
+
