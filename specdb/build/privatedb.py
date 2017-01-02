@@ -281,8 +281,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             except KeyError:
                 instr = 'none'
             if 'LRIS' in instr:
-                if 'GRATING' not in plist.keys():
-                    plist['GRATING'] = []
+                if 'DISPERSER' not in plist.keys():
+                    plist['DISPERSER'] = []
                     plist['INSTR'] = []
                     plist['R'] = []
                 try:
@@ -293,13 +293,13 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                     else:
                         det = 'LRIS-B'
                 if 'LRIS-R' in det:
-                    plist['GRATING'].append(head['GRANAME'])
+                    plist['DISPERSER'].append(head['GRANAME'])
                     plist['INSTR'].append('LRISr')
                 else:
-                    plist['GRATING'].append(head['GRISNAME'])
+                    plist['DISPERSER'].append(head['GRISNAME'])
                     plist['INSTR'].append('LRISb')
                 # Resolution
-                res = Rdicts[plist['INSTR'][-1]][plist['GRATING'][-1]]
+                res = Rdicts[plist['INSTR'][-1]][plist['DISPERSER'][-1]]
                 try:
                     sname = head['SLITNAME']
                 except KeyError:

@@ -308,7 +308,7 @@ def get_req_clms(sdb_key=None):
     """
     req_clms = ['RA_GROUP', 'DEC_GROUP', 'EPOCH', 'zem_GROUP', 'R', 'WV_MIN',
             'WV_MAX', 'DATE-OBS', 'GROUP_ID', 'NPIX', 'SPEC_FILE',
-            'INSTR', 'GRATING', 'TELESCOPE']
+            'INSTR', 'DISPERSER', 'TELESCOPE']
     if sdb_key is not None:
         req_clms += [sdb_key]
     return req_clms
