@@ -64,8 +64,11 @@ class QueryCatalog(object):
 
         """
         import json
-        #
+        # Catalog and attributes
         self.cat = Table(hdf['catalog'].value)
+        self.cat_attr = {}
+        for key in hdf['catalog'].attrs.keys():
+            self.cat_attr[key] = hdf['catalog'].attrs[key]
         # Set ID key
         self.idkey = idkey
         if idkey is None:
@@ -110,6 +113,7 @@ class QueryCatalog(object):
         matched_cat = Table(np.repeat(np.zeros_like(self.cat[0]), ncoord))
         # Grab IDs
         IDs = self.match_coord(coords, toler=toler, **kwargs)
+
         # Find rows in catalog
         rows = match_ids(IDs, self.cat[self.idkey], require_in_match=False)
         # Fill
@@ -117,6 +121,26 @@ class QueryCatalog(object):
         matched_cat[np.where(gd_rows)] = self.cat[rows[gd_rows]]
         # Null the rest
         matched_cat[self.idkey][np.where(~gd_rows)] = IDs[~gd_rows]
+        # Return
+        return matched_cat
+
+    def cat_from_ids(self, IDs):
+        """
+        Parameters
+        ----------
+        IDs : ndarray
+         IDKEY values
+
+        Returns
+        -------
+        matched_cat : Table
+          Catalog entries matching the input IDs
+
+        """
+        # Find rows in catalog
+        rows = match_ids(IDs, self.cat[self.idkey], require_in_match=True)
+        # Fill
+        matched_cat = self.cat[rows]
         # Return
         return matched_cat
 
@@ -314,7 +338,7 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def radial_search(self, inp, radius, max=None, verbose=True, private=False, **kwargs):
+    def radial_search(self, inp, radius, mt_max=None, verbose=True, private=False, **kwargs):
         """ Search for sources in a radius around the input coord
 
         Parameters
@@ -324,7 +348,7 @@ class QueryCatalog(object):
           Single coordinate
         radius : Angle or Quantity, optional
           Tolerance for a match
-        max : int, optional
+        mt_max : int, optional
           Maximum number of matches to return
         verbose
 
@@ -346,8 +370,9 @@ class QueryCatalog(object):
             print("Your search yielded {:d} match[es] within radius={:g}".format(np.sum(good), radius))
         # Sort by separation
         asort = np.argsort(sep[good])
-        if max is not None:
-            asort = asort[:max]
+        if mt_max is not None:
+            imax = min(asort.size,mt_max)
+            asort = asort[:imax]
         # Return
         return self.cat[self.idkey][good][asort]
 

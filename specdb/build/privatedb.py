@@ -23,6 +23,7 @@ from specdb.build import utils as spbu
 from specdb.zem import utils as spzu
 from specdb import defs
 from specdb.build.utils import add_ids, write_hdf, set_sv_idkey
+from specdb.ssa import default_fields
 
 try:
     basestring
@@ -50,11 +51,15 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
     -------
     pfiles : list
       List of FITS files
-    meta_file : str or None
-      Name of meta JSON file in tree_root
-    mtbl_file : str or None
-      Name of meta table file in tree_root
-      Must have either _meta.ascii or _meta.fits extension
+    out_tuple : tuple
+      meta_file : str or None
+        Name of meta JSON file in tree_root
+      mtbl_file : str or None
+        Name of meta table file in tree_root
+        Must have either _meta.ascii or _meta.fits extension
+      ssa_file : str or None
+        Name of JSON file for SSA information
+          -- Must contain Title, flux, fxcalib keys
     """
     walk = os.walk(branch)
     folders = ['/.']
@@ -86,7 +91,7 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                     pfiles.append(ofile)
         # walk
         folders = next(walk)[1]
-    # Grab meta files (if they exists)
+    # Dict for meta parsing
     mfile = glob.glob(branch+'/*_meta.json')
     if len(mfile) == 1:
         mfile = mfile[0]
@@ -95,13 +100,20 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
         mfile = None
     else:
         raise IOError("Multiple meta JSON files in branch: {:s}.  Limit to one".format(branch))
+    # Meta Table
     mtbl_file = glob.glob(branch+'/*_meta.ascii') + glob.glob(branch+'/*_meta.fits')
     if len(mtbl_file) == 1:
         mtbl_file = mtbl_file[0]
     else:
         mtbl_file = None
+    # SSA file
+    ssa_files = glob.glob(branch+'/*_ssa.json')
+    if len(ssa_files) == 1:
+        ssa_file = ssa_files[0]
+    else:
+        ssa_file = None
     # Return
-    return pfiles, mfile, mtbl_file
+    return pfiles, (mfile, mtbl_file, ssa_file)
 
 
 def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
@@ -503,7 +515,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     return
 
 
-def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID', **kwargs):
+def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
+          publisher='Unknown', **kwargs):
     """ Generate the DB
 
     Parameters
@@ -558,7 +571,9 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID', **kwargs
             continue
         print('Working on branch: {:s}'.format(branch))
         # Files
-        fits_files, meta_file, mtbl_file = grab_files(branch)
+        fits_files, out_tup = grab_files(branch)
+        meta_file, mtbl_file, ssa_file = out_tup
+
         # Meta
         maxpix, phead, mdict, stype = 10000, None, None, 'QSO'
         if meta_file is not None:
@@ -584,9 +599,15 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID', **kwargs
         maindb = add_ids(maindb, full_meta, flag_g, tkeys, 'PRIV_ID', first=(flag_g==1))
         # Ingest
         ingest_spectra(hdf, group_name, full_meta, max_npix=maxpix, **kwargs)
+        # SSA
+        if ssa_file is not None:
+            user_ssa = ltu.loadjson(ssa_file)
+            ssa_dict = default_fields(user_ssa['Title'], flux=user_ssa['flux'], fxcalib=user_ssa['fxcalib'])
+            hdf[group_name]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
 
     # Write
-    write_hdf(hdf, dbname, maindb, zpri, gdict, version)
+    write_hdf(hdf, str(dbname), maindb, zpri, gdict, version,
+              Publisher=publisher)
     print("Wrote {:s} DB file".format(outfil))
 
 

@@ -52,7 +52,7 @@ def test_radial_search(igmsp):
     assert isrt[0] == 0
     assert isrt[-1] == len(idxm)-1
     # Multiple but grab only 1
-    idxs = igmsp.qcat.radial_search(icoord, 1*u.deg, max=1)
+    idxs = igmsp.qcat.radial_search(icoord, 1*u.deg, mt_max=1)
     assert len(idxs) == 1
 
 
