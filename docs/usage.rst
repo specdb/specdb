@@ -1,26 +1,22 @@
 .. highlight:: rest
 
-************
-Using specdb
-************
+*********************
+Basic Usage in Python
+*********************
 
 This file summarizes some of the simple usage cases
 of `specdb` from within Python.
 See the :doc:`scripts` documentation for a discussion of
-command-line usage cases outside of Python.
+command-line usage from the command line.
 
-Notebooks
-=========
-
-.. toctree::
-   :maxdepth: 1
-
-       Simple Usage <Simple_Usage>
+You can view a
+`Usage Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/Simple_Usage.ipynb>`_
+on github that shows most of the following examples.
 
 Setup
 =====
 
-The main class of specdb is simply instantiated::
+The main class SpecDB is simply instantiated::
 
     from specdb.specdb import SpecDB
     igmsp = SpecDB(db_file='/raid/IGMSPEC_DB/IGMspec_DB_v02.hdf5')
@@ -30,8 +26,24 @@ This loads the database catalog::
     igmsp.qcat
     <QueryCatalog:  DB_file=/u/xavier/local/Python/igmspec/DB/IGMspec_DB_v01.hdf5 with 377018 sources Loaded groups are [u'BOSS_DR12', u'GGG', u'HD-LLS_DR1', u'KODIAQ_DR1', u'SDSS_DR7'] >
 
-and opens the hdf5 file (without loading the data).
+and opens the database HDF5 file without loading any
+other data.
 
+The various public databases may have a unique child
+of SpecDB.  Currently, there is:
+
+========== ====================================================
+Database   SpecDB Child
+========== ====================================================
+igmspec    IgmSpec
+========== ====================================================
+
+Here is an example instantiation for *igmspec::
+
+    igmsp = IgmSpec()  # Loads the highest version in $IGMSPEC_DB
+
+This loads the highest version number of the HDF5 files located
+in the $IGMSPEC_DB folder.
 
 Querying the Catalog
 ====================

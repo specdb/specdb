@@ -17,6 +17,13 @@ Getting Started
    :maxdepth: 2
 
    installing
+
+Using specdb with a Database
+----------------------------
+
+.. toctree::
+   :maxdepth: 2
+
    scripts
    usage
 
