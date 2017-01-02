@@ -221,7 +221,8 @@ def empty_vo(rtype='results'):
 
 
 def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
-    """
+    """ Use a specdb meta table to generate a new astropy Table
+    that is ready for conversion to a VOTable.
     Parameters
     ----------
     meta : Table
