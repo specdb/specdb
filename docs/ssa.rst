@@ -61,8 +61,11 @@ See below for a listing of the standard meta parameters.
 METADATA
 --------
 
-As per SSA protocol, a data query with FORMAT=METADATA will
-return the default input and output parameters of the service.
+As per SSA protocol, a data query with FORMAT=METADATA::
+
+   votable = ssai.querydata(FORMAT='METADATA')
+
+will return the default input and output parameters of the service.
 The following shows the current implementation.
 
 Referring to the Version 1.2 of the Spectral Data Model, all
