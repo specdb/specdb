@@ -76,4 +76,4 @@ Char.SpatialAxis.Coverage.Bounds.Extent The aperture is not always precisely def
 Char.TimeAxis.Coverage.Bounds.Extent    The total exposure time has not always been recorded
 ======================================= ===============
 
-Here is the current METADATA response::
+:doc:`ssa_metadata.xml` shows the current METADATA response.
