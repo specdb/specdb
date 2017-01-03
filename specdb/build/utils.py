@@ -250,6 +250,8 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
       Key for ID
     mtch_toler : Quantity, optional
       Matching tolerance;  typically taken from the default
+    pair_sep : Angle, optional
+      Sepration at which a pair is considered 'real'
     close_pairs : bool, optional
       Input list includes close pairs (i.e. within mtch_toler)
 
@@ -271,7 +273,6 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     pidx1, pidx2, pd2d, _ = c_new.search_around_sky(c_new, mtch_toler)
     pairs = pd2d > pair_sep
     if np.sum(pairs) and (not close_pairs):
-        pdb.set_trace()
         print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
         raise IOError("Use close_pairs=True if appropriate")
     # Find new sources (ignoring pairs at first)
