@@ -1,7 +1,7 @@
 {
     "maxpix": 35000,
     "meta_dict": {
-        "GRATING": "ECH",
+        "DISPERSER": "ECH",
         "TELESCOPE": "Keck-II",
         "INSTR": "ESI",
         "R": 4545.0
