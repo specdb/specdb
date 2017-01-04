@@ -257,52 +257,6 @@ class QueryCatalog(object):
         # Return
         return gdIDs, good
 
-    def match_coord(self, coords, group=None, toler=0.5*u.arcsec, verbose=True):
-        """ Match an input set of SkyCoords to the catalog within a given radius
-
-        Parameters
-        ----------
-        coords : SkyCoord
-          Single or array
-        toler : Angle or Quantity, optional
-          Tolerance for a match
-        group : str, optional
-          Restrict to matches within a specific group
-        verbose : bool, optional
-
-        Returns
-        -------
-        indices : int array
-          ID values
-          -1 if no match within toler
-          -2 is within tol but not within input group
-
-        Returned IDs are aligned with coord array
-
-        """
-        # Checks
-        if not isinstance(toler, (Angle, Quantity)):
-            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
-        # Match
-        idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
-        # Generate
-        if len(d2d) == 1:
-            IDs = np.array([self.cat[self.idkey][idx]])
-        else:
-            IDs = self.cat[self.idkey][idx].data
-        close = d2d < toler
-        # Restrict to group?
-        if group is not None:
-            answer, query = self.chk_in_group(IDs, group)
-            IDs[~query] = -2
-        # Deal with out of tolerance (after group)
-        IDs[~close] = -1
-        # Finish
-        if verbose:
-            gd = IDs >= 0
-            print("Your search yielded {:d} matches from {:d} input coordinates".format(np.sum(gd),
-                                                                                        IDs.size))
-        return IDs
 
     def pairs(self, sep, dv):
         """ Generate a pair catalog
@@ -339,7 +293,8 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def query_dict(self, idict, groups=None, in_all_groups=False, verbose=True, **kwargs):
+    def query_dict(self, idict, groups=None, in_all_groups=False, verbose=True,
+                   cat=None, **kwargs):
         """ Query the catalog without using coordinates.
         In this case, a query_dict is required
         Parameters
@@ -353,6 +308,9 @@ class QueryCatalog(object):
           Only used if groups is input
           If in_all_groups=True, the source must have a spectrum in each to match
           Otherwise, it must exist in at least one of the groups
+        cat : Table, optional
+          Default is self.cat  (the entire catalog)
+          This allows one to pass in a sub-catalog
         verbose : bool, optional
         kwargs
 
@@ -365,6 +323,9 @@ class QueryCatalog(object):
         IDs : int ndarray
           Array of IDKEY values of the matches
         """
+        # Init
+        if cat is None:
+            cat = self.cat
         #reload(spdbu)
         # Copy in case we need to add group search
         qdict = idict.copy()
@@ -391,10 +352,10 @@ class QueryCatalog(object):
             idict[key] = fgroups
 
         # Query
-        matches = spdbu.query_table(self.cat, idict)
+        matches = spdbu.query_table(cat, idict)
 
         # Return
-        return matches, self.cat[matches], self.cat[self.idkey][matches].data
+        return matches, cat[matches], cat[self.idkey][matches].data
 
     def query_position(self, inp, radius, query_dict=None, max_match=None,
                        verbose=True, groups=None, **kwargs):
@@ -407,6 +368,12 @@ class QueryCatalog(object):
           Single coordinate
         radius : Angle or Quantity
           Tolerance for a match
+        groups : list, optional
+          Restrict to matches within one or more groups
+          Uses query_dict()
+        query_dict : dict, optional
+          Restrict on criteria specified in the query_dict
+          Uses query_dict()
         max_match : int, optional
           Maximum number of rows to return in sub_cat and IDs
           Ordered by separation distance
@@ -454,6 +421,69 @@ class QueryCatalog(object):
         # Return
         return matches, self.cat[matches][asort], self.cat[self.idkey][matches].data[asort]
 
+    def query_coords(self, coords, groups=None, toler=0.5*u.arcsec, query_dict=None,
+                     verbose=True, **kwargs):
+        """ Match an input set of SkyCoords to the catalog within a given radius
+
+        Parameters
+        ----------
+        coords : SkyCoord
+          Single or array
+        toler : Angle or Quantity, optional
+          Tolerance for a match
+        groups : list, optional
+          Restrict to matches within one or more groups
+          Uses query_dict()
+        query_dict : dict, optional
+          Restrict on criteria specified in the query_dict
+          Uses query_dict()
+        verbose : bool, optional
+
+        Returns
+        -------
+        matches : bool, ndarray
+          True indicates the input coordinates matched all rules
+          Array is aligned with input coordinates
+        matched_cat : Table
+          Slice of the catalog
+          Size and order matches input coords
+          Non-matches are empty
+        IDs : int array
+          ID values
+          -1 if no match within toler
+          -2 source within tol in catalog but not within input groups and/or query_dict
+          Aligned with coord array
+        """
+        # Checks
+        if not isinstance(toler, (Angle, Quantity)):
+            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
+        # Match
+        idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
+        if len(d2d) == 1:  # Annoying array/scalar bit
+            IDs = np.array([self.cat[self.idkey][idx]])
+            idx = np.array([int(idx)])
+        else:
+            IDs = self.cat[self.idkey][idx].data
+        coord_matches = d2d <= toler
+        # Query dict or groups? -- Performed on a cut of the full catalog
+        if (query_dict is not None) or (groups is not None):
+            if query_dict is None:
+                query_dict = {}
+            qmatches, _, _ = self.query_dict(query_dict, groups=groups,
+                                             cat=self.cat[idx[coord_matches]], **kwargs)
+            IDs[~qmatches] = -2
+        # Must occur after qdict/group query
+        IDs[~coord_matches] = -1
+        matches = IDs >= 0
+        if verbose:
+            print("Your search yielded {:d} matches from {:d} input coordinates".format(np.sum(matches), IDs.size))
+        # Matched catalog
+        matched_cat = Table(np.repeat(np.zeros_like(self.cat[0]), len(IDs)))
+        matched_cat[np.where(matches)] = self.cat[idx[matches]]
+        matched_cat[self.idkey][np.where(~matches)] = IDs[~matches]
+        # Return
+        return matches, matched_cat, IDs
+
     def radial_search(self, inp, radius, **kwargs):
         """ Search for sources in a radius around the input coord
 
@@ -471,10 +501,7 @@ class QueryCatalog(object):
           Catalog IDs corresponding to match in order of increasing separation
           Returns an empty array if there is no match
         """
-        warnings.warn("THIS METHOD WILL BE DEPRECATED.  USE QUERY_POSITION")
-        _, _, idx = self.query_position(inp, radius, **kwargs)
-        # Return
-        return idx
+        raise DeprecationWarning("THIS METHOD HAS BEEN DEPRECATED. USE query_position()")
 
     def show_cat(self, IDs):
         """  Show the catalog

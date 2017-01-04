@@ -51,67 +51,64 @@ def test_query_dict(igmsp):
     assert 225 in IDs5
 
 
-def test_radial_search(igmsp):
+def test_query_position(igmsp):
     # One match
-    idx = igmsp.qcat.radial_search((0.0019,17.7737), 1*u.arcsec)
+    _, _, idx = igmsp.qcat.query_position((0.0019,17.7737), 1*u.arcsec)
     assert idx >= 0
     # Blank
-    idx = igmsp.qcat.radial_search((10.038604,55.298477), 1*u.arcsec)
+    _, _, idx = igmsp.qcat.query_position((10.038604,55.298477), 1*u.arcsec)
     assert len(idx) == 0
     # Multiple (insure rank order)
     icoord = SkyCoord(ra=0.0055, dec=-1.5, unit='deg')
-    idxm = igmsp.qcat.radial_search(icoord, 1*u.deg)
+    _, subcat, _ = igmsp.qcat.query_position(icoord, 1*u.deg)
     # Test
-    ras = []
-    decs = []
-    for ii in idxm:
-        mt = np.where(igmsp.cat['IGM_ID'] == ii)[0]
-        ras.append(igmsp.cat['RA'][mt][0])
-        decs.append(igmsp.cat['DEC'][mt][0])
-    coord = SkyCoord(ra=ras, dec=decs, unit='deg')
+    coord = SkyCoord(ra=subcat['RA'], dec=subcat['DEC'], unit='deg')
     sep = icoord.separation(coord)
     isrt = np.argsort(sep)
     assert isrt[0] == 0
-    assert isrt[-1] == len(idxm)-1
+    assert isrt[-1] == len(subcat)-1
     # Multiple but grab only 1
-    idxs = igmsp.qcat.radial_search(icoord, 1*u.deg, mt_max=1)
+    _, _, idxs = igmsp.qcat.query_position(icoord, 1*u.deg, max_match=1)
     assert len(idxs) == 1
 
 
-def test_match_coord(igmsp):
+def test_query_coords(igmsp):
     # Single
     coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
     #
-    idx = igmsp.qcat.match_coord(coord)
+    _, _, idx = igmsp.qcat.query_coords(coord)
     assert idx[0] >= 0
     # Multiple
     coords = SkyCoord(ra=[0.0019]*2, dec=[17.7737]*2, unit='deg')
-    idxs = igmsp.qcat.match_coord(coords)
+    _, _, idxs = igmsp.qcat.query_coords(coords)
     assert len(idxs) == 2
     # Dataset
-    idxs2 = igmsp.qcat.match_coord(coords, group='BOSS_DR12')
+    _, _, idxs2 = igmsp.qcat.query_coords(coords, groups=['BOSS_DR12'])
     assert np.sum(idxs2 >= 0) == 2
-    idxs3 = igmsp.qcat.match_coord(coords, group='HD-LLS_DR1')
+    _, _, idxs3 = igmsp.qcat.query_coords(coords, groups=['HD-LLS_DR1'])
     assert np.sum(idxs3 >= 0) == 0
 
 
-def test_cat_from_coord(igmsp):
+def test_cat_from_query_coord(igmsp):
     # Single
     coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
     #
-    ccat = igmsp.qcat.cat_from_coords(coord)
+    _, ccat, _ = igmsp.qcat.query_coords(coord)
     assert ccat['IGM_ID'][0] == 0
     # Multiple
     coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
-    ccat2 = igmsp.qcat.cat_from_coords(coords)
+    _, ccat2, _ = igmsp.qcat.query_coords(coords)
     assert len(ccat2) == 2
     assert ccat2['IGM_ID'][0] == 1
+    assert ccat2['IGM_ID'][1] == 0
     # One miss
     coords3 = SkyCoord(ra=[9.0028,0.0019], dec=[-14.9747,17.7737], unit='deg')
-    ccat3 = igmsp.qcat.cat_from_coords(coords3)
+    _, ccat3, _ = igmsp.qcat.query_coords(coords3)
     assert ccat3['IGM_ID'][0] == -1
+    pytest.set_trace()
 
 
+'''
 def test_chk_in_group(igmsp):
     # BOSS
     answer, query = igmsp.qcat.chk_in_group(np.array([0,1,2]), 'BOSS_DR12')
@@ -138,3 +135,4 @@ def test_ids_in_groups(igmsp):
     assert IDs4.size == 2
 
 
+'''

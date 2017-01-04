@@ -128,14 +128,13 @@ class SSAInterface(object):
 
 
         # Perform query
-        IDs = self.specdb.qcat.radial_search(coord, SIZE*size_unit, mt_max=MAXREC)
+        _, subcat, IDs = self.specdb.qcat.query_position(coord, SIZE*size_unit, max_match=MAXREC)
 
         if IDs.size > 0:
             # Grab meta params
             metaparams, pIDs = metaquery_param()
 
             # Grab sub-catalog
-            subcat = self.specdb.qcat.cat_from_ids(IDs)
             gd_groups = self.specdb.qcat.groups_containing_IDs(IDs)
 
             # Loop on groups

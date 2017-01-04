@@ -112,8 +112,9 @@ refine the search (on emission redshift)::
 Querying with a List of Coordinates
 -----------------------------------
 
-There are several methods that interface with the primary
-source catalog.
+One can query the database with a set of coordinates,
+each of which is matched to a small tolerance
+(default: 0.5 arcseconds).
 
 cat_from_coords
 ---------------
@@ -130,16 +131,6 @@ Here is an example call::
 
 The user can then analyze the catalog for this subset of
 sources (if any matched).
-
-radial_search
--------------
-
-One may search to within a given radius for sources around
-an input coordinate.  Here is an example::
-
-   ids2334 = igmsp.qcat.radial_search('J233446.40-090812.3', 1.*u.arcsec)
-
-The method returns an array of all source IDs within that radius.
 
 match_coord
 -----------
