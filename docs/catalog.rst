@@ -47,21 +47,42 @@ STYPE       str      Type of the source (e.g. QSO)
 Querying the Source Catalog
 ===========================
 
-There are three primary approaches to querying the source catalog
-which differ according to the treatment of coordinates.
+There are several approaches to querying the source catalog
+which differ according to the treatment of coordinates and
+source IDs.  The examples in the following documentation
+work on the test database file provided with `specdb`.
+To follow along, instantiate a SpecDB class::
+
+    import specdb
+    db_file = specdb.__path__[0]+'/tests/files/IGMspec_DB_v02_debug.hdf5'
+    from specdb.specdb import SpecDB
+    sdb = SpecDB(db_file=db_file)
+
+One can proceed to querying.
 
 Querying without Coordinates
 ----------------------------
 
 One can query the source catalog without regard
 to coordinates.  In this case, a :doc:`query_dict`
-is required.
+is required.  Here is an example::
+
+    qdict = {'zem': (3.,5.), 'flag_group-BITWISE-OR': [2,4,32], 'STYPE': 'QSO'}
+    matches, sub_cat, IDs = sdb.qcat.query_dict(qdict)
+
+This query restricts to sources with redshifts 3<z<5,
+source type 'QSO', and with spectra in any of the data
+groups specified by the bitwise flags of 2,4, or 32.
+
+The method returns a bool array (matches) indicating which
+rows of the catalog are matched, the sub-catalog of those rows,
+and the IDKEY values of those rows.
 
 Querying a Position on the Sky
 ------------------------------
 
-Querying with a Coordinate List
--------------------------------
+Querying with a List of Coordinates
+-----------------------------------
 
 There are several methods that interface with the primary
 source catalog.

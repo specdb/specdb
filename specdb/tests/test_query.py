@@ -29,6 +29,17 @@ def igmsp():
     igmsp = IgmSpec(db_file=db_file)
     return igmsp
 
+def test_query_dict(igmsp):
+    # BITWISE-OR
+    qdict = {'zem': (3.,5.), 'flag_group-BITWISE-OR': [2,4,8], 'STYPE': 'QSO'}
+    matches, sub_cat, IDs = igmsp.qcat.query_dict(qdict)
+    assert 123 in IDs
+    # BITWISE-AND
+    qdict2 = {'zem': (3.,5.), 'flag_group-BITWISE-AND': [4,8], 'STYPE': 'QSO'}
+    matches, sub_cat, IDs2 = igmsp.qcat.query_dict(qdict2)
+    assert 123 not in IDs2
+    assert 24295 in IDs2
+
 def test_radial_search(igmsp):
     # One match
     idx = igmsp.qcat.radial_search((0.0019,17.7737), 1*u.arcsec)

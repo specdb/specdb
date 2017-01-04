@@ -6,6 +6,10 @@ import numpy as np
 import warnings
 import pdb
 
+try:
+    basestring
+except NameError:  # For Python 3
+    basestring = str
 
 def load_db(db_type, **kwargs):
     """
@@ -57,10 +61,16 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
     for key,value in qdict.items():
         # Deal with BITWISE
         if '-BITWISE' in key:
-            flg_bitwise = True
-            key = key.replace('-BITWISE','')
+            if '-BITWISE-OR' in key:
+                flg_bitwise = 1
+            elif '-BITWISE-AND' in key:
+                flg_bitwise = 2
+            else:
+                raise IOError("Undefined BITWISE approach")
+            # Truncate key name
+            key = key[:key.rfind('-BITWISE')]
         else:
-            flg_bitwise = False
+            flg_bitwise = 0
         # Check
         if key not in tkeys:
             msg = "Key {:s} in query_dict is not present in Table".format(key)
@@ -77,14 +87,20 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
                 raise IOError("Tuple for key={:s} in query_dict must have length 2 for min/max".format(key))
             # Min/Max
             match = match & (tbl[key].data >= value[0]) & (tbl[key].data <= value[1])
-        elif isinstance(value,(list,float,str,int)):
-            if flg_bitwise:
+        elif isinstance(value,(list,float,basestring,int)):
+            if flg_bitwise > 0: # BITWISE
                 if isinstance(value,(int)):
                     match &= (tbl[key].data & 2**value).astype(bool)
                 elif isinstance(value,(list)):
-                    bit_match = np.array([False]*len(tbl))
+                    if flg_bitwise == 1:
+                        bit_match = np.array([False]*len(tbl))
+                    else:
+                        bit_match = np.array([True]*len(tbl))
                     for item in value:
-                        bit_match += (tbl[key].data & 2**item).astype(bool)
+                        if flg_bitwise == 1: # OR
+                            bit_match += (tbl[key].data & item).astype(bool)
+                        else: # AND
+                            bit_match &= (tbl[key].data & item).astype(bool)
                     match &= bit_match
             else:
                 # Recast

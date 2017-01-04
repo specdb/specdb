@@ -40,10 +40,15 @@ Extra handling is required to query bitwise flags
 in a bitwise fashion.
 The current approach is to append '-BITWISE' to the
 keyword to indicate that the input value(s) is/are
-to be matched in a bitwise manner, e.g.::
+to be matched in a bitwise manner.  In addition,
+one appends '-AND' to require all of the bits are on
+or '-OR' to require only one.  Here is an example::
 
-    qdict = {'zem': (1.,2.), 'flag_group-BITWISE': [2,4,32]}
+    qdict = {'zem': (1.,2.), 'flag_group-BITWISE-OR': [2,4,32]}
 
 This will match against the flag_group column with
 bitwise logic.  That is, Table rows with any of the
 input values turned on will match.
+
+Note that the input values are the base-10 representations,
+i.e.  2**5=32 or 2**9=512, not 5 or 9.

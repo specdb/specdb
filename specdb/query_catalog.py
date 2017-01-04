@@ -338,13 +338,32 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def query(self, coords=None, query_dict=None, verbose=True, **kwargs):
+    def query_dict(self, idict, verbose=True, **kwargs):
+        """ Query the catalog without using coordinates.
+        In this case, a query_dict is required
+        Parameters
+        ----------
+        idict : dict
+          Query_dict
+        verbose : bool, optional
+        kwargs
+
+        Returns
+        -------
+        matches : bool ndarray
+          True if the row in the catalog is a match
+        sub_cat : Table
+          Slice of the catalog with matched rows
+        IDs : int ndarray
+          Array of IDKEY values of the matches
+        """
         from specdb import utils as spdbu
         reload(spdbu)
-        if query_dict is not None:
-            match = spdbu.query_table(self.cat, query_dict)
+        # Copy in case we need to add group search
+        qdict = idict.copy()
+        matches = spdbu.query_table(self.cat, qdict)
         # Return
-        return match
+        return matches, self.cat[matches], self.cat[self.idkey][matches].data
 
     def radial_search(self, inp, radius, mt_max=None, verbose=True, private=False, **kwargs):
         """ Search for sources in a radius around the input coord
