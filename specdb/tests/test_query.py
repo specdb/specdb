@@ -105,10 +105,8 @@ def test_cat_from_query_coord(igmsp):
     coords3 = SkyCoord(ra=[9.0028,0.0019], dec=[-14.9747,17.7737], unit='deg')
     _, ccat3, _ = igmsp.qcat.query_coords(coords3)
     assert ccat3['IGM_ID'][0] == -1
-    pytest.set_trace()
 
 
-'''
 def test_chk_in_group(igmsp):
     # BOSS
     answer, query = igmsp.qcat.chk_in_group(np.array([0,1,2]), 'BOSS_DR12')
@@ -135,4 +133,3 @@ def test_ids_in_groups(igmsp):
     assert IDs4.size == 2
 
 
-'''

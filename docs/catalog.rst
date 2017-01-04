@@ -115,41 +115,29 @@ Querying with a List of Coordinates
 One can query the database with a set of coordinates,
 each of which is matched to a small tolerance
 (default: 0.5 arcseconds).
-
-cat_from_coords
----------------
-
-This method returns a Table drawn from the catalog matching
-the size and order of an input set of coordinates.  Sources
-that are not matched within the tolerance (default = 0.5 arcsec)
-have entries filled with zero values and ID<0.
-
-Here is an example call::
+The input is an astropy.coordinate.SkyCoord object.
+Here is an example::
 
     coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
-    sub_cat = igmsp.qcat.cat_from_coords(coords)
+    matches, subcat, IDs = sdb.qcat.query_coords(coords)
 
-The user can then analyze the catalog for this subset of
-sources (if any matched).
+The outputs have the same size as the input set of coordinates
+and are aligned.  As in the other queries, these are a bool array
+indicating a match, the sub-catalog with rows ordered by the
+input coordinates (non-matches are blank), and the IDKEY values.
+Sources that do not match by coordinate have IDKEY=-1 and those
+that match coordinates but fail some other criterion have
+IDKEY=-2.
 
-match_coord
------------
+Here are a few other examples::
 
-This method matches a set of input coordinates (a SkyCoord object)
-to the source catalog within an optional tolerance (default=0.5").  It returns
-an ndarray of IDs with shape and order matching the input list.
-Coordinates without a match within the tolerance
-have -1 values .  Here is an example::
+    qdict = dict(zem=(1.0, 2.5))
+    matches, subcat, IDs = sdb.qcat.query_coords(coords, query_dict=qdict)
 
-    coords = SkyCoord(ra=[0.0019,1.2321], dec=[17.7737,-12.2332], unit='deg')
-    IDs = igmsp.qcat.match_coord(coords)
+and::
 
-One can further restrict the search to a specific group
+    matches, subcat, IDs = sdb.qcat.query_coords(coords, groups=['BOSS_DR12'])
 
-    IDs = igmsp.match_coord(coords, group='BOSS_DR12')
-
-Sources that are a match in position but not within the group
-have an ID=-2.
 
 I/O
 ===

@@ -172,7 +172,6 @@ class QueryCatalog(object):
         # Return
         return answer, query
 
-
     def coord_to_ID(self, coord, tol=0.5*u.arcsec, closest=True, **kwargs):
         """ Convert an input coord to an ID if matched within a
         given tolerance.  If multiple sources are identified, return
@@ -241,7 +240,7 @@ class QueryCatalog(object):
         if IDs is None:
             IDs = self.cat[self.idkey].data
         # Flags
-        cat_rows = match_ids(IDs, self.cat[self.idkey].data)
+        cat_rows = match_ids(IDs, self.cat[self.idkey].data, require_in_match=True)
         fs = self.cat['flag_group'][cat_rows].data
         msk = np.zeros_like(fs).astype(int)
         for group in groups:
@@ -544,6 +543,7 @@ class QueryCatalog(object):
         self.cat['zem'].format = '6.3f'
         self.cat['sig_zem'].format = '5.3f'
 
+
     def groups_containing_IDs(self, IDs, igroup=None):
         """ Return a list of all groups that contain all of the input IDs
 
@@ -572,7 +572,7 @@ class QueryCatalog(object):
         for group in igroup:
             sflag = self.group_dict[group]
             # In the group?
-            query = (flags % (sflag*2)) >= sflag
+            query = (flags & sflag).astype(bool)
             if np.sum(query) == nIDs:
                 gd_groups.append(group)
         # Return
