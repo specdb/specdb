@@ -59,6 +59,8 @@ To follow along, instantiate a SpecDB class::
     sdb = SpecDB(db_file=db_file)
 
 One can proceed to querying.
+Much of the following is also contained in this
+`Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/SSA_IVOA.ipynb>`_.
 
 Querying without Coordinates
 ----------------------------
@@ -73,7 +75,8 @@ is required.  Here is an example::
 This query restricts to sources with redshifts 3<z<5,
 source type 'QSO', and with spectra in any of the data
 groups specified by the bitwise flags of 2,4, or 32.
-See more about :ref:`bitwise-flags` in a :doc:`query_dict`.
+Read more about using
+:ref:`bitwise-flags` in a :doc:`query_dict`.
 
 The method returns a bool array (matches) indicating which
 rows of the catalog are matched, the sub-catalog of those rows,
@@ -92,7 +95,7 @@ Here is a simple example with a small search radius::
 
     matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 10*u.arcsec)
 
-The objects returned is bool array (matches) indicating
+The objects returned are a bool array (matches) indicating
 which rows of the catalog matched, the sub-catalog of
 those rows ordered by separation from the search position,
 and the IDs of those sources also ordered by search position.
@@ -102,7 +105,7 @@ sources that have spectra in at least one of a set of groups::
 
     matches, sub_cat, IDs = sdb.qcat.query_position((2.813500,14.767200), 20*u.deg, groups=['SDSS_DR7','GGG'])
 
-Here the input is an (ra,dec) tuple assumed to be in decimal degrees.
+Here the input was an (ra,dec) tuple assumed to be in decimal degrees.
 Finally, an example that includes a :doc:`query_dict` to further
 refine the search (on emission redshift)::
 
