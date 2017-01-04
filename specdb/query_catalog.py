@@ -338,6 +338,14 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
+    def query(self, coords=None, query_dict=None, verbose=True, **kwargs):
+        from specdb import utils as spdbu
+        reload(spdbu)
+        if query_dict is not None:
+            match = spdbu.query_table(self.cat, query_dict)
+        # Return
+        return match
+
     def radial_search(self, inp, radius, mt_max=None, verbose=True, private=False, **kwargs):
         """ Search for sources in a radius around the input coord
 

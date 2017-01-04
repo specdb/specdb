@@ -2,7 +2,7 @@
 """
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import os, glob
+import numpy as np
 import warnings
 import pdb
 
@@ -34,3 +34,64 @@ def load_db(db_type, **kwargs):
     # Return
     return Specdb
 
+
+def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
+    """ Find all rows in the input table satisfying
+    the query given by qdict
+    Parameters
+    ----------
+    tbl : Table
+    qdict : dict
+      See query_dict documentation for rules
+
+    Returns
+    -------
+    match : bool ndarray
+        True = Row satisfies the query
+    """
+    # Init
+    match = np.array([True]*len(tbl))
+    tkeys = tbl.keys()
+
+    # Perform
+    for key,value in qdict.items():
+        # Deal with BITWISE
+        if '-BITWISE' in key:
+            flg_bitwise = True
+            key = key.replace('-BITWISE','')
+        else:
+            flg_bitwise = False
+        # Check
+        if key not in tkeys:
+            msg = "Key {:s} in query_dict is not present in Table".format(key)
+            if ignore_missing_keys:
+                if verbose:
+                    print(msg)
+                continue
+            else:
+                raise IOError(msg)
+        # Proceed
+        if isinstance(value,tuple):
+            # Check
+            if len(value) != 2:
+                raise IOError("Tuple for key={:s} in query_dict must have length 2 for min/max".format(key))
+            # Min/Max
+            match = match & (tbl[key].data >= value[0]) & (tbl[key].data <= value[1])
+        elif isinstance(value,(list,float,str,int)):
+            if flg_bitwise:
+                if isinstance(value,(int)):
+                    match &= (tbl[key].data & 2**value).astype(bool)
+                elif isinstance(value,(list)):
+                    bit_match = np.array([False]*len(tbl))
+                    for item in value:
+                        bit_match += (tbl[key].data & 2**item).astype(bool)
+                    match &= bit_match
+            else:
+                # Recast
+                mlist = np.array(value).astype(tbl[key].dtype)
+                # Match
+                match &= np.in1d(tbl[key].data, mlist)
+        else:
+            raise IOError("Bad data type for query_dict value: {}".format(type(value)))
+    # Return
+    return match

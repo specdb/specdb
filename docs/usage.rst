@@ -4,30 +4,55 @@
 Basic Usage in Python
 *********************
 
-This file summarizes some of the simple usage cases
-of `specdb` from within Python.
+This file summarizes some of the simple cases
+of using a `specdb` database from within Python.
 See the :doc:`scripts` documentation for a discussion of
 command-line usage from the command line.
 
-You can view a
-`Usage Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/Simple_Usage.ipynb>`_
-on github that shows most of the following examples.
+Overview
+========
 
-Setup
-=====
+There are three standard activities related to using
+a specdb database:
 
-The main class SpecDB is simply instantiated::
+1. :ref:`query-catalog`
+
+2. Querying the meta tables
+
+3. Retrieving spectra
+
+We provide separate documentation and examples
+for each of these activities.
+
+SpecDB
+======
+
+Essentially all of database interfacing is performed
+through the SpecDB Class (or one of its children).
+This class loads the database, performs queries on
+the catalogs and meta data, and retrieves the spectra.
+
+Instantiation
+-------------
+
+Step 0 is to instantiate by pointing the Class
+at the database of interest.  Here is an example::
 
     from specdb.specdb import SpecDB
-    igmsp = SpecDB(db_file='/raid/IGMSPEC_DB/IGMspec_DB_v02.hdf5')
+    specdb = SpecDB(db_file='/my_path/IGMspec_DB_v02.hdf5')
 
-This loads the database catalog::
+At instantiation, the SpecDB object performs the actions:
 
-    igmsp.qcat
-    <QueryCatalog:  DB_file=/u/xavier/local/Python/igmspec/DB/IGMspec_DB_v01.hdf5 with 377018 sources Loaded groups are [u'BOSS_DR12', u'GGG', u'HD-LLS_DR1', u'KODIAQ_DR1', u'SDSS_DR7'] >
+ - Opens a pointer to the HDF5 file
+ - Loads a QueryCatalog object into specdb.qcat
+ - Loads the source catalog as an astropy.Table in specdb.cat
+ - Loads the list of data groups in specdb.groups
+ - Loads a *dict* translating the data group flags in specdb.group_dict
+ - Generates an empty *dict* in specdb._gdict which will be used to interface with the data groups
 
-and opens the database HDF5 file without loading any
-other data.
+
+Children
+--------
 
 The various public databases may have a unique child
 of SpecDB.  Currently, there is:
@@ -38,76 +63,13 @@ Database   SpecDB Child
 igmspec    IgmSpec
 ========== ====================================================
 
-Here is an example instantiation for *igmspec::
+Here is an example instantiation for *igmspec*::
 
     igmsp = IgmSpec()  # Loads the highest version in $IGMSPEC_DB
 
-This loads the highest version number of the HDF5 files located
+This loads the highest version number of any HDF5 files located
 in the $IGMSPEC_DB folder.
 
-Querying the Catalog
-====================
-
-There are several methods that interface with the primary
-source catalog.
-
-cat_from_coords
----------------
-
-This method returns a Table drawn from the catalog matching
-the size and order of an input set of coordinates.  Sources
-that are not matched within the tolerance (default = 0.5 arcsec)
-have entries filled with zero values and ID<0.
-
-Here is an example call::
-
-    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
-    sub_cat = igmsp.qcat.cat_from_coords(coords)
-
-The user can then analyze the catalog for this subset of
-sources (if any matched).
-
-radial_search
--------------
-
-One may search to within a given radius for sources around
-an input coordinate.  Here is an example::
-
-   ids2334 = igmsp.qcat.radial_search('J233446.40-090812.3', 1.*u.arcsec)
-
-The method returns an array of all source IDs within that radius.
-
-match_coord
------------
-
-This method matches a set of input coordinates (a SkyCoord object)
-to the source catalog within an optional tolerance (default=0.5").  It returns
-an ndarray of IDs with shape and order matching the input list.
-Coordinates without a match within the tolerance
-have -1 values .  Here is an example::
-
-    coords = SkyCoord(ra=[0.0019,1.2321], dec=[17.7737,-12.2332], unit='deg')
-    IDs = igmsp.qcat.match_coord(coords)
-
-One can further restrict the search to a specific group
-
-    IDs = igmsp.match_coord(coords, group='BOSS_DR12')
-
-Sources that are a match in position but not within the group
-have an ID=-2.
-
-show_cat
---------
-
-A printout of the catalog values for a list of IDs is provided
-by `show_cat`::
-
-   igmsp.qcat.show_cat(IDs)
-
-This includes the flag_group values which indicate the groups
-that include a given source.  The catalog only shows a single
-entry per source and only those sources with ID values within
-the catalog (e.g. negative values are ignored).
 
 Grabbing Spectra
 ================

@@ -10,6 +10,7 @@ import h5py
 from astropy import units as u
 from astropy.table import Table
 
+from specdb import query_catalog as spdb_qc
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_group import InterfaceGroup
 
@@ -43,10 +44,11 @@ class SpecDB(object):
                 raise IOError("DB not found. Please either check the corresponding environmental "
                               "variable or directly provide the db_file")
         # Init
+        reload(spdb_qc)
         self.verbose = verbose
         self.open_db(db_file)
         # Catalog
-        self.qcat = QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
+        self.qcat = spdb_qc.QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
         self.cat = self.qcat.cat  # For convenience
         self.qcat.verbose = verbose
         self.groups = self.qcat.groups
