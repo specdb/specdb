@@ -32,4 +32,10 @@ def test_match_ids():
     assert mIDs[1] == 5
 
 
-
+def test_flags_to_groups():
+    # Dummy group dict
+    gdict = dict(BOSS_DR12=1, SDSS_DR7=2, GGG=16)
+    flags = np.array([1,3,16,3,17,18,19])
+    # Run
+    groups = cat_utils.flags_to_groups(flags, gdict)
+    pytest.set_trace()
