@@ -38,4 +38,5 @@ def test_flags_to_groups():
     flags = np.array([1,3,16,3,17,18,19])
     # Run
     groups = cat_utils.flags_to_groups(flags, gdict)
-    pytest.set_trace()
+    # Test
+    assert groups[-1] == 'BOSS_DR12,GGG,SDSS_DR7'
