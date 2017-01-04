@@ -39,6 +39,17 @@ def test_query_dict(igmsp):
     matches, sub_cat, IDs2 = igmsp.qcat.query_dict(qdict2)
     assert 123 not in IDs2
     assert 24295 in IDs2
+    # GROUPS
+    matches, sub_cat, IDs3 = igmsp.qcat.query_dict(qdict2, groups=['BOSS_DR12', 'GGG'])
+    assert 41217 in IDs3
+    matches, sub_cat, IDs4 = igmsp.qcat.query_dict(qdict2, groups=['BOSS_DR12', 'GGG'], in_all_groups=True)
+    assert len(IDs4) < len(IDs3)
+    assert 3244 in IDs4
+    # Scalars
+    qdict3 = {'zem': (3.,5.), 'flag_group': 3, 'STYPE': 'QSO'}  # Only in BOSS and SDSS
+    matches, sub_cat, IDs5 = igmsp.qcat.query_dict(qdict3)
+    assert 225 in IDs5
+
 
 def test_radial_search(igmsp):
     # One match

@@ -33,6 +33,27 @@ list       [2,32,256]   Interpreted as a list of values to match against
 For *list* entries, the match is successful if the Table values
 matches any of the items in the list.
 
+Examples for Catalog Queries
+----------------------------
+
+While most queries of the database catalog will be
+based on coordinates, one can further restrict the
+query with a query *dict*.
+
+Here are some simple examples for querying the :doc:`catalog`::
+
+    qdict = {'zem': (1.,2.), 'STYPE': 'QSO'}
+
+This will restrict to sources with redshift 1<=z<=2 and
+source type 'QSO'.  Here is another::
+
+    qdict = {'zem': (1.,2.), 'flag_group': 8}
+
+Same cut on redshift and now restricting to sources
+with the bitwise flag_group=8.
+
+.. _bitwise-flags:
+
 Bitwise Flags
 =============
 
@@ -50,5 +71,5 @@ This will match against the flag_group column with
 bitwise logic.  That is, Table rows with any of the
 input values turned on will match.
 
-Note that the input values are the base-10 representations,
+Note that the input values are the full values,
 i.e.  2**5=32 or 2**9=512, not 5 or 9.

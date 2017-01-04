@@ -73,6 +73,7 @@ is required.  Here is an example::
 This query restricts to sources with redshifts 3<z<5,
 source type 'QSO', and with spectra in any of the data
 groups specified by the bitwise flags of 2,4, or 32.
+See more about :ref:`bitwise-flags` in a :doc:`query_dict`.
 
 The method returns a bool array (matches) indicating which
 rows of the catalog are matched, the sub-catalog of those rows,
@@ -80,6 +81,33 @@ and the IDKEY values of those rows.
 
 Querying a Position on the Sky
 ------------------------------
+
+One can query the database around a given location
+on the sky.  For convenience, the formatting of the
+sky position includes many options.  One also inputs
+a search radius which is either an Angle or Quantity
+from astropy.
+
+Here is a simple example with a small search radius::
+
+    matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 10*u.arcsec)
+
+The objects returned is bool array (matches) indicating
+which rows of the catalog matched, the sub-catalog of
+those rows ordered by separation from the search position,
+and the IDs of those sources also ordered by search position.
+
+Here is an example with a wider search and restricting to
+sources that have spectra in at least one of a set of groups::
+
+    matches, sub_cat, IDs = sdb.qcat.query_position((2.813500,14.767200), 20*u.deg, groups=['SDSS_DR7','GGG'])
+
+Here the input is an (ra,dec) tuple assumed to be in decimal degrees.
+Finally, an example that includes a :doc:`query_dict` to further
+refine the search (on emission redshift)::
+
+    qdict = dict(zem=(1.0, 3.))
+    matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 20*u.deg, query_dict=qdict)
 
 Querying with a List of Coordinates
 -----------------------------------

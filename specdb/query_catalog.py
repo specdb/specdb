@@ -16,6 +16,7 @@ from astropy.coordinates import SkyCoord, match_coordinates_sky, Angle
 from linetools import utils as ltu
 
 from specdb.cat_utils import match_ids
+from specdb import utils as spdbu
 
 try:
     basestring
@@ -338,13 +339,20 @@ class QueryCatalog(object):
         # Reload
         return ID_fg, ID_bg
 
-    def query_dict(self, idict, verbose=True, **kwargs):
+    def query_dict(self, idict, groups=None, in_all_groups=False, verbose=True, **kwargs):
         """ Query the catalog without using coordinates.
         In this case, a query_dict is required
         Parameters
         ----------
         idict : dict
           Query_dict
+        groups : list, optional
+          List of groups by name to match with the source
+          Logic (and/or) is defined by in_all_groups
+        in_all_groups : bool, optional
+          Only used if groups is input
+          If in_all_groups=True, the source must have a spectrum in each to match
+          Otherwise, it must exist in at least one of the groups
         verbose : bool, optional
         kwargs
 
@@ -357,27 +365,105 @@ class QueryCatalog(object):
         IDs : int ndarray
           Array of IDKEY values of the matches
         """
-        from specdb import utils as spdbu
-        reload(spdbu)
+        #reload(spdbu)
         # Copy in case we need to add group search
         qdict = idict.copy()
-        matches = spdbu.query_table(self.cat, qdict)
+        # Groups
+        def purge_flag_group(idict):
+            for key in idict.keys():
+                if 'flag_group' in key:
+                    warnings.warn("Scrubbing key={:s} from the search because you input groups".format(key))
+                    _ = idict.pop(key)
+        if groups is not None:
+            # Purge
+            purge_flag_group(idict)
+            # Generate flag_group
+            fgroups = []
+            for group in groups:
+                fgroups.append(self.group_dict[group])
+            # Generate key
+            key = 'flag_group-BITWISE-'
+            if in_all_groups:
+                key += 'AND'
+            else:
+                key += 'OR'
+            # Add
+            idict[key] = fgroups
+
+        # Query
+        matches = spdbu.query_table(self.cat, idict)
+
         # Return
         return matches, self.cat[matches], self.cat[self.idkey][matches].data
 
-    def radial_search(self, inp, radius, mt_max=None, verbose=True, private=False, **kwargs):
+    def query_position(self, inp, radius, query_dict=None, max_match=None,
+                       verbose=True, groups=None, **kwargs):
         """ Search for sources in a radius around the input coord
 
         Parameters
         ----------
         inp : str or tuple or SkyCoord
-          See linetools.utils.radec_to_coord
+          See linetools.utils.radec_to_coord for details
           Single coordinate
-        radius : Angle or Quantity, optional
+        radius : Angle or Quantity
           Tolerance for a match
-        mt_max : int, optional
-          Maximum number of matches to return
+        max_match : int, optional
+          Maximum number of rows to return in sub_cat and IDs
+          Ordered by separation distance
         verbose
+        kwargs
+
+        Returns
+        -------
+        matches : bool ndarray
+          True if the row in the catalog is a match
+          Size matches complete catalog irrespective of max_match
+        sub_cat : Table
+          Slice of the catalog with matched rows
+          Ordered by separation; May be limited by max_match
+        IDs : int ndarray
+          Array of IDKEY values of the matches
+          Ordered by separation; May be limited by max_match
+        """
+        # Checks
+        if not isinstance(radius, (Angle, Quantity)):
+            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
+        # Convert to SkyCoord
+        coord = ltu.radec_to_coord(inp)
+        # Separation
+        sep = coord.separation(self.coords)
+
+        # Match
+        matches = sep < radius
+
+        # Query dict?
+        if (query_dict is not None) or (groups is not None):
+            if query_dict is None:
+                query_dict = {}
+            qmatches, _, _ = self.query_dict(query_dict, groups=groups, **kwargs)
+            matches &= qmatches
+        if verbose:
+            print("Your search yielded {:d} match[es] within radius={:g}".format(np.sum(matches), radius))
+
+        # Sort by separation
+        asort = np.argsort(sep[matches])
+        if max_match is not None:
+            imax = min(asort.size, max_match)
+            asort = asort[:imax]
+
+        # Return
+        return matches, self.cat[matches][asort], self.cat[self.idkey][matches].data[asort]
+
+    def radial_search(self, inp, radius, **kwargs):
+        """ Search for sources in a radius around the input coord
+
+        Parameters
+        ----------
+        inp : str or tuple or SkyCoord
+          See linetools.utils.radec_to_coord for details
+          Single coordinate
+        radius : Angle or Quantity
+          Tolerance for a match
 
         Returns
         -------
@@ -385,23 +471,10 @@ class QueryCatalog(object):
           Catalog IDs corresponding to match in order of increasing separation
           Returns an empty array if there is no match
         """
-        if not isinstance(radius, (Angle, Quantity)):
-            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
-        # Convert to SkyCoord
-        coord = ltu.radec_to_coord(inp)
-        # Separation
-        sep = coord.separation(self.coords)
-        # Match
-        good = sep < radius
-        if verbose:
-            print("Your search yielded {:d} match[es] within radius={:g}".format(np.sum(good), radius))
-        # Sort by separation
-        asort = np.argsort(sep[good])
-        if mt_max is not None:
-            imax = min(asort.size,mt_max)
-            asort = asort[:imax]
+        warnings.warn("THIS METHOD WILL BE DEPRECATED.  USE QUERY_POSITION")
+        _, _, idx = self.query_position(inp, radius, **kwargs)
         # Return
-        return self.cat[self.idkey][good][asort]
+        return idx
 
     def show_cat(self, IDs):
         """  Show the catalog
