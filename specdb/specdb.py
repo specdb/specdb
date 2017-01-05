@@ -8,9 +8,10 @@ import warnings
 import h5py
 
 from astropy import units as u
-from astropy.table import Table
+from astropy.table import Table, vstack
 
 from specdb import query_catalog as spdb_qc
+from specdb import interface_group as spdb_ig
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_group import InterfaceGroup
 
@@ -213,6 +214,62 @@ class SpecDB(object):
 
         return self.allspec_of_ID(ID, groups=groups, **kwargs)
 
+    def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
+
+        # Cut down using source catalog
+        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=query_dict,
+                                                         groups=groups, **kwargs)
+        # Add IDs
+        if query_dict is None:
+            query_dict = {}
+        query_dict[self.idkey] = IDs.tolist()
+
+        # Build up groups
+        sub_groups = []
+        for group, bit in self.group_dict.items():
+            if np.sum(sub_cat['flag_group'] & bit) > 0:
+                sub_groups.append(group)
+        # Call (restrict at least on IDs)
+        all_meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
+        # Finish
+        return all_meta
+
+
+    def query_meta(self, qdict, groups=None, **kwargs):
+        """ Uses query_dict to parse all
+        Parameters
+        ----------
+        qdict
+        groups
+        kwargs
+
+        Returns
+        -------
+        meta : Table
+          Stack of all meta data satisfying the query
+          Column 'GROUP' contains group name
+          None if there is no match
+        """
+        # Init
+        if groups is None:
+            groups = self.groups
+        # Loop on groups
+        all_meta = []
+        for group in groups:
+            matches, sub_meta, IDs = self[group].query_meta(qdict, **kwargs)
+            if len(sub_meta) > 0:
+                # Add group
+                sub_meta['GROUP'] = str(group)
+                # Add RA/DEC?
+                # Append -- Not keeping the empty ones
+                all_meta.append(sub_meta)
+        # Stack
+        if len(all_meta) == 0:
+            return None
+        else:
+            return vstack(all_meta)
+
+
     def __getitem__(self, key):
         """ Access the DB groups
 
@@ -234,7 +291,8 @@ class SpecDB(object):
             if key not in self.groups:
                 raise IOError("Input group={:s} is not in the database".format(key))
             else: # Load
-                self._gdict[key] = InterfaceGroup(self.hdf, key, idkey=self.idkey)
+                reload(spdb_ig)
+                self._gdict[key] = spdb_ig.InterfaceGroup(self.hdf, key, idkey=self.idkey)
                 return self._gdict[key]
 
     def __repr__(self):

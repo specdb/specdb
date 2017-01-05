@@ -16,7 +16,7 @@ from linetools.spectra.xspectrum1d import XSpectrum1D
 
 from specdb.cat_utils import match_ids
 from specdb.group_utils import show_group_meta
-
+from specdb import utils as spdbu
 
 class InterfaceGroup(object):
     """ A Class for interfacing with the DB
@@ -320,6 +320,25 @@ class InterfaceGroup(object):
                 print("Staged {:d} spectra totalling {:g} Gb".format(len(rows), new_memory))
             return True
 
+    def query_meta(self, qdict, **kwargs):
+        """
+        Parameters
+        ----------
+        qdict : dict
+          Query_dict
+
+        Returns
+        -------
+        matches : bool array
+        sub_meta : Table
+          Subset of the meta table matching the query
+        IDs : int ndarray
+        """
+        # Query
+        matches = spdbu.query_table(self.meta, qdict)
+
+        # Return
+        return matches, self.meta[matches], self.meta[self.idkey][matches].data
 
     def update(self):
         """ Update key attributes
