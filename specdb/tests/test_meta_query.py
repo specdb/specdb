@@ -52,6 +52,39 @@ def test_meta_from_position(igmsp):
     # Multiple but grab closest source
     meta5 = igmsp.meta_from_position((0.0055,-1.5), 1*u.deg, max_match=1)
     assert len(meta5) == 1
+    # Groups
+    meta = igmsp.meta_from_position((2.813500,14.767200), 20*u.deg, groups=['GGG','HD-LLS_DR1'])
+    for group in meta['GROUP'].data:
+        assert group in ['GGG', 'HD-LLS_DR1']
 
 
+def test_meta_from_coords(igmsp):
+    # Single
+    coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
+    _, meta = igmsp.meta_from_coords(coord)
+    meta['GROUP'] == 'BOSS_DR12'
+    # Multiple sources
+    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
+    _, meta = igmsp.meta_from_coords(coords)
+    assert len(meta) == 2
+    # Multiple sources with one bad
+    coords = SkyCoord(ra=[0.0028,0.0019], dec=[-14.9747,17.7737], unit='deg')
+    matches, meta = igmsp.meta_from_coords(coords)
+    assert matches[0] == False
+    # Multiple hits
+    coord = SkyCoord(ra=2.813458, dec=14.767167, unit='deg')
+    _, meta4 = igmsp.meta_from_coords(coord)
+    assert len(meta4) == 1  # Only grabs first
+    assert meta4['GROUP_ID'] == 0
+    #
+    coords = SkyCoord(ra=[2.813458]*2, dec=[14.767167]*2, unit='deg')
+    _, meta5 = igmsp.meta_from_coords(coords)
+    assert len(meta5) == 2
+    assert np.sum(meta5['GROUP_ID'] == meta5['GROUP_ID']) == 2
+    # Multiple hits allowed
+    coord = SkyCoord(ra=2.813458, dec=14.767167, unit='deg')
+    _, meta4 = igmsp.meta_from_coords(coord, first=False)
+    pytest.set_trace()
+    assert len(meta4) == 1  # Only grabs first
+    assert meta4['GROUP_ID'] == 0
 

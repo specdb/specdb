@@ -214,7 +214,61 @@ class SpecDB(object):
 
         return self.allspec_of_ID(ID, groups=groups, **kwargs)
 
+    def meta_from_coords(self, coords, query_dict=None, groups=None,
+                               first=True, **kwargs):
+        # Cut down using source catalog
+        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
+                                                         groups=groups, **kwargs)
+        # Setup
+        if query_dict is None:
+            query_dict = {}
+
+        # Loop on good ones -- slow
+        idx = np.where(IDs >= 0)[0]
+        all_meta = []
+        for iidx in idx:
+            query_dict[self.idkey] = [IDs[iidx]]
+            # Groups for me
+            sub_groups = []
+            for group, bit in self.group_dict.items():
+                if np.sum(matched_cat['flag_group'][iidx] & bit) > 0:
+                    sub_groups.append(group)
+            # Query
+            meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
+            # First?
+            if first:
+                all_meta.append(meta[0:1])
+            else:
+                all_meta.append(meta)
+        # Finish and pad misses
+        if first:
+            stack = vstack(all_meta)
+            final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)))
+            final_meta[np.where(matches)] = stack
+            final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
+        else:
+            final_meta = all_meta
+
+
+        # Return
+        return matches, final_meta
+
+
+
     def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
+        """
+        Parameters
+        ----------
+        inp
+        radius
+        query_dict
+        groups
+        kwargs
+
+        Returns
+        -------
+
+        """
 
         # Cut down using source catalog
         matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=query_dict,
@@ -224,7 +278,7 @@ class SpecDB(object):
             query_dict = {}
         query_dict[self.idkey] = IDs.tolist()
 
-        # Build up groups
+        # Build up groups (to restrict on those that match)
         sub_groups = []
         for group, bit in self.group_dict.items():
             if np.sum(sub_cat['flag_group'] & bit) > 0:
