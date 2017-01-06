@@ -60,7 +60,7 @@ To follow along, instantiate a SpecDB class::
 
 One can proceed to querying.
 Much of the following is also contained in this
-`Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/SSA_IVOA.ipynb>`_.
+`Query Catalog Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/Query_Catalog.ipynb>`_.
 
 Querying without Coordinates
 ----------------------------

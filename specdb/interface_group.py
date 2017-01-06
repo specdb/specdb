@@ -39,7 +39,10 @@ class InterfaceGroup(object):
         """
         Parameters
         ----------
-        db_file : str, optional
+        hdf : h5py.File object
+        group : str
+        idkey : str
+
         Returns
         -------
 

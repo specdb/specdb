@@ -22,7 +22,7 @@ coordinates:
 Style   Type      Example                  Comment
 ======= ========= ======================== =======================
 J2000   str       'J123411.12+123411.1'    The 'J' is not required
-colon   str       '00:22:33.1,+12:22:33.3'
-radec   tuple     (23.2311, -12.2311)      RA, DEC in deg
+colon   str       '00:22:33.1,+12:22:33.3' The ':" are not required
+radec   tuple     (23.2311, -12.2311)      RA, DEC in deg; units not required
 coord   SkyCoord
 ======= ========= ======================== =======================

@@ -1,125 +1,189 @@
-.. highlight:: rest
+.. highlight:: meta
 
 *********
-Meta Data
+Meta data
 *********
 
-Each group in specdb includes a meta data table
-with each row describing each ingested spectrum.
+This document describes the meta data of
+a `specdb` database and methods to query it.
 
-Here are the required columns:
+.. _meta-desc:
+
+Description
+===========
+
+Each of the :doc:`groups` in a `specdb` database
+contains a meta data table.
+
+
+At a minimum the meta table contains the following
+columns:
+
+The table comprising the source catalog has the following entries:
+
+    req_clms = ['RA_GROUP', 'DEC_GROUP', 'EPOCH', 'zem_GROUP', 'R', 'WV_MIN',
+            'WV_MAX', 'DATE-OBS', 'GROUP_ID', 'NPIX', 'SPEC_FILE',
+            'INSTR', 'DISPERSER', 'TELESCOPE']
 
 ==========  ======== ============================================
 Key         Type     Description
 ==========  ======== ============================================
-IDKEY       int      Database ID values.
-zem         float    Emission redshift of background source
-RA          float    Right Ascension (deg)
-DEC         float    Declination (deg)
-EPOCH       float    Coordinate epoch (typically 2000)
-DATE-OBS    str      Date observed (YYYY-MM-DD)
-R           float    Instrument resolution, :math:`\lambda/\Delta\lambda` (FWHM)
-WV_MIN      float    Minimum wavelength of the spectrum
-WV_MAX      float    Maximum wavelength of the spectrum
-NPIX        int      Number of pixels in the spectrum; may include null values
-GROUP_ID    int      Unique identifier for each row in the meta table
-SPEC_FILE   str      Spectrum file name
-INSTR       str      Instrument file name (see `Instruments and Gratings`_ below for definitions)
-GRATING     str      Grating name (see `Instruments and Gratings`_ below for definitions)
-TELESCOPE   str      Telescope name (see `Telescopes`_ below for definitions)
+IDKEY       int      Unique identifier in the `specdb` database
+zem_GROUP   float    Emission redshift of source given by the dataset
+RA_GROUP    float    Right Ascension (deg) given by the dataset
+DEC_GROUP   float    Declination (deg) given by the dataset
+EPOCH       float    Year of epoch
+R           float    Spectral resolution (dlambda/lambda; FWHM)
+WV_MIN      float    Minimum wavelength value
+WV_MAX      float    Maximum wavelength value
+NPIX        int      Number of pixels in the spectrum
+SPEC_FILE   str      Individual filename of the spectrum
+INSTR       str      Instrument used: see specdb.defs.instruments
+DISPERSER   str      Dispersing element
+TELESCOPE   str      Name of the telescope
 ==========  ======== ============================================
 
-Each specdb database should use a unique ID key for the Database ID
-values.  For example, igmspec uses IGM_ID.
 
-Instruments and Gratings
-------------------------
+.. _access-meta:
 
-The instruments used in specdb are provided in specdb.defs.instruments.
-The following Table summarizes and defines the instruments
-currently used within the specdb software:
+Accessing the Meta Data
+=======================
 
-==========  ========     ============================================
-Instrument  Gratings     Description
-==========  ========     ============================================
-ACS         PR200L       HST/ACS Prism mode (slitless)
-BOSS        BLUE         Blue channel spectrograph
- ..         RED          Red channel spectrograph
- ..         BOTH         Spectrum includes data from both spectrographs
-COS         G130M        HST/COS spectrometer
- ..         G160M        HST/COS spectrometer
- ..         G130M/G160M  HST/COS spectrometer with combined gratings
- ..         G130M-G160M  HST/COS spectrometer with combined gratings
-ESI         ECH          Echelette mode on Keck/ESI instrument
-FOS         G160L        HST/FOS spectrometer
- ..         G130H        ..
- ..         G190H        ..
- ..         G270H        ..
-FUSE        LWRS         FUSE spectrometer
-GMOS-N      R400         Gemini North GMOS spectrometer
- ..         B600         ..
-GMOS-S      R400         Gemini South GMOS spectrometer
- ..         B600         ..
-GNIRS       ECH          Gemini GNIRS spectrometer
-HIRES       BLUE         Blue cross-disperser on HIRES (aka HIRESb)
- ..         UV           Blue cross-dispereser on HIRES (historic name)
- ..         RED          Red cross-dispereser on HIRES (aka HIRESr)
- ..         BOTH         Spectrum includes data from both cross-dispersers
-ISAAC       SW_MRes      VLT/Isaac spectrometer
-LRISb       400/3400     Keck/LRIS blue camera
- ..         600/4000     ..
- ..         1200/3400    ..
-LRISr       600/7500     Keck/LRIS red camera
- ..         400/8500     ..
- ..         1200/7500    ..
-MagE        N/A          MagE spectrometer
-MIKEb       BLUE         Blue camera of MIKE spectrometer
-MIKE-Blue   BLUE         Alternative instrument name
-MIKEr       RED          Red camera of MIKE spectrometer
-MIKE-Red    RED          Alternative instrument name for MIKE
-MIKE        BOTH         Spectrum is a splice of MIKEb and MIKEr data
-MMT         ??           Defaults to MMT red channel spectrograph (RCS)
-mmtbluechan 500GPM       MMT blue channel spectrograph (BCS)
-NIRI        Hgrism_G5203 Gemini NIRI spectrometer
- ..         Kgrism_G5204 ..
-NIRSPEC     Low-Res      Low resolution mode of NIRSPEC
-MODS1B      G400L        MODS spectrometer on LBT; blue side
-MODS1R      G670L        MODS spectrometer on LBT; red side
-MOSFIRE     H            H-band mode
-SDSS        BLUE         Blue channel spectrograph
- ..         RED          Red channel spectrograph
- ..         BOTH         Spectrum includes data from both spectrographs
-STIS        G140L        HST/STIS spectrometer
- ..         G230L        ..
- ..          ..          And many more..
-TSPEC       ECH          Palomar Triplespec spectrometer
-XSHOOTER    UVB          VLT/XShooter spectrometer in UVB camera
- ..         VIS          VLT/XShooter spectrometer in VIS camera
- ..         NIR          VLT/XShooter spectrometer in NIR camera
-UVES        BOTH         VLT/UVES spectrometer
-WFC3        G280         WFC3 grism (slitless)
-2dF         300B         Blue channel spectrograph
-==========  ========     ============================================
+Within the `specdb` software, a meta data
+table is read during instantiation of
+an InterfaceGroup class.  Within the object
+the meta data is stored as an astropy.table.Table.
 
-Telescopes
-----------
+For convenience, InterfaceGroup objects
+are stored in a hidden dict within the
+SpecDB class.
 
-Here are the telescopes currently incorporated in specdb:
+Here is explanation by example::
 
-==============  ====================================================
-Telescope       Website
-==============  ====================================================
-Gemini-N        http://www.gemini.edu
-Gemini-S        http://www.gemini.edu
-HST             http://www.stsci.edu/hst/
-Keck-I          http://www.keckobservatory.org/
-Keck-II         http://www.keckobservatory.org/
-LBT             http://www.lbto.org/
-Magellan/Clay   http://obs.carnegiescience.edu/Magellan
-Magellan/Baade  http://obs.carnegiescience.edu/Magellan
-MMT             https://www.mmto.org/
-SDSS 2.5-M      https://www.sdss3.org/instruments/telescope.php
-UKST            https://www.aao.gov.au/about-us/uk-schmidt-telescope
-VLT             http://www.eso.org/public/teles-instr/paranal/
-==============  ====================================================
+    # Instantiate the SpecDB object
+    sdb = SpecDB(db_file='filename_of_DB')
+    # Instantiate the InterfaceGroup and pass a pointer to the meta table
+    meta_tbl = sdb['group_name'].meta
+    # Accessing data in the meta table
+    instruments = meta_tbl['INSTR']
 
+.. _query-meta:
+
+Querying the Meta Data
+======================
+
+There are several approaches to querying the meta data
+with the SpecDB object.  Each of
+these differ according to the treatment of coordinates.
+And each uses the underlying :ref:`query_meta` method
+in the InterfaceGroup class.
+
+The examples in the following documentation
+work on the test database file provided with `specdb`.
+To follow along, instantiate a SpecDB class::
+
+    import specdb
+    db_file = specdb.__path__[0]+'/tests/files/IGMspec_DB_v02_debug.hdf5'
+    from specdb.specdb import SpecDB
+    sdb = SpecDB(db_file=db_file)
+
+One can proceed to querying.
+Much of the following is also contained in this
+`Query Meta Data Notebook <https://github.com/specdb/specdb/blob/master/docs/nb/Query_Meta.ipynb>`_.
+
+
+Querying with a Query dict
+--------------------------
+
+One can query meta data tables with
+a :doc:`query_dict` object.
+Here is an example::
+
+    qdict = {'TELESCOPE': 'Gemini-North', 'NPIX': (1580,1583), 'GRATING': ['B600', 'R400']}
+
+
+This query restricts to sources with redshifts 3<z<5,
+source type 'QSO', and with spectra in any of the data
+groups specified by the bitwise flags of 2,4, or 32.
+Read more about using
+:ref:`bitwise-flags` in a :doc:`query_dict`.
+
+The method returns a bool array (matches) indicating which
+rows of the catalog are matched, the sub-catalog of those rows,
+and the IDKEY values of those rows.
+
+Querying a Position on the Sky
+------------------------------
+
+One can query the database around a given location
+on the sky.  For convenience, the formatting of the
+sky position includes many options.  One also inputs
+a search radius which is either an Angle or Quantity
+from astropy.
+
+Here is a simple example with a small search radius::
+
+    matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 10*u.arcsec)
+
+The objects returned are a bool array (matches) indicating
+which rows of the catalog matched, the sub-catalog of
+those rows ordered by separation from the search position,
+and the IDs of those sources also ordered by search position.
+
+Here is an example with a wider search and restricting to
+sources that have spectra in at least one of a set of groups::
+
+    matches, sub_cat, IDs = sdb.qcat.query_position((2.813500,14.767200), 20*u.deg, groups=['SDSS_DR7','GGG'])
+
+Here the input was an (ra,dec) tuple assumed to be in decimal degrees.
+Finally, an example that includes a :doc:`query_dict` to further
+refine the search (on emission redshift)::
+
+    qdict = dict(zem=(1.0, 3.))
+    matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 20*u.deg, query_dict=qdict)
+
+Querying with a List of Coordinates
+-----------------------------------
+
+One can query the database with a set of coordinates,
+each of which is matched to a small tolerance
+(default: 0.5 arcseconds).
+The input is an astropy.coordinate.SkyCoord object.
+Here is an example::
+
+    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
+    matches, subcat, IDs = sdb.qcat.query_coords(coords)
+
+The outputs have the same size as the input set of coordinates
+and are aligned.  As in the other queries, these are a bool array
+indicating a match, the sub-catalog with rows ordered by the
+input coordinates (non-matches are blank), and the IDKEY values.
+Sources that do not match by coordinate have IDKEY=-1 and those
+that match coordinates but fail some other criterion have
+IDKEY=-2.
+
+Here are a few other examples::
+
+    qdict = dict(zem=(1.0, 2.5))
+    matches, subcat, IDs = sdb.qcat.query_coords(coords, query_dict=qdict)
+
+and::
+
+    matches, subcat, IDs = sdb.qcat.query_coords(coords, groups=['BOSS_DR12'])
+
+
+I/O
+===
+
+show
+----
+
+A printout of the catalog values for a list of IDs is provided
+by `show_cat`::
+
+   igmsp.qcat.show_cat(IDs)
+
+This includes the flag_group values which indicate the groups
+that include a given source.  The catalog only shows a single
+entry per source and only those sources with ID values within
+the catalog (e.g. negative values are ignored).
