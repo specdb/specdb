@@ -42,6 +42,7 @@ Data
    :maxdepth: 2
 
    catalog
+   groups
    meta
    spectra
 

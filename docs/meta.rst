@@ -1,7 +1,7 @@
 .. highlight:: meta
 
 *********
-Meta data
+Meta Data
 *********
 
 This document describes the meta data of
@@ -16,14 +16,7 @@ Each of the :doc:`groups` in a `specdb` database
 contains a meta data table.
 
 
-At a minimum the meta table contains the following
-columns:
-
-The table comprising the source catalog has the following entries:
-
-    req_clms = ['RA_GROUP', 'DEC_GROUP', 'EPOCH', 'zem_GROUP', 'R', 'WV_MIN',
-            'WV_MAX', 'DATE-OBS', 'GROUP_ID', 'NPIX', 'SPEC_FILE',
-            'INSTR', 'DISPERSER', 'TELESCOPE']
+At a minimum the meta table contains the following columns:
 
 ==========  ======== ============================================
 Key         Type     Description
@@ -43,6 +36,7 @@ DISPERSER   str      Dispersing element
 TELESCOPE   str      Name of the telescope
 ==========  ======== ============================================
 
+Each group may have additional meta data.
 
 .. _access-meta:
 
@@ -57,7 +51,7 @@ an astropy.table.Table.
 
 For convenience, InterfaceGroup objects
 are kept in a hidden dict within the
-SpecDB class.
+:ref:`specdb-class`.
 
 Here is explanation by example::
 
@@ -81,7 +75,7 @@ in the :ref:`interface-group` class.
 
 The examples in the following documentation
 work on the test database file provided with `specdb`.
-To follow along, instantiate a SpecDB class::
+To follow along, instantiate a :ref:`specdb-class`::
 
     import specdb
     db_file = specdb.__path__[0]+'/tests/files/IGMspec_DB_v02_debug.hdf5'
@@ -154,45 +148,50 @@ that the source occur in all of the input groups.
 Querying with a List of Coordinates
 -----------------------------------
 
-One can query the database with a set of coordinates,
-each of which is matched to a small tolerance
-(default: 0.5 arcseconds).
+One can query the database for meta data matched
+to a set of input coordinates
+(default matching tolerance is 0.5 arcseconds).
 The input is an astropy.coordinate.SkyCoord object.
-Here is an example::
 
-    coords = SkyCoord(ra=[0.0028,0.0019], dec=[14.9747,17.7737], unit='deg')
-    matches, subcat, IDs = sdb.qcat.query_coords(coords)
+There are two types of output.  The default is
+to return a bool array indicating which of the
+input coordinates matched to the database and
+a masked Table with one row per input coordinate.  Each
+row is the meta data for the first spectrum
+matched to the coordinate query.  The Table is
+aligned to the input coordinate array.
 
+The other option (set first=False) returns a list
+of meta data tables, one per input coordinate
+in addition to the bool array.
+
+Here is an example of the default approach (first=True)::
+
+    coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
+    matches, meta = sdb.meta_from_coords(coords, first=False)
+
+In this case, meta is a masked Table.
 The outputs have the same size as the input set of coordinates
-and are aligned.  As in the other queries, these are a bool array
-indicating a match, the sub-catalog with rows ordered by the
-input coordinates (non-matches are blank), and the IDKEY values.
-Sources that do not match by coordinate have IDKEY=-1 and those
-that match coordinates but fail some other criterion have
-IDKEY=-2.
+and are aligned.
+Sources that do not match by coordinate have IDKEY=-1 in the Table.
 
-Here are a few other examples::
+Here is another example where we restrict on the groups allowed
+for a match::
 
-    qdict = dict(zem=(1.0, 2.5))
-    matches, subcat, IDs = sdb.qcat.query_coords(coords, query_dict=qdict)
+    matches, meta = sdb.meta_from_coords(coords, groups=['GGG'])
 
-and::
+In this case, the first row of the table returned is fully masked, except
+for the IDKEY column which has value -2 for the first row.
 
-    matches, subcat, IDs = sdb.qcat.query_coords(coords, groups=['BOSS_DR12'])
+By setting first=False, one receives all the
+meta data for each source in a list of Tables.  Again,
+the list is aligned to the input coordinates and
+the entry is None for failed queries.  Here is an example::
+
+    coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
+    matches, list_of_meta = sdb.meta_from_coords(coords, first=False)
+
+The second table in the list has two entries, one for each spectrum
+in the database for that source.
 
 
-I/O
-===
-
-show
-----
-
-A printout of the catalog values for a list of IDs is provided
-by `show_cat`::
-
-   igmsp.qcat.show_cat(IDs)
-
-This includes the flag_group values which indicate the groups
-that include a given source.  The catalog only shows a single
-entry per source and only those sources with ID values within
-the catalog (e.g. negative values are ignored).

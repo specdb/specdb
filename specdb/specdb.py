@@ -216,6 +216,25 @@ class SpecDB(object):
 
     def meta_from_coords(self, coords, query_dict=None, groups=None,
                                first=True, **kwargs):
+        """
+        Parameters
+        ----------
+        coords
+        query_dict
+        groups
+        first
+        kwargs
+
+        Returns
+        -------
+        matches : bool array
+          True if the coordinate + query matches in database
+        final_meta : masked Table or list
+          If first=True (default), the method returns a masked Table
+          with each row aligned to the input coordinates.  Entries
+          that do not match are fully masked.
+          If first=False, this is a list of meta data Tables one per coordinate.
+        """
         # Cut down using source catalog
         matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
                                                          groups=groups, **kwargs)
@@ -252,8 +271,11 @@ class SpecDB(object):
                 final_meta = None
             else:
                 stack = vstack(all_meta)
-                final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)))
+                final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)), masked=True)
                 final_meta[np.where(matches)] = stack
+                # Mask bad rows but fill in IDs
+                for row in np.where(~matches)[0]:
+                    final_meta.mask[row] = [True]*len(final_meta.mask[row])
                 final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
         else:
             final_meta = all_meta

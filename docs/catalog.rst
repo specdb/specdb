@@ -1,8 +1,8 @@
 .. highlight:: catalog
 
-*******
-Catalog
-*******
+**************
+Source Catalog
+**************
 
 This document describes the source catalog of
 a `specdb` database

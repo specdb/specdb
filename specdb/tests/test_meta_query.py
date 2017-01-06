@@ -75,7 +75,7 @@ def test_meta_from_coords(igmsp):
     # With one query retrieving None
     matchesN, metaN = igmsp.meta_from_coords(coords, query_dict=dict(PLATE=6177))
     assert np.sum(matchesN) == 1
-    assert np.isclose(metaN['RA_GROUP'][1],0.)
+    assert metaN['RA_GROUP'][1].mask == True
     # Multiple sources with one bad
     coords = SkyCoord(ra=[0.0028,0.0019], dec=[-14.9747,17.7737], unit='deg')
     matches, meta = igmsp.meta_from_coords(coords)
@@ -85,6 +85,11 @@ def test_meta_from_coords(igmsp):
     _, meta4 = igmsp.meta_from_coords(coord)
     assert len(meta4) == 1  # Only grabs first
     assert meta4['GROUP_ID'] == 0
+    #
+    coords = SkyCoord(ra=[0.0028,9.99,2.813458], dec=[14.9747,-9.99,14.767167], unit='deg')
+    matches, meta4b = igmsp.meta_from_coords(coords)
+    assert meta4b['IGM_ID'][1] == -1
+    assert meta4b['RA_GROUP'][1].mask == True
     #
     coords = SkyCoord(ra=[2.813458]*2, dec=[14.767167]*2, unit='deg')
     _, meta5 = igmsp.meta_from_coords(coords)
@@ -102,8 +107,14 @@ def test_meta_from_coords(igmsp):
     assert len(meta7[0]) == 1
     assert len(meta7[1]) == 2
     assert np.sum(matches7) == 2
+    # Multiple hits on two sources with first=False; limit by groups
+    coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
+    matches7b, meta7b = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
+    assert meta7b[0] is None
     # Multiple hits on mixed sources with first=False
     coords = SkyCoord(ra=[0.0028,9.99,2.813458], dec=[14.9747,-9.99,14.767167], unit='deg')
     matches8, meta8 = igmsp.meta_from_coords(coords, first=False)
     assert meta8[1] is None
     assert np.sum(matches8) == 2
+    # Limit by groups
+    matches8b, meta8b = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
