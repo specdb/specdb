@@ -28,6 +28,16 @@ def igmsp():
     return igmsp
 
 
+def test_spectra_from_meta(igmsp):  # Base level operation
+    # One match
+    meta = igmsp.meta_from_position((0.0019,17.7737), 1*u.arcsec)
+    spec = igmsp.spectra_from_meta(meta)
+    # Two sources
+    meta2 = igmsp.meta_from_position((0.0055,-1.5), 1*u.deg)
+    spec2 = igmsp.spectra_from_meta(meta2)
+    assert spec2.nspec == 2
+
+'''
 def test_allspec_from_coord(igmsp):
     # One match
     spec_list, meta_list = igmsp.allspec_at_coord((0.0019, 17.7737))
@@ -48,3 +58,4 @@ def test_coords_to_spec(igmsp):
     coords = SkyCoord(ra=[2.8135, 16.5802], dec=[14.7672, 0.8065], unit='deg')
     spec, meta = igmsp.coords_to_spectra(coords, 'GGG', all_spec=True)
     assert spec.nspec == 4
+'''

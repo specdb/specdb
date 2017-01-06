@@ -91,6 +91,27 @@ class InterfaceGroup(object):
         # Add group
         self.meta.meta['group'] = group
 
+    def groupids_to_rows(self, group_IDs):
+        """ Convert GROUP_ID values to rows in the meta table
+        Mainly used to then grab the corresponding spectra
+
+        Parameters
+        ----------
+        group_IDs : int or ndarray
+
+        Returns
+        -------
+        rows : ndarray
+
+        """
+        # Checking
+        if isinstance(group_IDs, int):
+            group_IDs = np.array([group_IDs])  # Insures meta and other arrays are proper
+        # Find rows
+        rows = match_ids(group_IDs, self.meta['GROUP_ID'])
+        # Return
+        return rows
+
     def ids_to_firstrow(self, IDs):
         """ Given an input set of IDs, pass back the array of rows that
         match.  If a given source has more than one entry, only the first
@@ -184,7 +205,9 @@ class InterfaceGroup(object):
         return cut_meta
 
     def grab_specmeta(self, rows, verbose=None, **kwargs):
-        """
+        """ Grab the spectra and meta data for an input set of rows
+        Aligned to the rows input
+
         Parameters
         ----------
         rows : int or ndarray
@@ -194,9 +217,9 @@ class InterfaceGroup(object):
         Returns
         -------
         spec : XSpectrum1D
-          Spectra requested, ordered by the rows
-        meta : Table
-          Meta table, ordered by the rows
+          Spectra requested, ordered by the input rows
+        meta : Table  -- THIS MAY BE DEPRECATED
+          Meta table, ordered by the input rows
         """
         if isinstance(rows, int):
             rows = np.array([rows])  # Insures meta and other arrays are proper
@@ -279,6 +302,26 @@ class InterfaceGroup(object):
         # Return
         return spec, self.meta
 
+    def query_meta(self, qdict, **kwargs):
+        """
+        Parameters
+        ----------
+        qdict : dict
+          Query_dict
+
+        Returns
+        -------
+        matches : bool array
+        sub_meta : Table
+          Subset of the meta table matching the query
+        IDs : int ndarray
+        """
+        # Query
+        matches = spdbu.query_table(self.meta, qdict)
+
+        # Return
+        return matches, self.meta[matches], self.meta[self.idkey][matches].data
+
     def show_meta(self, imeta=None, meta_keys=None):
         """ Nicely format and show the meta table
         Parameters
@@ -293,6 +336,24 @@ class InterfaceGroup(object):
             imeta = self.meta
         # Show
         show_group_meta()
+
+    def spec_from_meta(self, meta):
+        """ Return spectra aligned to input meta table
+
+        Parameters
+        ----------
+        meta : Table
+
+        Returns
+        -------
+        spectra : XSpectrum1D
+
+        """
+        rows = self.groupids_to_rows(meta['GROUP_ID'])
+        # Grab spectra
+        spec, _ = self.grab_specmeta(rows)
+        # Return
+        return spec
 
     def stage_data(self, rows, verbose=None, **kwargs):
         """ Stage the spectra for serving
@@ -322,26 +383,6 @@ class InterfaceGroup(object):
             if verbose:
                 print("Staged {:d} spectra totalling {:g} Gb".format(len(rows), new_memory))
             return True
-
-    def query_meta(self, qdict, **kwargs):
-        """
-        Parameters
-        ----------
-        qdict : dict
-          Query_dict
-
-        Returns
-        -------
-        matches : bool array
-        sub_meta : Table
-          Subset of the meta table matching the query
-        IDs : int ndarray
-        """
-        # Query
-        matches = spdbu.query_table(self.meta, qdict)
-
-        # Return
-        return matches, self.meta[matches], self.meta[self.idkey][matches].data
 
     def update(self):
         """ Update key attributes

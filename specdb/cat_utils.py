@@ -12,16 +12,19 @@ from astropy.table import Table
 
 def match_ids(IDs, match_IDs, require_in_match=True):
     """ Match input IDs to another array of IDs (usually in a table)
+    Return the rows aligned with input IDs
 
     Parameters
     ----------
     IDs : ndarray
     match_IDs : ndarray
+    require_in_match : bool, optional
+      Require that each of the input IDs occurs within the match_IDs
 
     Returns
     -------
     rows : ndarray
-      Rows in match_IDs that match to IDs
+      Rows in match_IDs that match to IDs, aligned
       -1 if there is no match
 
     """
