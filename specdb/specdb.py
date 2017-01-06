@@ -225,7 +225,10 @@ class SpecDB(object):
 
         # Loop on good ones -- slow
         idx = np.where(IDs >= 0)[0]
-        all_meta = []
+        if first:
+            all_meta = []
+        else:
+            all_meta = [None]*matches.size
         for iidx in idx:
             query_dict[self.idkey] = [IDs[iidx]]
             # Groups for me
@@ -237,15 +240,21 @@ class SpecDB(object):
             meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
             # First?
             if first:
-                all_meta.append(meta[0:1])
+                if meta is None:
+                    matches[iidx] = False
+                else:
+                    all_meta.append(meta[0:1])
             else:
-                all_meta.append(meta)
+                all_meta[iidx] = meta
         # Finish and pad misses
         if first:
-            stack = vstack(all_meta)
-            final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)))
-            final_meta[np.where(matches)] = stack
-            final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
+            if len(all_meta) == 0:
+                final_meta = None
+            else:
+                stack = vstack(all_meta)
+                final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)))
+                final_meta[np.where(matches)] = stack
+                final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
         else:
             final_meta = all_meta
 
