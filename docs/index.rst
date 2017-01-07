@@ -17,26 +17,42 @@ Getting Started
    :maxdepth: 2
 
    installing
+
+Using specdb with a Database
+----------------------------
+
+.. toctree::
+   :maxdepth: 2
+
    scripts
    usage
 
-Databases
----------
+Accessing Data
+--------------
+
+.. toctree::
+   :maxdepth: 2
+
+   catalog
+   groups
+   meta
+   spectra
+
+specdb Databases
+----------------
 
 .. toctree::
    :maxdepth: 2
 
    igmspec
 
-Data
+IVOA
 ----
 
 .. toctree::
    :maxdepth: 2
 
-   catalog
-   meta
-   spectra
+   ssa
 
 Generating a Database
 ---------------------

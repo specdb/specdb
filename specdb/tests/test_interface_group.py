@@ -50,6 +50,7 @@ def test_getrows_one_source():
     assert rows.size == 1
     hdf.close()
 
+
 def test_getrows_sources():
     # Init
     db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
@@ -69,7 +70,8 @@ def test_getrows_sources():
     assert rows[0] > rows[1]
     hdf.close()
 
-def test_grab_specmeta():
+
+def test_grab_specmeta():  # Use rows only
     # Init
     db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
     hdf = h5py.File(db_file, 'r')
@@ -83,3 +85,20 @@ def test_grab_specmeta():
     spec, meta = boss_group.grab_specmeta(rows)
     assert spec.nspec == 5
     assert meta['IGM_ID'][0] == meta['IGM_ID'][-1]
+
+
+def test_spec_from_meta():
+    # Init
+    db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
+    hdf = h5py.File(db_file, 'r')
+    boss_group = InterfaceGroup(hdf, 'BOSS_DR12', 'IGM_ID')
+    meta = boss_group.meta
+    # One entry
+    imeta = meta[0:1]
+    spec = boss_group.spec_from_meta(imeta)
+    assert spec.nspec == 1
+    # Get spec and meta from multiple rows, with repeat
+    rows = np.array([4,3,3,1,4])
+    imeta = meta[rows]
+    spec = boss_group.spec_from_meta(imeta)
+    assert spec.nspec == 5

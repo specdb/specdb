@@ -5,7 +5,7 @@
     },
     "parse_head": {
         "DATE-OBS": "DATE",
-        "GRATING": "OPT_ELEM",
+        "DISPERSER": "OPT_ELEM",
         "INSTR": "INSTRUME",
         "R": true
     }

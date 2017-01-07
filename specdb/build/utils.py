@@ -250,6 +250,8 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
       Key for ID
     mtch_toler : Quantity, optional
       Matching tolerance;  typically taken from the default
+    pair_sep : Angle, optional
+      Sepration at which a pair is considered 'real'
     close_pairs : bool, optional
       Input list includes close pairs (i.e. within mtch_toler)
 
@@ -271,7 +273,6 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     pidx1, pidx2, pd2d, _ = c_new.search_around_sky(c_new, mtch_toler)
     pairs = pd2d > pair_sep
     if np.sum(pairs) and (not close_pairs):
-        pdb.set_trace()
         print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
         raise IOError("Use close_pairs=True if appropriate")
     # Find new sources (ignoring pairs at first)
@@ -539,6 +540,18 @@ def set_resolution(head, instr=None):
         raise IOError("Not read for this instrument")
 
 
+def set_sv_idkey(idkey):
+    """ Set the idkey in the event that it was not set by
+     calling start_maindb
+
+    Parameters
+    ----------
+    idkey : str
+
+    """
+    global sv_idkey
+    sv_idkey = idkey
+
 def start_maindb(idkey, **kwargs):
     """ Start the main DB catalog
 
@@ -564,7 +577,8 @@ def start_maindb(idkey, **kwargs):
     return maindb, tkeys
 
 
-def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
+def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.,
+              spaceframe='ICRS', **kwargs):
     """
     Parameters
     ----------
@@ -573,7 +587,9 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
     maindb
     zpri
     gdict
-    version
+    version : str
+    epoch : float, optional
+    spaceframe : str, optional
 
     Returns
     -------
@@ -585,10 +601,16 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.):
     hdf['catalog'] = maindb
     hdf['catalog'].attrs['NAME'] = str(dbname)
     hdf['catalog'].attrs['EPOCH'] = epoch
+    hdf['catalog'].attrs['EQUINOX'] = epoch
+    hdf['catalog'].attrs['SpaceFrame'] = str(spaceframe)
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(gdict))
     hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
-    hdf['catalog'].attrs['VERSION'] = version
+    hdf['catalog'].attrs['VERSION'] = str(version)
+    # kwargs
+    for key in kwargs:
+        hdf['catalog'].attrs[str(key)] = kwargs[key]
+    # Close
     hdf.close()
 
 

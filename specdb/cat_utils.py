@@ -12,16 +12,19 @@ from astropy.table import Table
 
 def match_ids(IDs, match_IDs, require_in_match=True):
     """ Match input IDs to another array of IDs (usually in a table)
+    Return the rows aligned with input IDs
 
     Parameters
     ----------
     IDs : ndarray
     match_IDs : ndarray
+    require_in_match : bool, optional
+      Require that each of the input IDs occurs within the match_IDs
 
     Returns
     -------
     rows : ndarray
-      Rows in match_IDs that match to IDs
+      Rows in match_IDs that match to IDs, aligned
       -1 if there is no match
 
     """
@@ -42,25 +45,57 @@ def match_ids(IDs, match_IDs, require_in_match=True):
     return rows
 
 
-def flag_to_surveys(flag, survey_dict):
-    """ Convert flag_survey to list of surveys
+def flags_to_groups(flags, group_dict):
+    """ Convert flag values to np.array of group names comma separated
+
+    Parameters
+    ----------
+    flag : list or ndarray
+      BITWISE flags
+    group_dict : dict
+      dict that converts the BITWISE flags to group names
+
+    Returns
+    -------
+    groups : str ndarray
+      Array of expanded list of groups corresponding to input flags
+    """
+    # Ugly for loops appear necessary
+    group_list = [[] for ii in range(len(flags))]
+    for key,value in group_dict.items():
+        in_flags = np.where(flags & value)[0]
+        for ii in in_flags:
+            group_list[ii].append(key)
+    # More
+    for ii,ilist in enumerate(group_list):
+        group_list[ii] = ','.join(ilist)
+    # Finally
+    garray = np.array(group_list)
+    # Return
+    return garray
+
+
+def flag_to_groups(flag, group_dict):
+    """ Convert flag value to list of groups
 
     Parameters
     ----------
     flag : int
-    survey_dict : dict
+      BITWISE flag
+    group_dict : dict
+      dict that converts the BITWISE flags
 
     Returns
     -------
-    surveys : list
-
+    groups : list
+      Expanded list of groups corresponding to input flag
     """
-    surveys = []
-    for key,sflag in survey_dict.items():
+    groups = []
+    for key,sflag in groups.items():
         if flag % (2*sflag) >= sflag:
-            surveys.append(key)
+            groups.append(key)
     # Return
-    return surveys
+    return groups
 
 
 def write_cat_to_fits(DB_file, cat_fits_file):

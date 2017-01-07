@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Produced with astropy.io.votable version 1.3
+     http://www.astropy.org/ -->
+<VOTABLE version="1.2" xmlns="http://www.ivoa.net/xml/VOTable/v1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.ivoa.net/xml/VOTable/v1.2">
+ <RESOURCE type="results">
+  <PARAM ID="INPUT_POS" arraysize="*" datatype="char" name="INPUT:POS" value="">
+   <DESCRIPTION>
+    The center of the region of interest. The coordinate values are
+    specified in list format (comma separated) in decimal degrees with
+    no embedded white space followed by an optional coord. system.
+    Allowed systems are (ICRS) and the default is ICRS.
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="INPUT_SIZE" datatype="double" name="INPUT:SIZE" unit="deg" value="0.1">
+   <DESCRIPTION>
+    The radius of the circular region of interest in decimal
+    degrees.Default sized radius is 0.001 degrees
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="INPUT_BAND" arraysize="*" datatype="char" name="INPUT:BAND" value="ALL">
+   <DESCRIPTION>
+    Not currently implemented
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="INPUT_TIME" arraysize="*" datatype="char" name="INPUT:TIME" value="">
+   <DESCRIPTION>
+    Not currently implemented
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="INPUT_FORMAT" arraysize="*" datatype="char" name="INPUT:FORMAT" value="ALL">
+   <DESCRIPTION>
+    Desired format of retrieved data.  Allowed values are HDF5,
+    METADATA
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="DataModel" arraysize="*" datatype="char" name="OUTPUT:DataModel" utype="ssa:Dataset.DataModel" value="">
+   <DESCRIPTION>
+    Datamodel name and version
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="DatasetType" arraysize="*" datatype="char" name="OUTPUT:DatasetType" utype="ssa:Dataset.Type" value="Spectrum">
+   <DESCRIPTION>
+    Dataset type
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="Title" arraysize="*" datatype="char" name="OUTPUT:Title" ucd="meta.title;meta.dataset" utype="ssa:DataID.Title" value="">
+   <DESCRIPTION>
+    Dataset Title
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="Instrument" arraysize="*" datatype="char" name="OUTPUT:Instrument" ucd="meta.id;instr" utype="ssa:DataID.Title" value="">
+   <DESCRIPTION>
+    Instrument name
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="Publisher" arraysize="*" datatype="char" name="OUTPUT:Publisher" ucd=" meta.curation" utype="ssa:Curation.Publisher" value=""/>
+  <PARAM ID="SpaceFrameName" arraysize="*" datatype="char" name="OUTPUT:SpaceFrameName" utype="ssa:CoordSys.SpaceFrame.Name" value="">
+   <DESCRIPTION>
+    Spatial coordinate frame name
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpaceFrameEquinox" datatype="double" name="OUTPUT:SpaceFrameEquinox" ucd="time.equinox;pos.frame" unit="yr" utype="ssa:CoordSys.SpaceFrame.Equinox" value="0"/>
+  <PARAM ID="FluxAxisUcd" arraysize="*" datatype="char" name="OUTPUT:FluxAxisUcd" utype="ssa:Char.FluxAxis.ucd" value=""/>
+  <PARAM ID="FluxAxisUnit" arraysize="*" datatype="char" name="OUTPUT:FluxAxisUnit" utype="ssa:Char.FluxAxis.unit" value=""/>
+  <PARAM ID="FluxAxisCalibration" arraysize="*" datatype="char" name="OUTPUT:FluxAxisCalibration" utype="ssa:Char.FluxAxis.Calibration" value=""/>
+  <PARAM ID="SpectralAxisUcd" arraysize="*" datatype="char" name="OUTPUT:SpectralAxisUcd" utype="ssa:Char.SpectralAxis.ucd" value=""/>
+  <PARAM ID="SpectralAxisUnit" arraysize="*" datatype="char" name="OUTPUT:SpectralAxisUnit" utype="ssa:Char.SpectralAxis.unit" value=""/>
+  <PARAM ID="TimeLocation" datatype="double" name="OUTPUT:TimeLocation" ucd="time.epoch" unit="d" utype="ssa:Char.TimeAxis.Coverage.Location.Value" value="0">
+   <DESCRIPTION>
+    Estimated UT day of observations
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpatialLocation" arraysize="2" datatype="double" name="OUTPUT:SpatialLocation" ucd="pos.eq" unit="deg" utype="ssa:Char.SpatialAxis.Coverage.Location.Value" value="0">
+   <DESCRIPTION>
+    Spatial Position
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpectralLocation" datatype="double" name="OUTPUT:SpectralLocation" ucd="instr.bandpass" unit="AA" utype="ssa:Char.Spectral.Coverage.Location.Value" value="0">
+   <DESCRIPTION>
+    Midpoint of the spectral coverage in Angstroms
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpectralBoundsExtent" datatype="double" name="OUTPUT:SpectralBoundsExtent" ucd="instr.bandwidth" unit="AA" utype="ssa:Char.Spectral.Coverage.Bounds.Extent" value="0">
+   <DESCRIPTION>
+    Width of spectrum in Angstroms
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpectralBoundsStart" datatype="double" name="OUTPUT:SpectralBoundsStart" ucd="em.wl;stat.min" unit="AA" utype="ssa:Char.Spectral.Coverage.Bounds.Start" value="0">
+   <DESCRIPTION>
+    Start of spectral coordinate in Angstroms
+   </DESCRIPTION>
+  </PARAM>
+  <PARAM ID="SpectralBoundsStop" datatype="double" name="OUTPUT:SpectralBoundsStop" ucd="em.wl;stat.max" unit="AA" utype="ssa:Char.Spectral.Coverage.Bounds.Stop" value="0">
+   <DESCRIPTION>
+    End of spectral coordinate in Angstroms
+   </DESCRIPTION>
+  </PARAM>
+  <INFO ID="QUERY_STATUS" name="QUERY_STATUS" value="OK"/>
+  <INFO ID="SERVICE_PROTOCOL" name="SERVICE_PROTOCOL" value="1.1"/>
+ </RESOURCE>
+</VOTABLE>
