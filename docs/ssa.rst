@@ -27,7 +27,7 @@ Notebooks
 Meta Data
 =========
 
-See the :doc:`privatedb` documentation for tips on how
+See the :doc:`private` documentation for tips on how
 to add meta data for IVOA compliance.
 
 SSA Interface
@@ -71,12 +71,13 @@ The following shows the current implementation.
 Referring to the Version 1.2 of the Spectral Data Model, all
 of the mandatory parameters are included except:
 
-======================================= ==============
+======================================= =====================================================
 Field                                   Reason
-======================================= ===============
+======================================= =====================================================
 Target.Name                             Sources may not have unique names in specdb
 Char.SpatialAxis.Coverage.Bounds.Extent The aperture is not always precisely defined
 Char.TimeAxis.Coverage.Bounds.Extent    The total exposure time has not always been recorded
-======================================= ===============
+======================================= =====================================================
 
-:doc:`ssa_metadata.xml` shows the current METADATA response.
+`specdb SSA METADATA <https://github.com/specdb/specdb/blob/usage/docs/ssa_metadata.xml>`_
+shows the current METADATA response.

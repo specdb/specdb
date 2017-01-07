@@ -1,11 +1,13 @@
 .. highlight:: rest
 
-*********************
-Basic Usage in Python
-*********************
+*****************
+Usage with Python
+*****************
 
-This file summarizes some of the simple cases
-of using a `specdb` database from within Python.
+This file introduces the :ref:`specdb-class` and provides
+links to the main actions
+for using a `specdb` database from within Python.
+
 See the :doc:`scripts` documentation for a discussion of
 command-line usage from the command line.
 
@@ -17,11 +19,12 @@ a specdb database:
 
 1. :ref:`query-catalog`
 
-2. Querying the meta tables
+2. :ref:`query-meta`
 
-3. Retrieving spectra
+3. :ref:`retrieve-spectra`
 
-We provide separate documentation and examples
+Use the above links to examine
+the documentation and examples
 for each of these activities.
 
 .. _specdb-class:

@@ -44,7 +44,15 @@ specdb Databases
 .. toctree::
    :maxdepth: 2
 
-      igmspec
+   igmspec
+
+IVOA
+----
+
+.. toctree::
+   :maxdepth: 2
+
+   ssa
 
 Generating a Database
 ---------------------

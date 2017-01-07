@@ -4,8 +4,8 @@
 Spectra
 *******
 
-Overview
-========
+Description
+===========
 
 The spectra are stored in a series of HDF5 :doc:`groups`
 as multi-dimension arrays (npixels x nspectra x nkeys).
@@ -27,14 +27,14 @@ read these arrays into the
 `XSpectrum1D`_ class provided
 in `linetools <http://linetools.readthedocs.io/en/latest/>`_.
 
+.. _retrieve-spectra:
 
 Retrieving Spectra
 ==================
 
-There are several methods in `specdb` to retrieve spectra
+There are several methods to retrieve spectra
 from a database instantiated in the :ref:`specdb-class`.
-But we *strongly recommend* that the default approach
-be:
+But we *strongly recommend* that the default approach be:
 
 1. Perform a meta query.
 2. Inspect the table returned.
@@ -124,6 +124,7 @@ wish to restrict by providing a :doc:`query_dict`, e.g.::
 This requires the spectra returned were taken with the R400 grating.
 
 
-**Note:** This method will raise an error if one or more of the input
+**Note:** This method will raise an *IOError* if one or more of the input
 coordinates are not within the requested group to within
-the tolerance parameter (default = 0.5").
+the tolerance parameter (default = 0.5") or if one or more sources
+fails to match an input :doc:`query_dict`.

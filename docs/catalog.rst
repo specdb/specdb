@@ -148,10 +148,10 @@ I/O
 show
 ----
 
-A printout of the catalog values for a list of IDs is provided
+A printout of the catalog values for a list of IDKEYs is provided
 by `show_cat`::
 
-   igmsp.qcat.show_cat(IDs)
+   sdb.qcat.show_cat(IDs)
 
 This includes the flag_group values which indicate the groups
 that include a given source.  The catalog only shows a single

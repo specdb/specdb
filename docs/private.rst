@@ -210,11 +210,8 @@ This will create a private DB called `testDB` from the directory tree
 Within Python
 -------------
 
-It is possible you will need to customize things to the
-extent that you will want to generate the database
-from inside Python.
-
-Here is a call for the test database::
+Here is a call for the test database in one go
+from within Python::
 
    from specdb.build import privatedb as pbuild
    # Read z table
@@ -226,12 +223,14 @@ Here is a call for the test database::
 If ztbl == 'igmspec',  the code will attempt to load the
 IgmSpec database and use the quasars catalog for redshifts.
 
-Main Steps
-==========
+Step by Step in Python
+======================
 
-Here are the main, individual steps taken when generating the
-private DB.  There is, however, additional code within mk_db()
-that is required.
+It is possible that you will need to customize things
+further.  This section describes the step-by-step
+approach from within Python.
+Note that there is additional code within mk_db() that may
+be required.
 
 Get Started
 -----------
