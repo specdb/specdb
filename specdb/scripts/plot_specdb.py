@@ -13,9 +13,9 @@ def parser(options=None):
     parser.add_argument("coord", type=str, help="Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322 or 07:45:00.47,34:17:31.1")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all,priv]")
     parser.add_argument("--tol", default=5., type=float, help="Maximum offset in arcsec [default=5.]")
-    parser.add_argument("--meta", default=True, help="Show meta data? [default: True]", action="store_true")
-    parser.add_argument("-g", "--group", help="Name of Group to use (e.g. BOSS_DR12)")
-    parser.add_argument("--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
+    #parser.add_argument("--meta", default=True, help="Show meta data? [default: True]", action="store_true")
+    parser.add_argument("-g", "--group", help="Restrict on Group (e.g. BOSS_DR12)")
+    parser.add_argument("-s", "--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
     parser.add_argument("--mplot", default=False, help="Use simple matplotlib plot [default: False]")
     parser.add_argument("--db_file", help="Full path of db_file")
 
@@ -29,7 +29,7 @@ def parser(options=None):
 def main(args, unit_test=False, **kwargs):
     """ Run
     """
-
+    import numpy as np
     from astropy import units as u
     from specdb.utils import load_db
     from specdb import group_utils
@@ -44,26 +44,27 @@ def main(args, unit_test=False, **kwargs):
         groups=[args.group]
     else:
         groups = None
-    all_spec, all_meta = Specdb.allspec_at_coord(icoord, tol=args.tol*u.arcsec, groups=groups)
+    spec, meta = Specdb.spectra_from_coord(icoord, tol=args.tol*u.arcsec, groups=groups)
 
     # Outcome
-    if len(all_meta) == 0:
+    if meta is None:
         print("No source found, try another location or a larger tolerance.")
         return
-    elif len(all_meta) == 1:  # One group hit
-        spec = all_spec[0]
-        meta = all_meta[0]
+    elif len(meta) == 1:  # One group hit
         print("Source located in group: {:s}".format(meta.meta['group']))
-    else:  # More than 1 group
-        idx = 0
-        spec = all_spec[idx]
-        meta = all_meta[idx]
-        groups = [meta.meta['group'] for meta in all_meta]
-        print("Source located in more than one group")
-        print("Using group {:s}.  You can choose from this list {}".format(groups[idx], groups))
+    else:  # More than 1 spectrum
+        print("More than 1 spectrum found for input source. Here is a summary:")
+        indices = np.arange(len(meta)).astype(int)
+        meta['INDEX'] = indices
+        print(meta[['GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'GROUP_ID','INDEX']])
+        idx = args.select
+        print("Plotting index={:d} which you can specify with --select".format(idx))
+        #meta = all_meta[idx]
+        #groups = [meta.meta['group'] for meta in all_meta]
+        #print("Using group {:s}.  You can choose from this list {}".format(groups[idx], groups))
 
-    if args.meta:
-        group_utils.show_group_meta(meta)
+    #if args.meta:
+    #    group_utils.show_group_meta(meta)
 
     # Load spectra
     spec.select = args.select
