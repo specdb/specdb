@@ -251,6 +251,8 @@ class SpecDB(object):
             if len(sub_meta) > 0:
                 # Add group
                 sub_meta['GROUP'] = str(group)
+                # Scrub .meta
+                sub_meta.meta = None
                 # Add RA/DEC?
                 # Append -- Not keeping the empty ones
                 all_meta.append(sub_meta)
