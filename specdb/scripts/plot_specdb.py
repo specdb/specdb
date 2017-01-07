@@ -32,7 +32,6 @@ def main(args, unit_test=False, **kwargs):
     import numpy as np
     from astropy import units as u
     from specdb.utils import load_db
-    from specdb import group_utils
     from linetools.scripts.utils import coord_arg_to_coord
 
     # init
@@ -51,12 +50,12 @@ def main(args, unit_test=False, **kwargs):
         print("No source found, try another location or a larger tolerance.")
         return
     elif len(meta) == 1:  # One group hit
-        print("Source located in group: {:s}".format(meta.meta['group']))
+        print("Source located in group: {:s}".format(meta['GROUP']))
     else:  # More than 1 spectrum
         print("More than 1 spectrum found for input source. Here is a summary:")
         indices = np.arange(len(meta)).astype(int)
         meta['INDEX'] = indices
-        print(meta[['GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'GROUP_ID','INDEX']])
+        print(meta[['INDEX','GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'INSTR','DISPERSER','GROUP_ID']])
         idx = args.select
         print("Plotting index={:d} which you can specify with --select".format(idx))
         #meta = all_meta[idx]
