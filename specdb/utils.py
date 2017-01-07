@@ -39,7 +39,8 @@ def load_db(db_type, **kwargs):
     return Specdb
 
 
-def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
+def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
+                tbl_name=''):
     """ Find all rows in the input table satisfying
     the query given by qdict
     Parameters
@@ -47,6 +48,11 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
     tbl : Table
     qdict : dict
       See query_dict documentation for rules
+    ignore_missing_keys : bool, optional
+      Ignores any keys in the query_dict not found in Table
+      Otherwise, throw an IOError
+    tbl_name : str, optional
+      Name of table.  Mainly for error message
 
     Returns
     -------
@@ -73,7 +79,7 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
             flg_bitwise = 0
         # Check
         if key not in tkeys:
-            msg = "Key {:s} in query_dict is not present in Table".format(key)
+            msg = "Key {:s} in query_dict is not present in Table {:s}".format(key, tbl_name)
             if ignore_missing_keys:
                 if verbose:
                     print(msg)
@@ -101,7 +107,10 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True):
                             bit_match += (tbl[key].data & item).astype(bool)
                         else: # AND
                             bit_match &= (tbl[key].data & item).astype(bool)
-                    match &= bit_match
+                    try:
+                        match &= bit_match
+                    except TypeError:
+                        pdb.set_trace()
             else:
                 # Recast
                 mlist = np.array(value).astype(tbl[key].dtype)

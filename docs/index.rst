@@ -27,16 +27,8 @@ Using specdb with a Database
    scripts
    usage
 
-Databases
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   igmspec
-
-Data
-----
+Accessing Data
+--------------
 
 .. toctree::
    :maxdepth: 2
@@ -45,6 +37,14 @@ Data
    groups
    meta
    spectra
+
+specdb Databases
+----------------
+
+.. toctree::
+   :maxdepth: 2
+
+      igmspec
 
 Generating a Database
 ---------------------

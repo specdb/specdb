@@ -351,7 +351,7 @@ class QueryCatalog(object):
             idict[key] = fgroups
 
         # Query
-        matches = spdbu.query_table(cat, idict)
+        matches = spdbu.query_table(cat, idict, tbl_name='catalog')
 
         # Return
         return matches, cat[matches], cat[self.idkey][matches].data
@@ -464,13 +464,14 @@ class QueryCatalog(object):
         else:
             IDs = self.cat[self.idkey][idx].data
         coord_matches = d2d <= toler
-        # Query dict or groups? -- Performed on a cut of the full catalog
-        if (query_dict is not None) or (groups is not None):
-            if query_dict is None:
-                query_dict = {}
-            qmatches, _, _ = self.query_dict(query_dict, groups=groups,
-                                             cat=self.cat[idx[coord_matches]], **kwargs)
-            IDs[~qmatches] = -2
+        if np.sum(coord_matches) > 0:
+            # Query dict or groups? -- Performed on a cut of the full catalog
+            if (query_dict is not None) or (groups is not None):
+                if query_dict is None:
+                    query_dict = {}
+                qmatches, _, _ = self.query_dict(query_dict, groups=groups,
+                                                 cat=self.cat[idx[coord_matches]], **kwargs)
+                IDs[~qmatches] = -2
         # Must occur after qdict/group query
         IDs[~coord_matches] = -1
         matches = IDs >= 0

@@ -64,3 +64,49 @@ rows of the catalog are matched, the sub-table of those rows,
 and the IDKEY values of those rows.
 
 
+.. _group-spectra:
+
+Retrieving Spectra from a Group
+===============================
+
+See :doc:`spectra` for a full description of the
+spectra contained in a `specdb` database.  Here we
+describe the methods in the :ref:`interface-group` class
+that can be used to retrieve spectra.  In all cases,
+the spectra are returned in
+memory as an `XSpectrum1D`_ object.
+
+grab_specmeta
+-------------
+
+The lowest level method for retrieving spectra from a group
+is `~specdb.interface_group.grab_specmeta`.  This method
+takes as input the row(s) desired and returns an
+`XSpectrum1D`_ object containing all of the spectra and
+a Table of the meta data (the latter may be DEPRECATED).
+The items in each object are aligned with the input row(s).
+Here is an example::
+
+    # One spectrum
+    row = 3
+    spec, meta = igroup.grab_specmeta(row)
+    # Multiple
+    rows = np.array([2,5,5,11])
+    spec, meta = igroup.grab_specmeta(rows)
+
+In the latter call, the 5th row is retrieved twice.
+
+spec_from_meta
+--------------
+
+A more convenient method within :ref:`interface-group`
+is to input a Table of meta data to retrieve the desired
+spectra.  This Table must include a column of GROUP_ID values.
+Using the sub_meta Table from the above :ref:`group-query-meta`::
+
+    spec = igroup.spec_from_meta(sub_meta)
+
+Again, an `XSpectrum1D`_ object is returned with spectra
+aligned to the input meta data Table.
+
+.. _XSpectrum1D: http://linetools.readthedocs.io/en/latest/xspectrum1d.html

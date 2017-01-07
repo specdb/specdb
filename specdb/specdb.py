@@ -83,13 +83,16 @@ class SpecDB(object):
 
     def meta_from_coords(self, coords, query_dict=None, groups=None,
                                first=True, **kwargs):
-        """
+        """ Return meta data for an input set of coordinates
         Parameters
         ----------
-        coords
-        query_dict
-        groups
-        first
+        coords : SkyCoord
+          Expecting an array of coordinates
+        query_dict : dict, optional
+        groups : list, optional
+          If provided, the meta data of the groups are searched in the list order
+        first : bool, optional
+          Only provide the first entry found for the source
         kwargs
 
         Returns
@@ -122,6 +125,14 @@ class SpecDB(object):
             for group, bit in self.group_dict.items():
                 if np.sum(matched_cat['flag_group'][iidx] & bit) > 0:
                     sub_groups.append(group)
+            # If groups was input, order by groups
+            if groups is not None:
+                new_sub = []
+                for group in groups:
+                    if group in sub_groups:
+                        new_sub.append(group)
+                # Replace
+                sub_groups = new_sub
             # Query
             meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
             # First?
@@ -184,7 +195,7 @@ class SpecDB(object):
         for group, bit in self.group_dict.items():
             if np.sum(sub_cat['flag_group'] & bit) > 0:
                 sub_groups.append(group)
-        # Call (restrict at least on IDs)
+        # Call (restrict on IDs at the least)
         all_meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
         # Finish
         return all_meta
@@ -220,7 +231,7 @@ class SpecDB(object):
         ----------
         qdict : dict
           Query dict
-        groups : list, optinal
+        groups : list, optional
         kwargs
 
         Returns
@@ -314,6 +325,8 @@ class SpecDB(object):
         """
         # Grab meta
         meta = self.meta_from_position(inp, tol, max_match=1, **kwargs)
+        if meta is None:
+            return None, None
         # Grab spec and return
         return self.spectra_from_meta(meta), meta
 
@@ -337,6 +350,34 @@ class SpecDB(object):
         meta = self.meta_from_ID(ID, **kwargs)
         # Grab spec and return
         return self.spectra_from_meta(meta), meta
+
+    def spectra_in_group(self, coords, group, **kwargs):
+        """ Grab the first spectrum found in a given group for an input set of coordinates
+        Parameters
+        ----------
+        coords : SkyCoord
+          Expected to be an array
+        group : str
+          Name of group to use
+        kwargs
+
+        Returns
+        -------
+        spec : XSpectrum1D
+          First spectrum found for each input coordinate.
+          Aligned to set of coordinates
+        meta : Table
+          Meta data describing the spectra; also aligned
+        """
+        # Grab meta
+        matches, meta = self.meta_from_coords(coords, groups=[group], **kwargs)
+        # Check
+        if np.sum(matches) != matches.size:
+            raise IOError("Not all of the input coordinates matched in your group")
+        # Grab spectra
+        spec = self.spectra_from_meta(meta)
+        # Return
+        return spec, meta
 
     def __getitem__(self, key):
         """ Access the DB groups

@@ -51,6 +51,10 @@ def test_spectra_from_meta(igmsp):  # Base level operation
 
 
 def test_spectra_from_coord(igmsp):
+    # No match
+    specN, metaN = igmsp.spectra_from_coord((0.0019, -17.7737))
+    assert specN is None
+    assert metaN is None
     # One match
     spec, meta = igmsp.spectra_from_coord((0.0019, 17.7737))
     assert spec.nspec == 1
@@ -68,15 +72,36 @@ def test_spectra_from_ID(igmsp):
     spec, meta = igmsp.spectra_from_ID(3244)
     assert spec.nspec == 2
 
-'''
-def test_coords_to_spec(igmsp):
+
+def test_spectra_in_group(igmsp):
+    # Missed a source -- raises IOError
+    coords = SkyCoord(ra=[0.0028, 0.0019], dec=[14.9747, -17.77374], unit='deg')
+    with pytest.raises(IOError):
+        spec, meta = igmsp.spectra_in_group(coords, 'BOSS_DR12')
+    # Another with both missing
+    coords = SkyCoord(ra=[2.8135,16.5802], dec=[-14.7672, -0.8065], unit='deg')
+    with pytest.raises(IOError):
+        spec, meta = igmsp.spectra_in_group(coords, 'GGG')
+    # Each source has only spectrum in the group
     coords = SkyCoord(ra=[0.0028, 0.0019], dec=[14.9747, 17.77374], unit='deg')
-    spec, meta = igmsp.coords_to_spectra(coords, 'BOSS_DR12')
+    spec, meta = igmsp.spectra_in_group(coords, 'BOSS_DR12')
     # Test
     assert spec.nspec == 2
     assert meta['PLATE'][0] == 6177
+    # Each source has multiple spectra in the group
+    coords = SkyCoord(ra=[2.8135,16.5802], dec=[14.7672, 0.8065], unit='deg')
+    spec, meta = igmsp.spectra_in_group(coords, 'GGG')
+    assert meta['DISPERSER'][0] == 'B600'
+    qdict = dict(DISPERSER='R400')
+    spec, meta = igmsp.spectra_in_group(coords, 'GGG', query_dict=qdict)
+    assert meta['DISPERSER'][0] == 'R400'
+    # Another with bad grating
+    qdict = dict(DISPERSER='X400')
+    with pytest.raises(IOError):
+        spec, meta = igmsp.spectra_in_group(coords, 'GGG', query_dict=qdict)
+    '''
     # Multiple spectra per group
     coords = SkyCoord(ra=[2.8135, 16.5802], dec=[14.7672, 0.8065], unit='deg')
     spec, meta = igmsp.coords_to_spectra(coords, 'GGG', all_spec=True)
     assert spec.nspec == 4
-'''
+    '''

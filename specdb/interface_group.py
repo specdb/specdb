@@ -317,7 +317,7 @@ class InterfaceGroup(object):
         IDs : int ndarray
         """
         # Query
-        matches = spdbu.query_table(self.meta, qdict)
+        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data')
 
         # Return
         return matches, self.meta[matches], self.meta[self.idkey][matches].data
