@@ -118,3 +118,9 @@ def test_meta_from_coords(igmsp):
     assert np.sum(matches8) == 2
     # Limit by groups
     matches8b, meta8b = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
+
+
+def test_meta_from_ID(igmsp):
+    meta = igmsp.meta_from_ID(3244)
+    assert len(meta) == 2
+    assert meta['IGM_ID'][1] == 3244

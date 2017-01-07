@@ -49,6 +49,7 @@ def test_spectra_from_meta(igmsp):  # Base level operation
     spec4.select = 1
     assert np.isclose(meta4['WV_MIN'][1], spec4.wvmin.value)
 
+
 def test_spectra_from_coord(igmsp):
     # One match
     spec, meta = igmsp.spectra_from_coord((0.0019, 17.7737))
@@ -56,6 +57,15 @@ def test_spectra_from_coord(igmsp):
     assert meta['PLATE'][0] == 6173
     # Multiple matches and spectra
     spec, meta = igmsp.spectra_from_coord('001115.23+144601.8')#, groups=['GGG']) # Not in debug file for BOSS or SDSS
+    assert spec.nspec == 2
+    # Many matches; takes closest
+    spec, meta = igmsp.spectra_from_coord((0.0019, 17.7737), tol=10*u.deg)
+    assert spec.nspec == 1
+    assert meta['PLATE'][0] == 6173
+
+
+def test_spectra_from_ID(igmsp):
+    spec, meta = igmsp.spectra_from_ID(3244)
     assert spec.nspec == 2
 
 '''
