@@ -17,7 +17,7 @@ Version   Datasets
 ========  ====================================================
 v01       BOSS_DR12, SDSS_DR7, KODIAQ_DR1, HD_LLS, GGG
 v02       MUSoDLA, HSTQSO, COS-Dwarfs, COS-Halos, 2QZ, HDLA100
-  ..      ESI-DLA, XQ-100, HST_z2
+  ..      ESI-DLA, XQ-100, HST_z2, UVpSM4
 ========  ====================================================
 
 Downloading
@@ -56,3 +56,5 @@ More
 A greater description can be found in the docs of that repository:
 `igmspec <http://github.com/specdb/igmspec>`_.
 
+You can also view a series of examples of using the database here:
+`Examples with igmspec <https://github.com/specdb/specdb/blob/master/docs/nb/Examples_with_igmspec.ipynb>`_
