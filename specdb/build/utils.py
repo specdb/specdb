@@ -16,6 +16,7 @@ from linetools import utils as ltu
 
 from specdb import defs
 from specdb.cat_utils import match_ids
+from specdb.utils import clean_vstack
 
 def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
     """ Add IDs to
@@ -236,6 +237,42 @@ def chk_meta(meta, chk_cat_only=False):
     return chk
 
 
+def chk_vstack(hdf):
+    """ Check whether the meta data in a specdb database can
+    be stacked with specdb.utils.clean_vstack
+
+    Parameters
+    ----------
+    hdf : HDF5 pointer
+
+    Returns
+    -------
+    chk : bool
+
+    """
+    meta_tables = []
+    labels = []
+    for key in hdf.keys():
+        try:
+            meta = Table(hdf[key]['meta'].value)
+        except (KeyError,ValueError):
+            print("Skipping data group {:s}".format(key))
+        else:
+            # Save a snippet
+            meta_tables.append(meta[0:1])
+            labels.append(key)
+    # Try to stack
+    try:
+        stack = clean_vstack(meta_tables, labels)
+    except:
+        chk = False
+    else:
+        print("Passing chk_vstack...")
+        chk = True
+    # Return
+    return chk
+
+
 def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.arcsec,
                 close_pairs=False):
     """ Generate new CAT_IDs for an input DB
@@ -288,12 +325,14 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
         not_pair_match = pd2d > pair_sep
         # Reset new -- It will get a new ID below -- np.where is needed to actually set new
         new[pidx1[pairs][np.where(not_pair_match)[0]]] = True
-    nnew = np.sum(new)
     # New IDs
-    if nnew > 0:
-        new_idx = np.where(new)[0]
-        newID = np.max(maindb[idkey])
-
+    nnew = np.sum(new)
+    new_idx = np.where(new)[0]
+    newID = np.max(maindb[idkey])
+    # Ingest
+    if nnew == 1:
+        IDs[new_idx] = newID + 1
+    elif nnew > 1: # Deal with duplicates
         sub_c_new = c_new[new]
         dup_idx, dup_d2d, _ = match_coordinates_sky(sub_c_new, sub_c_new, nthneighbor=2)
         if close_pairs:

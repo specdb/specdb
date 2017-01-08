@@ -605,6 +605,12 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
             ssa_dict = default_fields(user_ssa['Title'], flux=user_ssa['flux'], fxcalib=user_ssa['fxcalib'])
             hdf[group_name]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
 
+    # Check stacking
+    if not spbu.chk_vstack(hdf):
+        print("Meta data will not stack using specdb.utils.clean_vstack")
+        print("Proceed to write at your own risk..")
+        pdb.set_trace()
+
     # Write
     write_hdf(hdf, str(dbname), maindb, zpri, gdict, version,
               Publisher=publisher)
