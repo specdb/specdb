@@ -281,7 +281,7 @@ class QueryCatalog(object):
         if dv > 0.:  # Desire projected pairs
             zem1 = self.cat['zem'][close]
             zem2 = self.cat['zem'][idx[close]]
-            dv12 = ltu.v_from_z(zem1,zem2)
+            dv12 = ltu.dv_from_z(zem1,zem2)
             gdz = np.abs(dv12) > dv
             # f/g and b/g
             izfg = dv12[gdz] < 0*u.km/u.s
@@ -471,7 +471,9 @@ class QueryCatalog(object):
                     query_dict = {}
                 qmatches, _, _ = self.query_dict(query_dict, groups=groups,
                                                  cat=self.cat[idx[coord_matches]], **kwargs)
-                IDs[~qmatches] = -2
+                # Eliminated bad ones
+                badq = np.where(coord_matches)[0][~qmatches]
+                IDs[badq] = -2
         # Must occur after qdict/group query
         IDs[~coord_matches] = -1
         matches = IDs >= 0
@@ -525,7 +527,7 @@ class QueryCatalog(object):
         self.cat[cat_keys][good].pprint(max_width=120)
         # Print group dict
         print("----------")
-        print("Survey key:")
+        print("Group key:")
         for group in self.groups:
             print("    {:s}: {:d}".format(group, self.group_dict[group]))
             #print("    {:s}: {:d}".format(survey, idefs.get_survey_dict()[survey]))

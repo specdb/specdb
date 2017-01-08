@@ -143,8 +143,6 @@ class InterfaceGroup(object):
         ypos = np.searchsorted(gdi, IDs, sorter=xsorted)
         indices = xsorted[ypos]  # Location in subset of meta table
         # Store and return
-        #self.sub_meta = self.meta[match_survey][indices] # only the first entry in table
-        #self.indices = indices
         rows = np.where(match_group)[0][indices]
         return rows
 
