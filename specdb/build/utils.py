@@ -91,7 +91,7 @@ def add_to_flag(cur_flag, add_flag):
         return cur_flag
 
 
-def add_to_group_dict(group_name, gdict):
+def add_to_group_dict(group_name, gdict, skip_for_debug=False):
     """ Add input group_name to the group dict
     Done in place
 
@@ -107,7 +107,8 @@ def add_to_group_dict(group_name, gdict):
       New bitwise flag
     """
     if group_name in gdict.keys():
-        raise IOError("Group already exists in group dict.  Should not be here..")
+        if not skip_for_debug:
+            raise IOError("Group already exists in group dict.  Should not be here..")
     # Find new flag
     if len(list(gdict.keys())) == 0: # First one
         new_flag = 1
@@ -355,13 +356,14 @@ def init_data(npix, include_co=False):
     # Return
     return data
 
-def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
+
+def set_new_ids(maindb, meta, idkey, chk=True, first=False, **kwargs):
     """ Set the new IDs
 
     Parameters
     ----------
     maindb
-    newdb
+    meta : Table
     idkey : str
     toler
     chk
@@ -376,7 +378,7 @@ def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
     ids : ID values of newdb
     """
     # IDs
-    ids = get_new_ids(maindb, newdb, idkey, **kwargs) # Includes new and old
+    ids = get_new_ids(maindb, meta, idkey, **kwargs) # Includes new and old
     # Crop to rows with new IDs
     if first:
         new = ids >= 0
@@ -386,11 +388,11 @@ def set_new_ids(maindb, newdb, idkey, chk=True, first=False, **kwargs):
     # Need unique
     uni, idx_uni = np.unique(ids[newi], return_index=True)
     #
-    cut_db = newdb[newi[idx_uni]]
+    cut_db = meta[newi[idx_uni]]
     cut_db.add_column(Column(ids[newi[idx_uni]], name=idkey))  # Assumes ordered by ID which is true
     # Reset IDs to all positive
     ids = np.abs(ids)
-    newdb[idkey] = ids
+    meta[idkey] = ids
     #
     return cut_db, new, ids
 
