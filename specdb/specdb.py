@@ -10,8 +10,9 @@ import h5py
 from astropy import units as u
 from astropy.table import Table, vstack
 
-from specdb import query_catalog as spdb_qc
-from specdb import interface_group as spdb_ig
+from specdb import utils as sdbu
+#from specdb import query_catalog as spdb_qc
+#from specdb import interface_group as spdb_ig
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_group import InterfaceGroup
 
@@ -45,11 +46,10 @@ class SpecDB(object):
                 raise IOError("DB not found. Please either check the corresponding environmental "
                               "variable or directly provide the db_file")
         # Init
-        reload(spdb_qc)
         self.verbose = verbose
         self.open_db(db_file)
         # Catalog
-        self.qcat = spdb_qc.QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
+        self.qcat = QueryCatalog(self.hdf, verbose=self.verbose, **kwargs)
         self.cat = self.qcat.cat  # For convenience
         self.qcat.verbose = verbose
         self.groups = self.qcat.groups
@@ -102,18 +102,84 @@ class SpecDB(object):
         final_meta : masked Table or list
           If first=True (default), the method returns a masked Table
           with each row aligned to the input coordinates.  Entries
-          that do not match are fully masked.
+          that do not match are fully masked.  The entry is the first
+          one found (looping over groups).
           If first=False, this is a list of meta data Tables one per coordinate.
+            This is very slow and also not recommended..
         """
+        from specdb.cat_utils import match_ids
         # Cut down using source catalog
         matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
                                                          groups=groups, **kwargs)
+        gdIDs = np.where(IDs >= 0)[0]
         # Setup
         if query_dict is None:
             query_dict = {}
+        query_dict[self.idkey] = IDs[gdIDs].tolist()
 
+        # Generate sub_groups for looping -- One by one is too slow for N > 100
+        #  This just requires a bit more book-keeping
+        all_fgroup = np.unique(matched_cat['flag_group'])
+        sub_groups = []
+        for group, bit in self.group_dict.items():
+            if np.sum(all_fgroup & bit) > 0:
+                sub_groups.append(group)
+        # If groups was input, cut down and order by groups
+        if groups is not None:
+            new_sub = []
+            for group in groups:
+                if group in sub_groups:
+                    new_sub.append(group)
+            # Replace
+            sub_groups = new_sub
+        # Loop on sub_groups
+        meta_list = []
+        meta_groups = []
+        for sub_group in sub_groups:
+            # Need to call this query_meta to add in GROUP name
+            meta = self.query_meta(query_dict, groups=[sub_group])
+            if meta is not None:
+                meta_list.append(meta)
+                meta_groups.append(sub_group)
+
+        # Stack
+        if len(meta_list) == 0:
+            matches[:] = False
+            if first:
+                return matches, None
+            else:
+                return matches, [None]*matches.size
+        elif len(meta_list) == 1:
+            stack = meta_list[0]
+        else:
+            stack = sdbu.clean_vstack(meta_list, meta_groups)
+
+        # Book-keeping
+        if first:
+            final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)), masked=True)
+            # Find good IDs in stacked Table
+            rows = match_ids(IDs[gdIDs], stack[self.idkey], require_in_match=False)
+            gd_rows = rows >= 0
+            # Fill
+            final_meta[gdIDs[gd_rows]] = stack[rows[gd_rows]]
+            # Mask bad rows but fill in IDs -- Faster to work on columns
+            matches[gdIDs[~gd_rows]] = False
+            msk_rows = np.where(~matches)[0]
+            for key in final_meta.keys():
+                final_meta[key].mask[msk_rows] = True
+            #for row in np.where(~matches)[0]:
+            #    final_meta.mask[row] = [True]*len(final_meta.mask[row])
+            final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
+        else:
+            final_meta = [None]*matches.size
+            # Loop on coords
+            gdI = np.where(matches)[0]
+            for jj in gdI:
+                gd_rows = np.where(stack[self.idkey] == IDs[jj])[0]
+                if len(gd_rows) > 0:
+                    final_meta[jj] = stack[gd_rows]
+        '''
         # Loop on good ones -- slow
-        idx = np.where(IDs >= 0)[0]
         if first:
             all_meta = []
         else:
@@ -157,8 +223,8 @@ class SpecDB(object):
                 final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
         else:
             final_meta = all_meta
-
-
+        '''
+        print("Final query yielded {:d} matches.".format(np.sum(matches)))
         # Return
         return matches, final_meta
 
@@ -171,6 +237,7 @@ class SpecDB(object):
         radius : Angle or Quantity
         query_dict : dict, optional
         groups : list, optional
+          Restrict to input groups
         kwargs
 
         Returns
@@ -194,7 +261,12 @@ class SpecDB(object):
         sub_groups = []
         for group, bit in self.group_dict.items():
             if np.sum(sub_cat['flag_group'] & bit) > 0:
-                sub_groups.append(group)
+                # Restrict on groups, if input
+                if groups is not None:
+                    if group in groups:
+                        sub_groups.append(group)
+                else:
+                    sub_groups.append(group)
         # Call (restrict on IDs at the least)
         all_meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
         # Finish
@@ -402,8 +474,7 @@ class SpecDB(object):
             if key not in self.groups:
                 raise IOError("Input group={:s} is not in the database".format(key))
             else: # Load
-                reload(spdb_ig)
-                self._gdict[key] = spdb_ig.InterfaceGroup(self.hdf, key, idkey=self.idkey)
+                self._gdict[key] = InterfaceGroup(self.hdf, key, idkey=self.idkey)
                 return self._gdict[key]
 
     def __repr__(self):

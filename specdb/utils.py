@@ -11,6 +11,59 @@ try:
 except NameError:  # For Python 3
     basestring = str
 
+
+def clean_vstack(tables, labels, **kwargs):
+    """ Perform an astropy.table.vstack on a list of Tables
+    after first renaming any conflicting columns
+
+    Parameters
+    ----------
+    tables : list
+     list of astropy.table.Table
+    labels : list
+     list of str labels to append to unruly column names
+    kwargs
+
+    Returns
+    -------
+    stack : Table
+
+    """
+    from astropy.table import operations, TableMergeError, vstack
+
+    # Loop on tables
+    tkeys = []
+    tbl_idx = []
+    for ss, table in enumerate(tables):
+        for key in table.keys():
+            try:
+                idx = tkeys.index(key)
+            except ValueError:
+                tkeys.append(key)
+                tbl_idx.append(ss)
+            else:
+                rename = False
+                # Check data type
+                try:
+                    operations.common_dtype([table[key],tables[tbl_idx[idx]][key]])
+                except TableMergeError:
+                    rename = True
+                # Check shape
+                shapes = [table[key].shape[1:],tables[tbl_idx[idx]][key].shape[1:]]
+                uniq_shapes = set(shapes)
+                if len(uniq_shapes) != 1:
+                    rename = True
+                # Rename?
+                if rename:
+                    new_name = labels[ss]+'_'+key
+                    warnings.warn("Renaming column in table {:s} from {:s} to {:s}".format(labels[ss], key, new_name))
+                    table.rename_column(key, new_name)
+                    tkeys.append(new_name)
+                    tbl_idx.append(ss)
+    # Stack
+    return vstack(tables)
+
+
 def load_db(db_type, **kwargs):
     """
     Parameters
