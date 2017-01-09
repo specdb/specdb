@@ -14,7 +14,7 @@ queries.
 For the following, we have referred to the Simple
 Spectral Access Protocal, Version 1.1 document
 and the IVOA working draft 20110319
-of Version 1.2 of the Spectral Data Model.
+of Version 2.0 of the Spectral Data Model (dated 20160928).
 
 Notebooks
 =========
@@ -68,16 +68,19 @@ As per SSA protocol, a data query with FORMAT=METADATA::
 will return the default input and output parameters of the service.
 The following shows the current implementation.
 
-Referring to the Version 1.2 of the Spectral Data Model, all
+Referring to the Version 2.0 of the Spectral Data Model, all
 of the mandatory parameters are included except:
 
 ======================================= =====================================================
 Field                                   Reason
 ======================================= =====================================================
-Target.Name                             Sources may not have unique names in specdb
-Char.SpatialAxis.Coverage.Bounds.Extent The aperture is not always precisely defined
-Char.TimeAxis.Coverage.Bounds.Extent    The total exposure time has not always been recorded
+Char.SpatialAxis.Coverage.Bounds.Extent The aperture is not always precisely defined or known
+Char.TimeAxis.Coverage.Bounds.Extent    The total exposure time has not always been recorded and
+ ..                                     spectra are often the combination of ones acquired over mutiple nights
 ======================================= =====================================================
+
+Also, Target.Name is simply the data group name with the GROUP_ID appended.
+
 
 `specdb SSA METADATA <https://github.com/specdb/specdb/blob/usage/docs/ssa_metadata.xml>`_
 shows the current METADATA response.

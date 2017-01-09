@@ -146,7 +146,7 @@ class SSAInterface(object):
                 meta_group = self.specdb[group].cut_meta(IDs[gdID], first=False)
                 meta_attr = self.specdb[group].meta_attr
                 # Convert to SSA VO
-                ssavo_meta = meta_to_ssa_vo(meta_group, meta_attr, subcat[gdID],
+                ssavo_meta = meta_to_ssa_vo(group, meta_group, meta_attr, subcat[gdID],
                                             self.specdb.idkey,
                                             self.specdb.qcat.cat_attr)
                 all_vometa.append(ssavo_meta)
@@ -194,7 +194,7 @@ def ssa_defs():
 
     """
     ssa_dict = {}
-    ssa_dict['DataModel'] = str('Spectrum-1.2')
+    ssa_dict['DataModel'] = str('Spectrum-2.0')
     ssa_dict['DatasetType'] = str('Spectrum')
 
     return ssa_dict
@@ -219,11 +219,13 @@ def empty_vo(rtype='results'):
     return evotable
 
 
-def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
+def meta_to_ssa_vo(group, meta, meta_attr, subcat, idkey, cat_attr):
     """ Use a specdb meta table to generate a new astropy Table
     that is ready for conversion to a VOTable.
     Parameters
     ----------
+    group : str
+      Name of group
     meta : Table
     ssa_attr : dict
     idkey : str
@@ -247,7 +249,7 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
             if np.sum(gd_i) > 0:
                 tdict = {}
                 tdict['SSA'] = meta_attr[key].copy()
-                votbls.append(meta_to_ssa_vo(meta[gd_i], tdict, subcat, idkey, cat_attr))
+                votbls.append(meta_to_ssa_vo(group, meta[gd_i], tdict, subcat, idkey, cat_attr))
         votbl = vstack(votbls)
     else:
         ssa_dict = ssa_defs()
@@ -261,6 +263,11 @@ def meta_to_ssa_vo(meta, meta_attr, subcat, idkey, cat_attr):
         votbl['Instrument'] = meta['INSTR']
         # Curation
         votbl['Publisher'] = str(cat_attr['Publisher'])
+        # Target
+        tnames = []
+        for row in meta:
+            tnames.append(str('{:s}_{:d}'.format(group, row['GROUP_ID'])))
+        votbl['TargetName'] = tnames
         # Coord sys
         votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
         votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
@@ -420,6 +427,11 @@ def metaquery_param(evotbl=None):
     equinox = Param(evotbl, ID="SpaceFrameEquinox", name="OUTPUT:SpaceFrameEquinox", datatype="double",
                     ucd="time.equinox;pos.frame", utype="ssa:CoordSys.SpaceFrame.Equinox", unit="yr", value=0.)
     all_params.append(equinox)
+
+    # data model metadata: Target.*
+    tname = Param(evotbl, ID="TargetName", name="OUTPUT:TargetName", datatype="str",
+                    ucd="meta.id;src", utype="ssa:Target.Name", value="")
+    all_params.append(tname)
 
     # characterization metadata: FluxAxis
     flux_axis_ucd = Param(evotbl, ID="FluxAxisUcd", name="OUTPUT:FluxAxisUcd",
