@@ -263,14 +263,14 @@ def meta_to_ssa_vo(group, meta, meta_attr, subcat, idkey, cat_attr):
         votbl['Instrument'] = meta['INSTR']
         # Curation
         votbl['Publisher'] = str(cat_attr['Publisher'])
+        # Coord sys
+        votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
+        votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
         # Target
         tnames = []
         for row in meta:
             tnames.append(str('{:s}_{:d}'.format(group, row['GROUP_ID'])))
         votbl['TargetName'] = tnames
-        # Coord sys
-        votbl['SpaceFrameName'] = str(cat_attr['SpaceFrame'])
-        votbl['SpaceFrameEquinox'] = cat_attr['EQUINOX']
         # FluxAxis
         votbl['FluxAxisUcd'] = str(meta_attr['SSA']['FluxUcd'])
         votbl['FluxAxisUnit'] = str(meta_attr['SSA']['FluxUnit'])
@@ -299,7 +299,10 @@ def meta_to_ssa_vo(group, meta, meta_attr, subcat, idkey, cat_attr):
         all_params, pIDs = metaquery_param()
         vo_keys = votbl.keys()
         for vokey,pID in zip(vo_keys,pIDs):
-            assert vokey == pID
+            try:
+                assert vokey == pID
+            except AssertionError:
+                print("{:s} does not match pID".format(vokey))
     # Return
     return votbl
 
@@ -429,7 +432,7 @@ def metaquery_param(evotbl=None):
     all_params.append(equinox)
 
     # data model metadata: Target.*
-    tname = Param(evotbl, ID="TargetName", name="OUTPUT:TargetName", datatype="str",
+    tname = Param(evotbl, ID="TargetName", name="OUTPUT:TargetName", datatype="char",
                     ucd="meta.id;src", utype="ssa:Target.Name", value="")
     all_params.append(tname)
 
