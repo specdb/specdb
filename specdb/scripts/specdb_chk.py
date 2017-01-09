@@ -14,8 +14,8 @@ except NameError:
 def parser(options=None):
     import argparse
     # Parse
-    parser = argparse.ArgumentParser(description='Check a specdb DB file')
-    parser.add_argument("db_file", type=str, help="Database file")
+    parser = argparse.ArgumentParser(description='Check a specdb DB file [v1.1]')
+    parser.add_argument("db_file", type=str, help="specdb Database file (expecting an HDF5 file)")
     #parser.add_argument("-v", "--version", default='v01', help="DB version to generate")
     #parser.add_argument("-v", "--version", default='v01', help="DB version to generate")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
@@ -77,9 +77,23 @@ def main(pargs):
                         dbinfo[dbname][version]['oldest_ok_date']))
                 # Compare?
 
+    # Sources and spectra
+    print("-------------------------------------------------")
+    print("There are {:d} unique sources in the source catalog".format(len(hdf['catalog'].value)))
+
     # List datasets
+    nspec = 0
     for key in hdf.keys():
+        if key == 'catalog':
+            continue
         print("Dataset: {:s}".format(key))
+        # Spectra
+        try:
+            nspec += hdf[key]['spec'].size
+        except:
+            pass
+
+    print("There are a total of {:d} spectra in the database".format(nspec))
 
 ##
 if __name__ == '__main__':
