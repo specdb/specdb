@@ -12,8 +12,16 @@ It provides spectra that probe the intergalactic medium
 Versions
 ========
 
+The datasets included in a specific version of the
+`igmspec` database release are summarized below.  We
+refer you to the publication
+(`coming soon <http://specdb.readthedocs.io/en/latest/>`_)
+and the
+`igmspec documentation <http://igmspec.readthedocs.io/en/latest/>`_
+for futher descriptions of the data groups.
+
 ========  ====================================================
-Version   Datasets
+Version   Data Groups
 ========  ====================================================
 v01       BOSS_DR12, SDSS_DR7, KODIAQ_DR1, HD_LLS, GGG
 v02       MUSoDLA, HSTQSO, COS-Dwarfs, COS-Halos, 2QZ, HDLA100
@@ -53,8 +61,9 @@ Add to your UNIX environmental variables the path to the DB file, e.g.::
 More
 ====
 
-A greater description can be found in the docs of that repository:
-`igmspec <http://github.com/specdb/igmspec>`_.
-
 You can also view a series of examples of using the database here:
 `Examples with igmspec <https://github.com/specdb/specdb/blob/master/docs/nb/Examples_with_igmspec.ipynb>`_
+
+Other details are provided in the
+`igmspec documentation <http://igmspec.readthedocs.io/en/latest/>`_.
+
