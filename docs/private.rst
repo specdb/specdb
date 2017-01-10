@@ -299,6 +299,11 @@ Here is an example::
 Finish
 ------
 
+Before writing, the code tests whether the meta data tables
+can be stacked using the specdb.utils.clean_vstack() method.
+This may be required for queries of the meta data and spectra
+extraction.  The code will hit a pdb.set_trace() if this fails.
+
 Write the catalog and close the HDF5 file.::
 
    zpri = [str('SDSS'), str('BOSS')]
