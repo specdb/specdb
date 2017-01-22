@@ -1,4 +1,5 @@
 # Module to run tests on ID methods
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import pytest
 import numpy as np
@@ -28,6 +29,14 @@ def igmsp():
 def test_chk_vstack(igmsp):
     assert spbu.chk_vstack(igmsp.hdf)
 
+
+def test_clean_meta():
+    meta = Table()
+    meta['SPEC_FILE'] = ['abas', 'adfasd', '123as']
+    assert 'unicode' in meta['SPEC_FILE'].dtype.name
+    # Clean
+    spbu.clean_table_for_hdf(meta)
+    assert 'str' in meta['SPEC_FILE'].dtype.name
 
 def test_get_newids():
     # Faux maindb

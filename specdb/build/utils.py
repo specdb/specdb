@@ -216,13 +216,8 @@ def chk_meta(meta, chk_cat_only=False):
         except:
             print("Bad DATE-OBS formatting")
             chk = False
-        # Check for unicode
-        for key in meta_keys:
-            if 'unicode' in meta[key].dtype.name:
-                warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
-                tmp = Column(meta[key].data.astype(str), name=key)
-                meta.remove_column(key)
-                meta[key] = tmp
+        # Clean
+        clean_table_for_hdf(meta)
         # Check instrument
         meta_instr = meta['INSTR'].data
         db_instr = np.array(inst_dict.keys()).astype(str)
@@ -272,6 +267,29 @@ def chk_vstack(hdf):
     # Return
     return chk
 
+
+def clean_table_for_hdf(tbl):
+    """ Prepare an input table for writing in an HDF5 object
+    Cleans unicode
+
+    Parameters
+    ----------
+    tbl : Table
+
+    Returns
+    -------
+    tbl is modified in place
+
+    """
+    #
+    tbl_keys = tbl.keys()
+    for key in tbl_keys:
+        # Check for unicode
+        if 'unicode' in tbl[key].dtype.name:
+            warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
+            tmp = Column(tbl[key].data.astype(str), name=key)
+            tbl.remove_column(key)
+            tbl[key] = tmp
 
 def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.arcsec,
                 close_pairs=False):
