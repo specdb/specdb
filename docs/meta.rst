@@ -195,3 +195,23 @@ The second table in the list has two entries, one for each spectrum
 in the database for that source.
 
 
+Accessing with IDs
+------------------
+
+One can access the group meta data for a set of objects by ID.
+The default is to return a table aligned to the input IDs
+and to only return the first matching row in the meta table
+for each ID value.::
+
+    meta = sdb['group_name'].meta_from_ids(2311)
+    meta = sdb['group_name'].meta_from_ids(np.array([2311,23411,121])
+
+The method will raise an error if one or more IDs is not present
+in the data group.
+
+If one wishes to retreive *all* of the meta data for the sources
+(i.e. multiple entries when multiple spectra exist), then set first=False, i.e.::
+
+    meta = sdb['group_name'].meta_from_ids(np.array([2311,23411,121], first=False)
+
+This table is no longer aligned to the input IDs.
