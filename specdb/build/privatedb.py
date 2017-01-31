@@ -33,7 +33,7 @@ except NameError:  # For Python 3
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
-               only_conti=False, skip_folders=[]):
+               only_conti=False, skip_folders=[], verbose=False):
     """ Generate a list of FITS files within the file tree
 
     Parameters
@@ -66,8 +66,8 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
     pfiles = []
     while len(folders) > 0:
         # Search for fits files
-        ofiles = []
         for folder in folders:
+            ofiles = []
             if folder in skip_folders:
                 print("Skipping folder = {:s}".format(folder))
                 continue
@@ -85,12 +85,15 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                 #
                 if only_conti:
                     ofile = ofile.replace('_c','')
-                    if not os.path.isfile(ofile):
-                        print("{:s} not present".format(ofile))
+                    if (not os.path.isfile(ofile)) and (not os.path.isfile(ofile+'.gz')):
+                        raise ValueError("{:s} not present".format(ofile))
+                        flg=False
                 if flg:
                     pfiles.append(ofile)
         # walk
         folders = next(walk)[1]
+        if verbose:
+            print("Will walk through folders {}".format(folders))
     # Dict for meta parsing
     mfile = glob.glob(branch+'/*_meta.json')
     if len(mfile) == 1:
