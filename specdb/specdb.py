@@ -104,8 +104,10 @@ class SpecDB(object):
           with each row aligned to the input coordinates.  Entries
           that do not match are fully masked.  The entry is the first
           one found (looping over groups).
-          If first=False, this is a list of meta data Tables one per coordinate.
-            This is very slow and also not recommended..
+          If first=False, this is a list of bool arrays that point to the
+            entries in the stack table (which follows).  This avoids
+             generating N Tables which is very slow
+        stack : Table -- only if first=False
         """
         from specdb.cat_utils import match_ids
         # Cut down using source catalog
@@ -170,63 +172,19 @@ class SpecDB(object):
             #for row in np.where(~matches)[0]:
             #    final_meta.mask[row] = [True]*len(final_meta.mask[row])
             final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
+            print("Final query yielded {:d} matches.".format(np.sum(matches)))
+            # Return
+            return matches, final_meta
         else:
-            final_meta = [None]*matches.size
+            final_list = [None]*matches.size
             # Loop on coords
             gdI = np.where(matches)[0]
-            for jj in gdI:
-                gd_rows = np.where(stack[self.idkey] == IDs[jj])[0]
-                if len(gd_rows) > 0:
-                    final_meta[jj] = stack[gd_rows]
-        '''
-        # Loop on good ones -- slow
-        if first:
-            all_meta = []
-        else:
-            all_meta = [None]*matches.size
-        for iidx in idx:
-            query_dict[self.idkey] = [IDs[iidx]]
-            # Groups for me
-            sub_groups = []
-            for group, bit in self.group_dict.items():
-                if np.sum(matched_cat['flag_group'][iidx] & bit) > 0:
-                    sub_groups.append(group)
-            # If groups was input, order by groups
-            if groups is not None:
-                new_sub = []
-                for group in groups:
-                    if group in sub_groups:
-                        new_sub.append(group)
-                # Replace
-                sub_groups = new_sub
-            # Query
-            meta = self.query_meta(query_dict, groups=sub_groups, **kwargs)
-            # First?
-            if first:
-                if meta is None:
-                    matches[iidx] = False
-                else:
-                    all_meta.append(meta[0:1])
-            else:
-                all_meta[iidx] = meta
-        # Finish and pad misses
-        if first:
-            if len(all_meta) == 0:
-                final_meta = None
-            else:
-                stack = vstack(all_meta)
-                final_meta = Table(np.repeat(np.zeros_like(stack[0]), len(IDs)), masked=True)
-                final_meta[np.where(matches)] = stack
-                # Mask bad rows but fill in IDs
-                for row in np.where(~matches)[0]:
-                    final_meta.mask[row] = [True]*len(final_meta.mask[row])
-                final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
-        else:
-            final_meta = all_meta
-        '''
-        print("Final query yielded {:d} matches.".format(np.sum(matches)))
-        # Return
-        return matches, final_meta
+            for ii,jj in enumerate(gdI):
+                if self.verbose & ((ii % 100) == 0):
+                    print('Done with {:d} of {:d}'.format(ii,len(gdI)))
+                gd_rows = stack[self.idkey] == IDs[jj]
+                final_list[jj] = gd_rows
+            return matches, final_list, stack
 
     def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
         """  Retrieve meta data for sources around a position on the sky

@@ -97,28 +97,29 @@ def test_meta_from_coords(igmsp):
     assert np.sum(meta5['GROUP_ID'] == meta5['GROUP_ID']) == 2
     # Multiple hits on single source with first=False
     coord = SkyCoord(ra=2.813458, dec=14.767167, unit='deg')
-    _, meta6 = igmsp.meta_from_coords(coord, first=False)
-    assert len(meta6) == 1
-    assert len(meta6[0]) == 2
-    assert meta6[0]['GROUP_ID'][0] == 0
+    _, meta6_list, meta6_stack = igmsp.meta_from_coords(coord, first=False)
+    assert len(meta6_list) == 1
+    meta6_0 = meta6_stack[meta6_list[0]]
+    assert len(meta6_0) == 2
+    assert meta6_0['GROUP_ID'][0] == 0
     # Multiple hits on two sources with first=False
     coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
-    matches7, meta7 = igmsp.meta_from_coords(coords, first=False)
-    assert len(meta7[0]) == 1
-    assert len(meta7[1]) == 2
+    matches7, meta7_list, meta7_stack = igmsp.meta_from_coords(coords, first=False)
+    assert len(meta7_stack[meta7_list[0]]) == 1
+    assert len(meta7_stack[meta7_list[1]]) == 2
     assert np.sum(matches7) == 2
     # Multiple hits on two sources with first=False; limit by groups
     coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
-    matches7b, meta7b = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
-    assert meta7b[0] is None
+    matches7b, meta7b_list, meta7b_stack = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
+    assert meta7b_list[0] is None
     # Multiple hits on mixed sources with first=False
     coords = SkyCoord(ra=[0.0028,9.99,2.813458], dec=[14.9747,-9.99,14.767167], unit='deg')
-    matches8, meta8 = igmsp.meta_from_coords(coords, first=False)
-    assert meta8[1] is None
+    matches8, meta8_list, meta8_stack = igmsp.meta_from_coords(coords, first=False)
+    assert meta8_list[1] is None
     assert np.sum(matches8) == 2
     # Limit by groups
-    matches8b, meta8b = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
-    assert meta8b[0] is None
+    matches8b, meta8b_list, _ = igmsp.meta_from_coords(coords, first=False, groups=['GGG'])
+    assert meta8b_list[0] is None
     # Limit by qdict
     qdict = dict(DISPERSER='R400')
 
