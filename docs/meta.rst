@@ -168,7 +168,7 @@ in addition to the bool array.
 Here is an example of the default approach (first=True)::
 
     coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
-    matches, meta = sdb.meta_from_coords(coords, first=False)
+    matches, meta = sdb.meta_from_coords(coords, first=True)
 
 In this case, meta is a masked Table.
 The outputs have the same size as the input set of coordinates
@@ -183,15 +183,17 @@ for a match::
 In this case, the first row of the table returned is fully masked, except
 for the IDKEY column which has value -2 for the first row.
 
-By setting first=False, one receives all the
+By setting first=False, one can retrieve all of the
 meta data for each source in a list of Tables.  Again,
-the list is aligned to the input coordinates and
+the list returned is aligned to the input coordinates and
 the entry is None for failed queries.  Here is an example::
 
     coords = SkyCoord(ra=[0.0028,2.813458], dec=[14.9747,14.767167], unit='deg')
-    matches, list_of_meta = sdb.meta_from_coords(coords, first=False)
+    matches, list_of_meta, meta_stack = sdb.meta_from_coords(coords, first=False)
 
-The second table in the list has two entries, one for each spectrum
-in the database for that source.
+The second table (meta_stack) is a Table of the meta data and the
+list_of_meta is a list of bool arrays which indicate the rows in the
+Table corresponding to the input coordinate (one for each spectrum
+in the database).
 
 
