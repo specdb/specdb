@@ -65,16 +65,16 @@ def main(args, unit_test=False, **kwargs):
     # Grab
     print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
                                               scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
-    all_spec, all_meta = Specdb.allspec_at_coord(scoord, groups=surveys)
+    spec, meta = Specdb.spectra_from_coord(scoord, groups=surveys)
 
     # Outcome
-    if len(all_meta) == 0:
+    if len(meta) == 0:
         print("No source found, try another location or a larger tolerance.")
         return
-    elif len(all_meta) == 1:  # One survey hit
-        spec = all_spec[0]
-        meta = all_spec[0]
+    elif len(meta) == 1:  # One survey hit
+        pass
     else:  # More than 1 survey
+        pdb.set_trace()
         idx = 0
         spec = all_spec[idx]
         meta = all_meta[idx]
