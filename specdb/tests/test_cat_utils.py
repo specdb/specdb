@@ -39,4 +39,5 @@ def test_flags_to_groups():
     # Run
     groups = cat_utils.flags_to_groups(flags, gdict)
     # Test
-    assert groups[-1] == 'BOSS_DR12,GGG,SDSS_DR7'
+    for igroup in ['BOSS_DR12','GGG','SDSS_DR7']:
+        assert igroup in groups[-1]

@@ -69,7 +69,7 @@ class QueryCatalog(object):
         self.cat = Table(hdf['catalog'].value)
         self.cat_attr = {}
         for key in hdf['catalog'].attrs.keys():
-            self.cat_attr[key] = hdf['catalog'].attrs[key]
+            self.cat_attr[key] = spdbu.hdf_decode(hdf['catalog'].attrs[key])
         # Set ID key
         self.idkey = idkey
         if idkey is None:
@@ -79,11 +79,7 @@ class QueryCatalog(object):
                         raise ValueError("Two keys with ID in them.  You must specify idkey directly.")
                     self.idkey = key
         # Group dict
-        try:
-            self.group_dict = json.loads(hdf['catalog'].attrs['GROUP_DICT'])
-        except KeyError:
-            self.group_dict = json.loads(hdf['catalog'].attrs['SURVEY_DICT'])  # Backwards compatible, will remove
-            self.cat['flag_group'] = self.cat['flag_survey']
+        self.group_dict = json.loads(spdbu.hdf_decode(hdf['catalog'].attrs['GROUP_DICT']))
 
         self.groups = list(self.group_dict.keys())
         if self.verbose:
@@ -330,10 +326,13 @@ class QueryCatalog(object):
         qdict = idict.copy()
         # Groups
         def purge_flag_group(idict):
+            scrub_keys = []
             for key in idict.keys():
                 if 'flag_group' in key:
                     warnings.warn("Scrubbing key={:s} from the search because you input groups".format(key))
-                    _ = idict.pop(key)
+                    scrub_keys += [key]
+            for key in scrub_keys:
+                _ = idict.pop(key)
         if groups is not None:
             # Purge
             purge_flag_group(idict)

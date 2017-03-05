@@ -50,7 +50,7 @@ def main(args, unit_test=False, **kwargs):
         print("No source found, try another location or a larger tolerance.")
         return
     elif len(meta) == 1:  # One group hit
-        print("Source located in group: {:s}".format(meta['GROUP']))
+        print("Source located in group: {:s}".format(meta['GROUP'][0]))
     else:  # More than 1 spectrum
         print("More than 1 spectrum found for input source. Here is a summary:")
         indices = np.arange(len(meta)).astype(int)
