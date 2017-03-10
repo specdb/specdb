@@ -10,9 +10,7 @@ import h5py
 from astropy import units as u
 from astropy.table import Table, vstack
 
-from specdb import utils as sdbu
-#from specdb import query_catalog as spdb_qc
-#from specdb import interface_group as spdb_ig
+from specdb import utils as spdbu
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_group import InterfaceGroup
 
@@ -58,9 +56,9 @@ class SpecDB(object):
         # Groups
         self._gdict = {}
         # Name, Creation date
-        self.name = self.qcat.cat_attr['NAME']
+        self.name = spdbu.hdf_decode(self.qcat.cat_attr['NAME'])
         print("Database is {:s}".format(self.name))
-        print("Created on {:s}".format(self.qcat.cat_attr['CREATION_DATE']))
+        print("Created on {:s}".format(spdbu.hdf_decode(self.qcat.cat_attr['CREATION_DATE'])))
         # Return
         return
 
@@ -154,7 +152,7 @@ class SpecDB(object):
         elif len(meta_list) == 1:
             stack = meta_list[0]
         else:
-            stack = sdbu.clean_vstack(meta_list, meta_groups)
+            stack = spdbu.clean_vstack(meta_list, meta_groups)
 
         # Book-keeping
         if first:
