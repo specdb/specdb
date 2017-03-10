@@ -67,14 +67,14 @@ class InterfaceGroup(object):
         group : str
         """
         import json
-        self.meta = Table(self.hdf[group+'/meta'].value)
+        self.meta = spdbu.hdf_decode(self.hdf[group+'/meta'].value, itype='Table')
         # Attributes
         self.meta_attr = {}
         for key in self.hdf[group+'/meta'].attrs.keys():
             if 'SSA' in key:
-                self.meta_attr[key] = json.loads(self.hdf[group+'/meta'].attrs[key])
+                self.meta_attr[key] = json.loads(spdbu.hdf_decode(self.hdf[group+'/meta'].attrs[key]))
             else:
-                self.meta_attr[key] = self.hdf[group+'/meta'].attrs[key]
+                self.meta_attr[key] = spdbu.hdf_decode(self.hdf[group+'/meta'].attrs[key])
         # Reformat
         if reformat:
             try:

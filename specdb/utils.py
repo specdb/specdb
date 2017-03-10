@@ -63,6 +63,37 @@ def clean_vstack(tables, labels, **kwargs):
     # Stack
     return vstack(tables)
 
+def hdf_decode(obj, itype=None):
+    """ Decode the incoming hdf5 object
+    Usually byte to str
+    Parameters
+    ----------
+    obj : object
+
+    Returns
+    -------
+    dobj : object
+      decoded object
+
+    """
+    if itype == 'Table':
+        from astropy.table import Table, Column
+        dobj = Table(obj)
+        # FIX STRING COLUMNS
+        for key in dobj.keys():
+            if 'bytes' in dobj[key].dtype.name:
+                ss = [hdf_decode(ii) for ii in dobj[key]]
+                # Remove
+                dobj.remove_column(key)
+                # Add back
+                dobj[key] = Column(ss)
+    else:  # Auto
+        if isinstance(obj,bytes):
+            dobj = obj.decode('utf-8')
+        else:
+            dobj = obj
+        #
+    return dobj
 
 def load_db(db_type, **kwargs):
     """
