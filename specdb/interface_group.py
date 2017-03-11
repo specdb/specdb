@@ -180,28 +180,6 @@ class InterfaceGroup(object):
         match_survey = np.in1d(self.meta[self.idkey], IDs)
         return np.where(match_survey)[0]
 
-    def cut_meta(self, IDs, first=True):
-        """ Grab meta data
-        Parameters
-        ----------
-        IDs : int or array
-          Return full table if None
-        first : bool, optional
-          Grab only the first row matching?
-
-        Returns
-        -------
-        meta : Table(s)
-
-        """
-        # Grab meta table
-        if first:
-            rows = self.ids_to_firstrow(IDs)
-        else:
-            rows = self.ids_to_allrows(IDs)
-        cut_meta = self.meta[rows]
-        return cut_meta
-
     def grab_specmeta(self, rows, verbose=None, **kwargs):
         """ Grab the spectra and meta data for an input set of rows
         Aligned to the rows input
@@ -299,6 +277,30 @@ class InterfaceGroup(object):
         spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking='edges')
         # Return
         return spec, self.meta
+
+    def meta_from_ids(self, IDs, first=True):
+        """ Grab meta data given a list of IDs
+
+        Parameters
+        ----------
+        IDs : int or array
+          Return full table if None
+        first : bool, optional
+          Grab only the first row matching?
+
+        Returns
+        -------
+        meta : Table(s)
+          If first=True, aligned to input IDs
+
+        """
+        # Grab meta table
+        if first:
+            rows = self.ids_to_firstrow(IDs)
+        else:
+            rows = self.ids_to_allrows(IDs)
+        cut_meta = self.meta[rows]
+        return cut_meta
 
     def query_meta(self, qdict, **kwargs):
         """
