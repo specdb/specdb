@@ -143,7 +143,7 @@ class SSAInterface(object):
                 # Grab meta from group
                 flag_group = self.specdb.qcat.group_dict[group]
                 gdID = np.where(subcat['flag_group'].data & flag_group)[0]
-                meta_group = self.specdb[group].cut_meta(IDs[gdID], first=False)
+                meta_group = self.specdb[group].meta_from_ids(IDs[gdID], first=False)
                 meta_attr = self.specdb[group].meta_attr
                 # Convert to SSA VO
                 ssavo_meta = meta_to_ssa_vo(group, meta_group, meta_attr, subcat[gdID],
