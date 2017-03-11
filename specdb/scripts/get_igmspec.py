@@ -43,7 +43,8 @@ def main(pargs):
         raise IOError("Bad version number")
 
     # URL
-    url_page = 'http://www.ucolick.org/~xavier/HD-LLS/DR1/'
+    #url_page = 'http://www.ucolick.org/~xavier/HD-LLS/DR1/'
+    url_page = 'http://specdb.ucsc.edu/'
     url = url_page+'IGMspec_DB_{:s}.hdf5'.format(pargs.version)
     
     # wget command
