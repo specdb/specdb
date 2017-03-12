@@ -257,6 +257,7 @@ def chk_vstack(hdf):
             meta_tables.append(meta[0:1])
             labels.append(key)
     # Try to stack
+    pdb.set_trace()
     try:
         stack = clean_vstack(meta_tables, labels)
     except:
@@ -626,7 +627,7 @@ def start_maindb(idkey, **kwargs):
     sv_idkey = idkey
     #
     idict = defs.get_db_table_format(**kwargs)
-    tkeys = idict.keys()
+    tkeys = list(idict.keys())
     lst = [[idict[tkey]] for tkey in tkeys]
     maindb = Table(lst, names=tkeys)
     # ID_key -- should be unique to the database
