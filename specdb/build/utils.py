@@ -675,7 +675,7 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.,
     hdf['catalog'].attrs['VERSION'] = str.encode(version)
     # kwargs
     for key in kwargs:
-        hdf['catalog'].attrs[bstr(key)] = kwargs[key]
+        hdf['catalog'].attrs[str.encode(key)] = kwargs[key]
     # Close
     hdf.close()
 

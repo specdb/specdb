@@ -113,6 +113,9 @@ def load_db(db_type, **kwargs):
     if db_type == 'igmspec':
         from specdb.specdb import IgmSpec
         Specdb = IgmSpec(**kwargs)
+    elif db_type == 'uvqs':
+        from specdb.specdb import UVQS
+        Specdb = UVQS(**kwargs)
     elif db_type == 'priv':  # Private
         from specdb.specdb import SpecDB
         Specdb = SpecDB(**kwargs)

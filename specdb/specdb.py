@@ -475,12 +475,12 @@ class IgmSpec(SpecDB):
 
         """
         import os, glob
-        if os.getenv('IGMSPEC_DB') is None:
+        if os.getenv('SPECDB') is None:
             warnings.warn('Environmental variable IGMSPEC_DB not set. Assuming this is a test')
             import igmspec
             db_dir = igmspec.__path__[0]+'/tests/files/'
         else:
-            db_dir = os.getenv('IGMSPEC_DB')
+            db_dir = os.getenv('SPECDB')
         #
         if version is not None:
             fils = glob.glob(db_dir+'/IGMspec_DB_*{:s}*hdf5'.format(version))
@@ -504,6 +504,63 @@ class IgmSpec(SpecDB):
 
     def __repr__(self):
         txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
+                                                                 self.db_file, len(self.cat))
+        # Surveys
+        txt += '   Loaded groups are {} \n'.format(self.groups)
+        txt += '>'
+        return (txt)
+
+class UVQS(SpecDB):
+    """ Main class for using UVQS DB
+    See SpecDB for full docs
+
+    Parameters
+    ----------
+    skip_test : bool, optional
+      Skip tests?  Highly *not* recommended
+
+    Attributes
+    ----------
+    """
+
+    def __init__(self, db_file=None, skip_test=True, **kwargs):
+        """
+        """
+        # db_file
+        SpecDB.__init__(self, db_file=db_file, skip_test=skip_test, **kwargs)
+
+    def grab_dbfile(self, version=None, **kwargs):
+        """ Grabs the DB file
+        Parameters
+        ----------
+        version : str, optional
+          Restrict search to input version
+
+        Returns
+        -------
+        db_file : str
+          full path to the DB file
+
+        """
+        import os, glob
+        if os.getenv('SPECDB') is None:
+            warnings.warn('Environmental variable SPECDB not set. Assuming this is a test')
+            import igmspec
+            db_dir = igmspec.__path__[0]+'/tests/files/'
+        else:
+            db_dir = os.getenv('SPECDB')
+        #
+        if version is not None:
+            fils = glob.glob(db_dir+'/UVQS_DB_*{:s}*hdf5'.format(version))
+        else:
+            fils = glob.glob(db_dir+'/UVQS_DB_*hdf5')
+        fils.sort()
+        db_file = fils[-1]  # Should grab the latest
+        # Return
+        return db_file
+
+    def __repr__(self):
+        txt = '<{:s}:  UVQS_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
                                                                  self.db_file, len(self.cat))
         # Surveys
         txt += '   Loaded groups are {} \n'.format(self.groups)

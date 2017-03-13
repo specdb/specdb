@@ -110,26 +110,26 @@ def z_priority():
 
     """
     zpri = [
-        str('GGG'),        # GGG redshifts
-        str('SDSS-HW'),    # SDSS redshifts with Hewitt&Wild
-        str('BOSS_PCA'),   # PCA analysis by Paris et al. 2015 on BOSS spectra
-        str('XQ-100'),     # XQ-100 redshifts
-        str('BOSS_PIPE'),  # BOSS Pipeline redshifts
-        str('2QZ'),        #
-        str('2SLAQ'),      #
-        str('AUS'),
-        str('AGES'),
-        str('COSMOS'),
-        str('FAN'),
-        str('MMT'),
-        str('PAPOVICH'),
-        str('GLIKMAN'),
-        str('MADDOX'),
-        str('LAMOST'),
-        str('MCGREER'),
-        str('VCV'),
-        str('ALLBOSS'),
-        str('UNKN'),       # Unknown
+        str.encode('GGG'),        # GGG redshifts
+        str.encode('SDSS-HW'),    # SDSS redshifts with Hewitt&Wild
+        str.encode('BOSS_PCA'),   # PCA analysis by Paris et al. 2015 on BOSS spectra
+        str.encode('XQ-100'),     # XQ-100 redshifts
+        str.encode('BOSS_PIPE'),  # BOSS Pipeline redshifts
+        str.encode('2QZ'),        #
+        str.encode('2SLAQ'),      #
+        str.encode('AUS'),
+        str.encode('AGES'),
+        str.encode('COSMOS'),
+        str.encode('FAN'),
+        str.encode('MMT'),
+        str.encode('PAPOVICH'),
+        str.encode('GLIKMAN'),
+        str.encode('MADDOX'),
+        str.encode('LAMOST'),
+        str.encode('MCGREER'),
+        str.encode('VCV'),
+        str.encode('ALLBOSS'),
+        str.encode('UNKN'),       # Unknown
     ]
     return zpri
 

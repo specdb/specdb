@@ -52,7 +52,7 @@ def main(pargs):
         warnings.warn('DB file has no name.  Must be really old.')
         dbname = None
     else:
-        print("specdb DB file is from the {:s} database".format(dbname))
+        print("specdb DB file is from the {:s} database".format(str(dbname)))
 
     # Check Creation Date
     try:
@@ -62,18 +62,18 @@ def main(pargs):
         return
     else:
         version = hdf['catalog'].attrs['VERSION']
-        print("specdb DB file version={:s} was created on {:s}".format(version,cdate))
+        print("specdb DB file version={} was created on {}".format(str(version),str(cdate)))
         if dbname is not None:
             try:
-                print("Latest version for specdb DB type={:s} is version={:s}".format(
-                        dbname, dbinfo[dbname]['latest_version']))
+                print("Latest version for specdb DB type={} is version={}".format(
+                        dbname, str(dbinfo[dbname]['latest_version'])))
             except KeyError:
-                print("No version version history for {:s}".format(dbname))
+                print("No version version history for {:s}".format(str(dbname)))
             else:
                 # Check
-                print("Latest creation date for this DB version was {:s}".format(
+                print("Latest creation date for this DB version was {}".format(
                     dbinfo[dbname][version]['newest_date']))
-                print("Oldest valid DB file for this DB version was {:s}".format(
+                print("Oldest valid DB file for this DB version was {}".format(
                         dbinfo[dbname][version]['oldest_ok_date']))
                 # Compare?
 
