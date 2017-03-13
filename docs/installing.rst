@@ -29,11 +29,11 @@ We recommend that you use `Anaconda <https://www.continuum.io/downloads/>`_
 to install and/or update these packages.
 
 * `python <http://www.python.org/>`_ versions 2.7, or 3.3 or later
-* `numpy <http://www.numpy.org/>`_ version 1.11 or later
-* `astropy <http://www.astropy.org/>`_ version 1.1 or later
-* `scipy <http://www.scipy.org/>`_ version 0.17 or later
+* `numpy <http://www.numpy.org/>`_ version 1.12 or later
+* `astropy <http://www.astropy.org/>`_ version 1.3 or later
+* `scipy <http://www.scipy.org/>`_ version 0.18 or later
 * `matplotlib <http://matplotlib.org/>`_  version 1.4 or later
-* `PyQT4 <https://wiki.python.org/moin/PyQt/>`_ version 4 (needed for linetools)
+* `PyQT5 <https://wiki.python.org/moin/PyQt/>`_ version 5 (needed for linetools)
 * `h5py <https://www.h5py.org/>`_ version 2.6 (for data I/O)
 
 If you are using Anaconda, you can check the presence of these packages with::
@@ -47,7 +47,6 @@ If any of these packages are missing you can install them
 with a command like::
 
 	conda install h5py
-	conda install pyqt=4
 
 If any of the packages are out of date, they can be updated
 with a command like::
