@@ -47,6 +47,7 @@ specdb Databases
    :maxdepth: 2
 
    igmspec
+   uvqs
 
 IVOA
 ----

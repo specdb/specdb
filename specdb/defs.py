@@ -8,6 +8,10 @@ import pdb
 from collections import OrderedDict
 from astropy import units as u
 
+try:
+    bstr = bytes
+except NameError:  # For Python 2
+    bstr = str
 
 def instruments():
     """ Dict of allowed instruments (and definitions)
@@ -43,9 +47,15 @@ def instruments():
         'MIKEr': dict(gratings=['RED']),
         # Magellan MagE spectrometer
         'MagE': dict(gratings=['N/A']),
+        # CAHA
+        'CAFOS': dict(gratings=['??']),
+        # LCO/Dupont BCS
+        'duPont-BCS': dict(gratings=['600/5000']),
         # MMT BCS
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
+        # Kast/Lick
+        'Kast': dict(gratings=['Both']),
         # LBT/MODS
         'MODS1B': dict(gratings=['G400L']),
         'MODS1R': dict(gratings=['G670L']),
@@ -100,26 +110,26 @@ def z_priority():
 
     """
     zpri = [
-        str('GGG'),        # GGG redshifts
-        str('SDSS-HW'),    # SDSS redshifts with Hewitt&Wild
-        str('BOSS_PCA'),   # PCA analysis by Paris et al. 2015 on BOSS spectra
-        str('XQ-100'),     # XQ-100 redshifts
-        str('BOSS_PIPE'),  # BOSS Pipeline redshifts
-        str('2QZ'),        #
-        str('2SLAQ'),      #
-        str('AUS'),
-        str('AGES'),
-        str('COSMOS'),
-        str('FAN'),
-        str('MMT'),
-        str('PAPOVICH'),
-        str('GLIKMAN'),
-        str('MADDOX'),
-        str('LAMOST'),
-        str('MCGREER'),
-        str('VCV'),
-        str('ALLBOSS'),
-        str('UNKN'),       # Unknown
+        str.encode('GGG'),        # GGG redshifts
+        str.encode('SDSS-HW'),    # SDSS redshifts with Hewitt&Wild
+        str.encode('BOSS_PCA'),   # PCA analysis by Paris et al. 2015 on BOSS spectra
+        str.encode('XQ-100'),     # XQ-100 redshifts
+        str.encode('BOSS_PIPE'),  # BOSS Pipeline redshifts
+        str.encode('2QZ'),        #
+        str.encode('2SLAQ'),      #
+        str.encode('AUS'),
+        str.encode('AGES'),
+        str.encode('COSMOS'),
+        str.encode('FAN'),
+        str.encode('MMT'),
+        str.encode('PAPOVICH'),
+        str.encode('GLIKMAN'),
+        str.encode('MADDOX'),
+        str.encode('LAMOST'),
+        str.encode('MCGREER'),
+        str.encode('VCV'),
+        str.encode('ALLBOSS'),
+        str.encode('UNKN'),       # Unknown
     ]
     return zpri
 
@@ -148,10 +158,10 @@ def get_db_table_format(extras=None):
         # Defs
     zpri = z_priority()
     lenz = [len(zpi) for zpi in zpri]
-    dummyf = str('#')*np.max(np.array(lenz))  # For the Table
+    dummyf = str.encode('#')*np.max(np.array(lenz))  # For the Table
     stypes = list_of_stypes()
     lens = [len(stype) for stype in stypes]
-    dummys = str('#')*np.max(np.array(lens))  # For the Table
+    dummys = str.encode('#')*np.max(np.array(lens))  # For the Table
 
     # Dict for Table
     idict = dict(RA=0., DEC=0., zem=0., sig_zem=0.,

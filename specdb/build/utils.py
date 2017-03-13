@@ -18,6 +18,11 @@ from specdb import defs
 from specdb.cat_utils import match_ids
 from specdb.utils import clean_vstack
 
+try:
+    bstr = bytes
+except NameError:  # For Python 2
+    bstr = str
+
 def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
     """ Add IDs to
     Input meta table has its CAT_ID values set in place
@@ -220,7 +225,7 @@ def chk_meta(meta, chk_cat_only=False):
         clean_table_for_hdf(meta)
         # Check instrument
         meta_instr = meta['INSTR'].data
-        db_instr = np.array(inst_dict.keys()).astype(str)
+        db_instr = np.array(list(inst_dict.keys())).astype(str)
         if not np.all(np.in1d(meta_instr, db_instr)):
             print("Bad instrument in meta data")
             chk = False
@@ -285,9 +290,10 @@ def clean_table_for_hdf(tbl):
     tbl_keys = tbl.keys()
     for key in tbl_keys:
         # Check for unicode
-        if 'unicode' in tbl[key].dtype.name:
+        #if 'unicode' in tbl[key].dtype.name:
+        if 'U' in tbl[key].dtype.__repr__():
             warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
-            tmp = Column(tbl[key].data.astype(str), name=key)
+            tmp = Column(tbl[key].data.astype(bstr), name=key)
             tbl.remove_column(key)
             tbl[key] = tmp
 
@@ -626,7 +632,7 @@ def start_maindb(idkey, **kwargs):
     sv_idkey = idkey
     #
     idict = defs.get_db_table_format(**kwargs)
-    tkeys = idict.keys()
+    tkeys = list(idict.keys())
     lst = [[idict[tkey]] for tkey in tkeys]
     maindb = Table(lst, names=tkeys)
     # ID_key -- should be unique to the database
@@ -657,18 +663,19 @@ def write_hdf(hdf, dbname, maindb, zpri, gdict, version, epoch=2000.,
     import json
     import datetime
     # Write
+    clean_table_for_hdf(maindb)
     hdf['catalog'] = maindb
-    hdf['catalog'].attrs['NAME'] = str(dbname)
+    hdf['catalog'].attrs['NAME'] = str.encode(dbname)
     hdf['catalog'].attrs['EPOCH'] = epoch
     hdf['catalog'].attrs['EQUINOX'] = epoch
-    hdf['catalog'].attrs['SpaceFrame'] = str(spaceframe)
+    hdf['catalog'].attrs['SpaceFrame'] = str.encode(spaceframe)
     hdf['catalog'].attrs['Z_PRIORITY'] = zpri
     hdf['catalog'].attrs['GROUP_DICT'] = json.dumps(ltu.jsonify(gdict))
-    hdf['catalog'].attrs['CREATION_DATE'] = str(datetime.date.today().strftime('%Y-%b-%d'))
-    hdf['catalog'].attrs['VERSION'] = str(version)
+    hdf['catalog'].attrs['CREATION_DATE'] = str.encode(datetime.date.today().strftime('%Y-%b-%d'))
+    hdf['catalog'].attrs['VERSION'] = str.encode(version)
     # kwargs
     for key in kwargs:
-        hdf['catalog'].attrs[str(key)] = kwargs[key]
+        hdf['catalog'].attrs[str.encode(key)] = kwargs[key]
     # Close
     hdf.close()
 

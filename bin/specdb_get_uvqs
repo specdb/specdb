@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# See top-level LICENSE file for Copyright information
+#
+# -*- coding: utf-8 -*-
+
+
+"""
+This script grabs the igmspec database file from the great Internet
+"""
+
+import specdb.scripts.get_uvqs as get_uvqs
+
+if __name__ == '__main__':
+    args = get_uvqs.parser()
+    get_uvqs.main(args)
