@@ -49,6 +49,26 @@ The script uses a simple wget command to the URL of the
 *igmspec* database.  It defaults to the most recent
 version of the database.
 
+specdb_get_uvqs
+---------------
+
+The download script for *UVQS* is named specdb_get_uvqs.
+Here is its usage::
+
+    wolverine> specdb_get_uvqs -h
+    usage: specdb_get_uvqs [-h] [-v VERSION]
+
+    Grab the UVQS DB
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -v VERSION, --version VERSION
+                            DB version to generate
+
+The script uses a simple wget command to the URL of the
+*UVQS* database.  It defaults to the most recent
+version of the database.
+
 specdb_plot
 ===========
 
