@@ -8,6 +8,10 @@ import pdb
 from collections import OrderedDict
 from astropy import units as u
 
+try:
+    bstr = bytes
+except NameError:  # For Python 2
+    bstr = str
 
 def instruments():
     """ Dict of allowed instruments (and definitions)
@@ -43,9 +47,15 @@ def instruments():
         'MIKEr': dict(gratings=['RED']),
         # Magellan MagE spectrometer
         'MagE': dict(gratings=['N/A']),
+        # CAHA
+        'CAFOS': dict(gratings=['??']),
+        # LCO/Dupont BCS
+        'duPont-BCS': dict(gratings=['600/5000']),
         # MMT BCS
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
+        # Kast/Lick
+        'Kast': dict(gratings=['Both']),
         # LBT/MODS
         'MODS1B': dict(gratings=['G400L']),
         'MODS1R': dict(gratings=['G670L']),
@@ -148,10 +158,10 @@ def get_db_table_format(extras=None):
         # Defs
     zpri = z_priority()
     lenz = [len(zpi) for zpi in zpri]
-    dummyf = str('#')*np.max(np.array(lenz))  # For the Table
+    dummyf = str.encode('#')*np.max(np.array(lenz))  # For the Table
     stypes = list_of_stypes()
     lens = [len(stype) for stype in stypes]
-    dummys = str('#')*np.max(np.array(lens))  # For the Table
+    dummys = str.encode('#')*np.max(np.array(lens))  # For the Table
 
     # Dict for Table
     idict = dict(RA=0., DEC=0., zem=0., sig_zem=0.,
