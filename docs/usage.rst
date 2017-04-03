@@ -70,9 +70,9 @@ igmspec    IgmSpec
 
 Here is an example instantiation for *igmspec*::
 
-    igmsp = IgmSpec()  # Loads the highest version in $IGMSPEC_DB
+    igmsp = IgmSpec()  # Loads the highest version in $SPECDB
 
 This loads the highest version number of any HDF5 files located
-in the $IGMSPEC_DB folder.
+in the $SPECDB folder.
 
 
