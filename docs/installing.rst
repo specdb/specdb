@@ -108,6 +108,6 @@ it in the ./data/DB/ subdirectory within specdb, e.g.::
 This will start a download of the most recent `igmspec` database; the current file is v02
 and has ~26Gb. Once the file is downloaded,
 you need to make sure the shell environmental
-variable `$IGMSPEC_DB` points to the host directory.
+variable `$SPECDB` points to the host directory.
 
 See :ref:`download-igmspec` for additional details on the script.
