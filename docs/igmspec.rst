@@ -54,8 +54,8 @@ Setup
 
 Add to your UNIX environmental variables the path to the DB file, e.g.::
 
-    setenv IGMSPEC_DB /raid/IGMSPEC_DB/   # csh or tcsh
-    export IGMSPEC_DB="/raid/IGMSPEC_DB/" # bash
+    setenv SPECDB /raid/SPECDB/   # csh or tcsh
+    export SPECDB="/raid/SPECDB/" # bash
 
 
 More
