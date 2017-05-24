@@ -41,7 +41,9 @@ def main(args, unit_test=False, **kwargs):
         groups=[args.group]
     else:
         groups = None
-    spec, meta = Specdb.spectra_from_coord(icoord, tol=args.tol*u.arcsec, groups=groups)
+    meta = Specdb.meta_from_position(icoord, args.tol*u.arcsec, groups=groups)
+    if unit_test:
+        return meta
 
     # Outcome
     if meta is None:
