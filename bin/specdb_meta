@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# See top-level LICENSE file for Copyright information
+#
+# -*- coding: utf-8 -*-
+
+
+"""
+This script runs PYPIT
+"""
+
+import specdb.scripts.grab_meta as grab_meta
+
+if __name__ == '__main__':
+    args = grab_meta.parser()
+    grab_meta.main(args)

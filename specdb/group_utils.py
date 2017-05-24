@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import numpy as np
 import pdb
 
-def show_group_meta(meta, meta_keys=None, show_all_keys=True):
+def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
     """ Show (nicely) a set of meta data
 
     Parameters
@@ -20,10 +20,13 @@ def show_group_meta(meta, meta_keys=None, show_all_keys=True):
     if meta_keys is None:
         mkeys = []
         # Grab IDs
-        for key in meta.keys():
-            if '_ID' in key:
-                mkeys += [key]
-        mkeys += ['RA_GROUP', 'DEC_GROUP', 'zem_GROUP', 'SPEC_FILE']
+        if idkey is None:
+            for key in meta.keys():
+                if '_ID' in key:
+                    mkeys += [key]
+        else:
+            mkeys += [idkey]
+        mkeys += ['GROUP', 'RA_GROUP', 'DEC_GROUP', 'zem_GROUP', 'SPEC_FILE']
     else:
         mkeys = meta_keys
     # Add in the rest
