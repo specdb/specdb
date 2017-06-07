@@ -106,6 +106,33 @@ Here is an example or two::
    specdb_plot J220248.31+123656.3 igmspec
 
 
+specdb_meta
+===========
+
+Show some meta data for all the sources within
+tolerance of a given coordinate.
+One must specify
+the database and can restrict on Group.
+Here is the usage::
+
+    specdb_meta -h
+    usage: specdb_meta [-h] [--tol TOL] [-g GROUP] [--db_file DB_FILE] coord dbase
+
+    specdb_meta script v0.1
+
+    positional arguments:
+      coord                 Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322
+                            or 07:45:00.47,34:17:31.1
+      dbase                 Database [igmspec,uvqs,all,priv]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --tol TOL             Maximum offset in arcsec [default=5.]
+      -g GROUP, --group GROUP
+                            Restrict on Group (e.g. BOSS_DR12)
+      --db_file DB_FILE     Full path of db_file
+
+
 sdss_spec
 =========
 

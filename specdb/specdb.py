@@ -476,7 +476,7 @@ class IgmSpec(SpecDB):
         """
         import os, glob
         if os.getenv('SPECDB') is None:
-            warnings.warn('Environmental variable IGMSPEC_DB not set. Assuming this is a test')
+            warnings.warn('Environmental variable SPECDB not set. Assuming this is a test')
             import igmspec
             db_dir = igmspec.__path__[0]+'/tests/files/'
         else:

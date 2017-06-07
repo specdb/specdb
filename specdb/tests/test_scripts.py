@@ -8,15 +8,28 @@ matplotlib.use('agg')  # For Travis
 import pytest
 import os
 
+from astropy.table import Table
+
+from ..scripts import grab_meta
 from ..scripts import plot_specdb
 from ..scripts import sdss_spec
 
 #version = 'v01'
 version = 'v02'
 
+
 def data_path(filename):
     data_dir = os.path.join(os.path.dirname(__file__), 'files')
     return os.path.join(data_dir, filename)
+
+
+def test_meta():
+    db_file = data_path('IGMspec_DB_{:s}_debug.hdf5'.format(version))
+    # Various inputs
+    pargs = grab_meta.parser(['000000.45+174625.4', 'priv', '--db_file={:s}'.format(db_file)])
+    meta = grab_meta.main(pargs, unit_test=True)
+    # Teset
+    assert isinstance(meta, Table)
 
 
 def test_plot_spec():
