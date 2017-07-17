@@ -91,7 +91,7 @@ def flag_to_groups(flag, group_dict):
       Expanded list of groups corresponding to input flag
     """
     groups = []
-    for key,sflag in groups.items():
+    for key,sflag in group_dict.items():
         if flag % (2*sflag) >= sflag:
             groups.append(key)
     # Return
