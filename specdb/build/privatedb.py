@@ -470,7 +470,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                     spec = dumb_spec()
                 else:
                     try:
-                        spec = lsio.readspec(f)#, **kwargs)
+                        spec = lsio.readspec(f, **kwargs)
                     except ValueError:  # Probably a continuum problem
                         pdb.set_trace()
         else:
