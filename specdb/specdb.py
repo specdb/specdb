@@ -322,7 +322,7 @@ class SpecDB(object):
             # Grab
             all_spec.append(self[group].spec_from_meta(meta[sub_meta]))
         # Collate
-        spec = ltsu.collate(all_spec)
+        spec = ltsu.collate(all_spec, masking='edges')
         # Re-order
         idx = np.concatenate(sv_rows)
         srt = np.argsort(idx)

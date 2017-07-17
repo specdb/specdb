@@ -69,6 +69,11 @@ def main(args, unit_test=False, **kwargs):
     spec.select = args.select
     if unit_test:
         return
+    # Add labels
+    lbls = []
+    for imeta in meta:
+        lbls.append('{:d}_{:s}'.format(imeta['INDEX'], imeta['GROUP']))
+    spec.labels = lbls
     # Show
     if args.mplot:
         spec.plot()
