@@ -74,17 +74,17 @@ def main(args, unit_test=False, **kwargs):
     elif len(meta) == 1:  # One survey hit
         pass
     else:  # More than 1 survey
-        pdb.set_trace()
-        idx = 0
-        spec = all_spec[idx]
-        meta = all_meta[idx]
-        surveys = [meta.meta['group'] for meta in all_meta]
+        surveys = [meta['GROUP'] for row in meta]
         print("Source located in more than one SDSS survey")
-        print("Using survey {:s}".format(surveys[idx]))
-        print("You can choose from this list {}".format(surveys))
+    indices = np.arange(len(meta)).astype(int)
+    meta['INDEX'] = indices
+    print(meta[['INDEX','GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'INSTR','DISPERSER','GROUP_ID']])
 
-    #group_utils.show_group_meta(meta)
-
+    # Add labels
+    lbls = []
+    for imeta in meta:
+        lbls.append('{:d}_{:s}'.format(imeta['INDEX'], imeta['GROUP']))
+    spec.labels = lbls
     # Load spectra
     spec.select = args.select
     if unit_test:
