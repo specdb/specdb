@@ -407,6 +407,7 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
+                   debug=False,
                    refs=None, verbose=False, badf=None, set_idkey=None,
                    grab_conti=False, **kwargs):
     """ Ingest the spectra
@@ -475,6 +476,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                         pdb.set_trace()
         else:
             spec = lsio.readspec(f, **kwargs)
+        if debug:
+            pdb.set_trace()
         # npix
         head = spec.header
         npix = spec.npix
