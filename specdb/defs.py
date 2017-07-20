@@ -49,8 +49,11 @@ def instruments():
         'MagE': dict(gratings=['N/A']),
         # CAHA
         'CAFOS': dict(gratings=['??']),
+        'TWIN': dict(gratings=['T13']),
         # LCO/Dupont BCS
         'duPont-BCS': dict(gratings=['600/5000']),
+        # KPNO
+        'RCS': dict(gratings=['KPC-10A']),
         # MMT BCS
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
@@ -204,8 +207,14 @@ def get_res_dicts():
                    }
     MOSFIRE_Rdict = {'H': 3660,  # Assumes 0.7" slit
                      }
+    # Calar Alto
+    TWIN_Rdict = {'KPC-10A': 408., 'KPC 10A': 408.} # 1" slit
+    # kp4m  https://www.noao.edu/kpno/manuals/l2mspect/node8.html
+    RCS_Rdict = {'KPC-10A': 408., 'KPC 10A': 408.} # 1" slit
+    # MMT
     MMT_Rdict = {'500GPM': 1430, '800GPM': 1730.}          # Assumes 1" slit
     MODS_Rdict = {'G400L': 1850, 'G670L': 2300.}          # Assumes 0.6" slit
+    # Gemini
     GMOS_Rdict = {'B600+_G5307': 844.,    # Assumes 1" slit
                   'B600+_G5323': 844.,
                   'B1200+_G5301': 1872.,
@@ -252,7 +261,7 @@ def get_res_dicts():
                   'G140L': 2000.,
                  }
     #
-    Rdicts = dict(ESI=ESI_Rdict, HIRES=HIRES_Rdict,
+    Rdicts = dict(ESI=ESI_Rdict, HIRES=HIRES_Rdict, RCS=RCS_Rdict,
                   GMOS=GMOS_Rdict, GNIRS=GNIRS_Rdict, LRISb=LRISb_Rdict,
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
@@ -288,6 +297,7 @@ def slit_width(slitname, req_long=True):
              'f6-4pix_G5212': 4., # NIRI
              '42x0.570': 0.57, # NIRSPEC
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
+             'slit 1.5 arcsec': 1.5, # RCS (kp4m)
              }
     #
     try:

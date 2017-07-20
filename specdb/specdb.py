@@ -105,7 +105,8 @@ class SpecDB(object):
           If first=False, this is a list of bool arrays that point to the
             entries in the stack table (which follows).  This avoids
              generating N Tables which is very slow
-        stack : Table -- only if first=False
+        stack : Table, optional
+          Only returned if first=False
         """
         from specdb.cat_utils import match_ids
         # Cut down using source catalog

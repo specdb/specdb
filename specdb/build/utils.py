@@ -56,6 +56,8 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
         newcut.rename_column('DEC_GROUP', 'DEC')
         newcut.rename_column('zem_GROUP', 'zem')
         cat_meta = newcut[tkeys]
+    else:
+        print("No new sources in this group")
     # Set or append
     if first:
         maindb = cat_meta
@@ -502,6 +504,8 @@ def set_resolution(head, instr=None):
                 instr = 'MODS1R'
             elif 'COS' in head['INSTRUME']:
                 instr = 'COS'
+            elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
+                instr = 'RCS'
         else:
             pass
         if instr is None:
@@ -570,6 +574,10 @@ def set_resolution(head, instr=None):
         except KeyError:
             print("Need to add {:s}".format(head['SLITNAME']))
             pdb.set_trace()
+    elif 'RCS' in instr: # KPNO (retired)
+        res_1 = Rdicts[instr][head['DISPERSE']]
+        swidth = defs.slit_width(head['APERTURE'])
+        return res_1 / swidth
     elif 'mmt' in instr:
         try:
             res = Rdicts[instr][head['DISPERSE']]*0.6

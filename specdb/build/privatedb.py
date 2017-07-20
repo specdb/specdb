@@ -271,7 +271,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
-                    if parse_head[key] == True:
+                    if parse_head[key] is True:
                         try:
                             plist[key].append(spbu.set_resolution(head))
                         except ValueError:
