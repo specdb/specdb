@@ -14,7 +14,7 @@ def parser(options=None):
     parser.add_argument("plate", type=int, help="Plate")
     parser.add_argument("fiberid", type=int, help="FiberID")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all]")
-    parser.add_argument("-s", "--survey", help="Name of Survey to use (BOSS_DR12 or SDSS_DR7)")
+    parser.add_argument("--survey", help="Name of Survey to use (BOSS_DR12 or SDSS_DR7)")
     parser.add_argument("--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
     parser.add_argument("-p", "--plot", default=False, action="store_true", help="Plot with lt_xspec")
 
