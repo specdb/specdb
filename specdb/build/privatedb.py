@@ -429,6 +429,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Grab continua.  They should exist but do not have to
     set_idkey : str, optional
       Only required if you are not performing the full script
+    **kwargs : optional
+      Passed to readspec()
 
     Returns
     -------
