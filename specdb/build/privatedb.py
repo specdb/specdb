@@ -271,7 +271,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
-                    if parse_head[key] == True:
+                    if parse_head[key] is True:
                         try:
                             plist[key].append(spbu.set_resolution(head))
                         except ValueError:
@@ -407,6 +407,7 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
+                   debug=False,
                    refs=None, verbose=False, badf=None, set_idkey=None,
                    grab_conti=False, **kwargs):
     """ Ingest the spectra
@@ -428,6 +429,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Grab continua.  They should exist but do not have to
     set_idkey : str, optional
       Only required if you are not performing the full script
+    **kwargs : optional
+      Passed to readspec()
 
     Returns
     -------
@@ -470,11 +473,13 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                     spec = dumb_spec()
                 else:
                     try:
-                        spec = lsio.readspec(f)#, **kwargs)
+                        spec = lsio.readspec(f, **kwargs)
                     except ValueError:  # Probably a continuum problem
                         pdb.set_trace()
         else:
-            spec = lsio.readspec(f)#, **kwargs)
+            spec = lsio.readspec(f, **kwargs)
+        if debug:
+            pdb.set_trace()
         # npix
         head = spec.header
         npix = spec.npix

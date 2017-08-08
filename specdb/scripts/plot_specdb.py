@@ -53,15 +53,15 @@ def main(args, unit_test=False, **kwargs):
         print("Source located in group: {:s}".format(meta['GROUP'][0]))
     else:  # More than 1 spectrum
         print("More than 1 spectrum found for input source. Here is a summary:")
-        indices = np.arange(len(meta)).astype(int)
-        meta['INDEX'] = indices
-        print(meta[['INDEX','GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'INSTR','DISPERSER','GROUP_ID']])
-        idx = args.select
-        print("Plotting index={:d} which you can specify with --select".format(idx))
         #meta = all_meta[idx]
         #groups = [meta.meta['group'] for meta in all_meta]
         #print("Using group {:s}.  You can choose from this list {}".format(groups[idx], groups))
 
+    indices = np.arange(len(meta)).astype(int)
+    meta['INDEX'] = indices
+    print(meta[['INDEX','GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'INSTR','DISPERSER','GROUP_ID']])
+    idx = args.select
+    print("Plotting index={:d} which you can specify with --select".format(idx))
     #if args.meta:
     #    group_utils.show_group_meta(meta)
 
@@ -69,6 +69,11 @@ def main(args, unit_test=False, **kwargs):
     spec.select = args.select
     if unit_test:
         return
+    # Add labels
+    lbls = []
+    for imeta in meta:
+        lbls.append('{:d}_{:s}'.format(imeta['INDEX'], imeta['GROUP']))
+    spec.labels = lbls
     # Show
     if args.mplot:
         spec.plot()

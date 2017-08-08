@@ -14,7 +14,7 @@ def parser(options=None):
     parser.add_argument("plate", type=int, help="Plate")
     parser.add_argument("fiberid", type=int, help="FiberID")
     parser.add_argument("dbase", type=str, help="Database [igmspec,all]")
-    parser.add_argument("-s", "--survey", help="Name of Survey to use (BOSS_DR12 or SDSS_DR7)")
+    parser.add_argument("--survey", help="Name of Survey to use (BOSS_DR12 or SDSS_DR7)")
     parser.add_argument("--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
     parser.add_argument("-p", "--plot", default=False, action="store_true", help="Plot with lt_xspec")
 
@@ -74,17 +74,17 @@ def main(args, unit_test=False, **kwargs):
     elif len(meta) == 1:  # One survey hit
         pass
     else:  # More than 1 survey
-        pdb.set_trace()
-        idx = 0
-        spec = all_spec[idx]
-        meta = all_meta[idx]
-        surveys = [meta.meta['group'] for meta in all_meta]
+        surveys = [meta['GROUP'] for row in meta]
         print("Source located in more than one SDSS survey")
-        print("Using survey {:s}".format(surveys[idx]))
-        print("You can choose from this list {}".format(surveys))
+    indices = np.arange(len(meta)).astype(int)
+    meta['INDEX'] = indices
+    print(meta[['INDEX','GROUP','RA_GROUP','DEC_GROUP',Specdb.idkey,'INSTR','DISPERSER','GROUP_ID']])
 
-    #group_utils.show_group_meta(meta)
-
+    # Add labels
+    lbls = []
+    for imeta in meta:
+        lbls.append('{:d}_{:s}'.format(imeta['INDEX'], imeta['GROUP']))
+    spec.labels = lbls
     # Load spectra
     spec.select = args.select
     if unit_test:
