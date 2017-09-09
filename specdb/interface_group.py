@@ -78,13 +78,13 @@ class InterfaceGroup(object):
         # Reformat
         if reformat:
             try:
-                self.meta['RA_GROUP'].format = '8.4f'
+                self.meta['RA_GROUP'].format = '10.6f'
             except KeyError:  # Backwards compatible, will deprecate
-                self.meta['RA'].format = '8.4f'
-                self.meta['DEC'].format = '8.4f'
+                self.meta['RA'].format = '10.6f'
+                self.meta['DEC'].format = '10.6f'
                 self.meta['zem'].format = '6.3f'
             else:
-                self.meta['DEC_GROUP'].format = '8.4f'
+                self.meta['DEC_GROUP'].format = '10.6f'
                 self.meta['zem_GROUP'].format = '6.3f'
             self.meta['WV_MIN'].format = '6.1f'
             self.meta['WV_MAX'].format = '6.1f'
