@@ -227,7 +227,7 @@ def chk_meta(meta, chk_cat_only=False):
         clean_table_for_hdf(meta)
         # Check instrument
         meta_instr = meta['INSTR'].data
-        db_instr = np.array(list(inst_dict.keys())).astype(str)
+        db_instr = np.array(list(inst_dict.keys())).astype(bstr)  # bytes
         if not np.all(np.in1d(meta_instr, db_instr)):
             print("Bad instrument in meta data")
             chk = False
