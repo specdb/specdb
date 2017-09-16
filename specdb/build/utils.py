@@ -368,7 +368,7 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
         ndups = np.sum(dups)
         # Not duplicates
         IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
-        newID = np.max(np.max(IDs), newID)
+        newID = max(np.max(IDs), newID)
 
         # Duplicates
         if ndups > 0:
