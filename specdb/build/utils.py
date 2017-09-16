@@ -23,7 +23,7 @@ try:
 except NameError:  # For Python 2
     bstr = str
 
-def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
+def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwargs):
     """ Add IDs to
     Input meta table has its CAT_ID values set in place
 
@@ -48,7 +48,7 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
       Updated catalog table
 
     """
-    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, **kwargs)
+    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, debug=debug, **kwargs)
     # If new sources
     if np.sum(new) > 0:
         newcut['flag_group'] = flag_g
@@ -422,7 +422,7 @@ def init_data(npix, include_co=False):
     return data
 
 
-def set_new_ids(maindb, meta, idkey, chk=True, first=False, **kwargs):
+def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwargs):
     """ Set the new IDs
 
     Parameters
@@ -444,6 +444,8 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, **kwargs):
     """
     # IDs
     ids = get_new_ids(maindb, meta, idkey, **kwargs) # Includes new and old
+    if debug:
+        pdb.set_trace()
     # Crop to rows with new IDs
     if first:
         new = ids >= 0
