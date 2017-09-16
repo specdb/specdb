@@ -300,7 +300,7 @@ def clean_table_for_hdf(tbl):
             tbl[key] = tmp
 
 def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.arcsec,
-                close_pairs=False):
+                close_pairs=False, debug=False):
     """ Generate new CAT_IDs for an input DB
 
     Parameters
@@ -375,6 +375,8 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
             # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
             dup_idx = np.where(dups)[0]
             dup_filled = np.array([False]*len(sub_c_new))
+            if debug:
+                pdb.set_trace()
             for idup in dup_idx: # Ugly loop..
                 if dup_filled[idup]:  # Already filled as a duplicate
                     continue
@@ -443,7 +445,7 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
     ids : ID values of newdb
     """
     # IDs
-    ids = get_new_ids(maindb, meta, idkey, **kwargs) # Includes new and old
+    ids = get_new_ids(maindb, meta, idkey, debug=debug, **kwargs) # Includes new and old
     if debug:
         pdb.set_trace()
     # Crop to rows with new IDs
