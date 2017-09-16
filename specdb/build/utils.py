@@ -368,11 +368,10 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
         ndups = np.sum(dups)
         # Not duplicates
         IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
+        newID = np.max(np.max(IDs), newID)
 
         # Duplicates
         if ndups > 0:
-            if np.sum(~dups) > 0:
-                newID = np.max(IDs)
             warnings.warn("We found {:d} duplicates (e.g. multiple spectra). Hope this was expected".format(ndups//2))
             # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
             dup_idx = np.where(dups)[0]
