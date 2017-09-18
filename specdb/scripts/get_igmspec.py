@@ -15,8 +15,8 @@ except NameError:
 def parser(options=None):
     import argparse
     # Parse
-    parser = argparse.ArgumentParser(description='Grab the IGMspec DB')
-    parser.add_argument("-v", "--version", default='v02.1', help="DB version to generate")
+    parser = argparse.ArgumentParser(description='Grab the IGMspec DB [v2.1]')
+    parser.add_argument("-v", "--version", default='v02.1', help="DB version to grab")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
