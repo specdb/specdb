@@ -40,14 +40,21 @@ def main(pargs):
     import h5py
     import warnings
     from specdb import defs
+    from specdb import utils as sdbu
     dbinfo = defs.dbase_info()
 
     # Open file
     hdf = h5py.File(pargs.db_file, 'r')
 
+    # Deal with Python 3
+    catalog = {}
+    for key in hdf['catalog'].attrs:
+        catalog[key] = hdf['catalog'].attrs[key]
+    catalog = sdbu.hdf_decode(catalog)
+
     # Name
     try:
-        dbname = hdf['catalog'].attrs['NAME']
+        dbname = catalog['NAME']
     except:
         warnings.warn('DB file has no name.  Must be really old.')
         dbname = None
@@ -56,12 +63,12 @@ def main(pargs):
 
     # Check Creation Date
     try:
-        cdate = hdf['catalog'].attrs['CREATION_DATE']
+        cdate = catalog['CREATION_DATE']
     except:
         warnings.warn('DB file has no Creation Date.  Must be really old..')
         return
     else:
-        version = hdf['catalog'].attrs['VERSION']
+        version = catalog['VERSION']
         print("specdb DB file version={} was created on {}".format(str(version),str(cdate)))
         if dbname is not None:
             try:

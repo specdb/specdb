@@ -16,7 +16,7 @@ def parser(options=None):
     import argparse
     # Parse
     parser = argparse.ArgumentParser(description='Grab the IGMspec DB')
-    parser.add_argument("-v", "--version", default='v02', help="DB version to generate")
+    parser.add_argument("-v", "--version", default='v02.1', help="DB version to generate")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
@@ -39,7 +39,7 @@ def main(pargs):
     import subprocess
 
     # Version
-    if pargs.version not in ['v01', 'v02']:
+    if pargs.version not in ['v02.1']:
         raise IOError("Bad version number")
 
     # URL

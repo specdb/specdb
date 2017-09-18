@@ -87,6 +87,11 @@ def hdf_decode(obj, itype=None):
                 dobj.remove_column(key)
                 # Add back
                 dobj[key] = Column(ss)
+    elif isinstance(obj, dict):
+        dobj = obj.copy()
+        for key,item in dobj.items():
+            skey = hdf_decode(key)
+            dobj[skey] = hdf_decode(item)
     else:  # Auto
         if isinstance(obj,bytes):
             dobj = obj.decode('utf-8')
