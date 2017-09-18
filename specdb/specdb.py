@@ -489,6 +489,7 @@ class IgmSpec(SpecDB):
             fils = glob.glob(db_dir+'/IGMspec_DB_*hdf5')
         fils.sort()
         db_file = fils[-1]  # Should grab the latest
+        print("Loading igmspec from {:s}".format(db_file))
         # Return
         return db_file
 

@@ -20,6 +20,7 @@ def test_show_meta():
     # Dummy meta
     meta = Table()
     meta['IGM_ID'] = [134,2234,211]
+    meta['GROUP'] = 'Testing'
     meta['GROUP_ID'] = [0,1,2]
     meta['RA_GROUP'] = [122.2234, 200.22222, 9.938444]
     meta['DEC_GROUP'] = [-13.22333, 23.211199, 55.2323232]
