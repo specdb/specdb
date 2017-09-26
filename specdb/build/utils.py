@@ -23,7 +23,7 @@ try:
 except NameError:  # For Python 2
     bstr = str
 
-def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
+def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwargs):
     """ Add IDs to
     Input meta table has its CAT_ID values set in place
 
@@ -48,7 +48,7 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, **kwargs):
       Updated catalog table
 
     """
-    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, **kwargs)
+    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, debug=debug, **kwargs)
     # If new sources
     if np.sum(new) > 0:
         newcut['flag_group'] = flag_g
@@ -227,7 +227,7 @@ def chk_meta(meta, chk_cat_only=False):
         clean_table_for_hdf(meta)
         # Check instrument
         meta_instr = meta['INSTR'].data
-        db_instr = np.array(list(inst_dict.keys())).astype(str)
+        db_instr = np.array(list(inst_dict.keys())).astype(bstr)  # bytes
         if not np.all(np.in1d(meta_instr, db_instr)):
             print("Bad instrument in meta data")
             chk = False
@@ -300,7 +300,7 @@ def clean_table_for_hdf(tbl):
             tbl[key] = tmp
 
 def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.arcsec,
-                close_pairs=False):
+                close_pairs=False, debug=False):
     """ Generate new CAT_IDs for an input DB
 
     Parameters
@@ -368,13 +368,16 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
         ndups = np.sum(dups)
         # Not duplicates
         IDs[new_idx[~dups]] = newID + 1 + np.arange(np.sum(~dups))
+        newID = max(np.max(IDs), newID)
+
         # Duplicates
         if ndups > 0:
-            newID = np.max(IDs)
             warnings.warn("We found {:d} duplicates (e.g. multiple spectra). Hope this was expected".format(ndups//2))
             # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
             dup_idx = np.where(dups)[0]
             dup_filled = np.array([False]*len(sub_c_new))
+            if debug:
+                pdb.set_trace()
             for idup in dup_idx: # Ugly loop..
                 if dup_filled[idup]:  # Already filled as a duplicate
                     continue
@@ -422,7 +425,7 @@ def init_data(npix, include_co=False):
     return data
 
 
-def set_new_ids(maindb, meta, idkey, chk=True, first=False, **kwargs):
+def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwargs):
     """ Set the new IDs
 
     Parameters
@@ -443,7 +446,9 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, **kwargs):
     ids : ID values of newdb
     """
     # IDs
-    ids = get_new_ids(maindb, meta, idkey, **kwargs) # Includes new and old
+    ids = get_new_ids(maindb, meta, idkey, debug=debug, **kwargs) # Includes new and old
+    if debug:
+        pdb.set_trace()
     # Crop to rows with new IDs
     if first:
         new = ids >= 0
