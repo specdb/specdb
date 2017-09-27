@@ -170,6 +170,10 @@ on any of your files.  The default is to take any FITS file
 in the branch (and sub-folders) except those files with these
 extensions: 'c.fits', 'C.fits', 'e.fits', 'E.fits', 'N.fits', 'old.fits'.
 
+Another option is to feed the ingest_spectra() method an
+XSpectrum1D object with all the spectra, aligned to the
+input meta Table.
+
 Quick go
 ========
 
