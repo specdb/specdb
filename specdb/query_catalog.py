@@ -411,9 +411,9 @@ class QueryCatalog(object):
             # Offset
             kpc_proper = self.cosmo.kpc_proper_per_arcmin(self.cat['zem'])
             phys_sep = kpc_proper * sep.to('arcmin')
+            good_z = self.cat['zem'] > 1e-3  # Floating point but somewhat arbitrary
             # Match
-            matches = phys_sep < radius
-            pdb.set_trace()
+            matches = (phys_sep < radius) & good_z
         else:
             # Match
             matches = sep < radius
