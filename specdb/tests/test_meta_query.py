@@ -56,6 +56,9 @@ def test_meta_from_position(igmsp):
     meta = igmsp.meta_from_position((2.813500,14.767200), 20*u.deg, groups=['GGG','HD-LLS_DR1'])
     for group in meta['GROUP'].data:
         assert group in ['GGG', 'HD-LLS_DR1']
+    # Physical separation
+    meta6 = igmsp.meta_from_position('001115.23+144601.8', 300*u.kpc)
+    assert len(meta6) == 2
 
 
 def test_meta_from_coords(igmsp):

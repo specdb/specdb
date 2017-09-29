@@ -192,6 +192,8 @@ class SpecDB(object):
         ----------
         inp : coordinate in one of several formats
         radius : Angle or Quantity
+          If Quantity has dimensions of length (e.g. kpc), then
+          it is assumed a proper radius (dependent on Cosmology)
         query_dict : dict, optional
         groups : list, optional
           Restrict to input groups
