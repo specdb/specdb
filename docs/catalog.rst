@@ -100,10 +100,10 @@ which rows of the catalog matched, the sub-catalog of
 those rows ordered by separation from the search position,
 and the IDs of those sources also ordered by search position.
 
-The search radius may instaed be given as a length.  If so, it
+The search radius may instead be given as a length.  If so, it
 is an assumed physical proper radius and is therefore
 dependent on cosmology
-(astropy.cosmology.Plank15 is assumed).  Only sources with
+(astropy.cosmology.Planck15 is assumed).  Only sources with
 redshift z>1e-3 are considered. Example::
 
     matches, sub_cat, IDs = sdb.qcat.query_position('001115.24+144601.9', 300*u.kpc)
