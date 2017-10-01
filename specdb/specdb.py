@@ -59,6 +59,8 @@ class SpecDB(object):
         self.name = spdbu.hdf_decode(self.qcat.cat_attr['NAME'])
         print("Database is {:s}".format(self.name))
         print("Created on {:s}".format(spdbu.hdf_decode(self.qcat.cat_attr['CREATION_DATE'])))
+        if self.qcat.version is not None:
+            print("Version: {:s}".format(self.qcat.version))
         # Return
         return
 
