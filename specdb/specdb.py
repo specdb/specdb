@@ -80,6 +80,46 @@ class SpecDB(object):
         self.hdf = h5py.File(db_file,'r')
         self.db_file = db_file
 
+    def get_sdss(self, plate, fiberid, groups=['BOSS_DR12', 'SDSS_DR7']):
+        """ Grab data using plate, fiber of SDSS/BOSS
+
+        Parameters
+        ----------
+        plate : int
+        fiberid : int
+        groups : list, optional
+
+        Returns
+        -------
+        spec: XSpectrum1D object
+        meta: Table
+
+        """
+        for kk,group in enumerate(groups):
+            meta = self[group].meta
+            if 'FIBERID' not in meta.keys():
+                meta.rename_column('FIBER','FIBERID')
+            if kk > 0:
+                mtbl = vstack([mtbl, meta], join_type='inner')
+            else:
+                mtbl = meta
+
+        # Find plate/fiber
+        imt = np.where((mtbl['PLATE'] == plate) & (mtbl['FIBERID'] == fiberid))[0]
+        if len(imt) == 0:
+            print("Plate and Fiber not found.  Try again")
+            return
+        else:
+            mt = imt[0]
+            scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
+
+        # Grab
+        print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
+                                                   scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
+        spec, meta = self.spectra_from_coord(scoord, groups=groups)
+        # Return
+        return spec, meta
+
     def meta_from_coords(self, coords, query_dict=None, groups=None,
                                first=True, **kwargs):
         """ Return meta data for an input set of coordinates
@@ -503,45 +543,6 @@ class IgmSpec(SpecDB):
         """
         from astropy.table import Table
         return Table(self.idb.hdf['quasars'].value)
-
-    def get_sdss(self, plate, fiberid, groups=['BOSS_DR12', 'SDSS_DR7']):
-        """ 
-        Parameters
-        ----------
-        plate
-        fiberid
-        groups
-
-        Returns
-        -------
-        spec: XSpectrum1D object
-        meta: Table
-
-        """
-        for kk,group in enumerate(groups):
-            meta = self[group].meta
-            if 'FIBERID' not in meta.keys():
-                meta.rename_column('FIBER','FIBERID')
-            if kk > 0:
-                mtbl = vstack([mtbl, meta], join_type='inner')
-            else:
-                mtbl = meta
-
-        # Find plate/fiber
-        imt = np.where((mtbl['PLATE'] == plate) & (mtbl['FIBERID'] == fiberid))[0]
-        if len(imt) == 0:
-            print("Plate and Fiber not found.  Try again")
-            return
-        else:
-            mt = imt[0]
-            scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
-
-        # Grab
-        print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
-                                                   scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
-        spec, meta = self.spectra_from_coord(scoord, groups=groups)
-        # Return
-        return spec, meta
 
     def __repr__(self):
         txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,

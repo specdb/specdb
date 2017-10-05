@@ -39,6 +39,7 @@ Accessing Data
    groups
    meta
    spectra
+   sdss
 
 specdb Databases
 ----------------
