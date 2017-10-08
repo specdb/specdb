@@ -82,6 +82,11 @@ class QueryCatalog(object):
         self.group_dict = json.loads(spdbu.hdf_decode(hdf['catalog'].attrs['GROUP_DICT']))
 
         self.groups = list(self.group_dict.keys())
+        try:
+            self.version = self.cat_attr['VERSION']
+        except KeyError:
+            self.version = None
+
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
