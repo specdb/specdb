@@ -364,9 +364,11 @@ class SpecDB(object):
         sv_rows = []
         for group in groups:
             sub_meta = meta['GROUP'] == group
-            sv_rows.append(np.where(sub_meta)[0])
             # Grab
-            all_spec.append(self[group].spec_from_meta(meta[sub_meta]))
+            spec = self[group].spec_from_meta(meta[sub_meta])
+            if spec is not None:
+                all_spec.append(spec)
+                sv_rows.append(np.where(sub_meta)[0])
         # Collate
         spec = ltsu.collate(all_spec, masking='edges')
         # Re-order

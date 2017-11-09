@@ -86,8 +86,12 @@ class InterfaceGroup(object):
             else:
                 self.meta['DEC_GROUP'].format = '9.5f'
                 self.meta['zem_GROUP'].format = '6.3f'
-            self.meta['WV_MIN'].format = '6.1f'
-            self.meta['WV_MAX'].format = '6.1f'
+            try:
+                self.meta['WV_MIN'].format = '6.1f'
+            except KeyError:  # meta table without spectra
+                pass
+            else:
+                self.meta['WV_MAX'].format = '6.1f'
         # Add group
         self.meta.meta['group'] = group
 
@@ -201,6 +205,10 @@ class InterfaceGroup(object):
             rows = np.array([rows])  # Insures meta and other arrays are proper
         if verbose is None:
             verbose = self.verbose
+        # Check spectra even exist!  (can be only meta data)
+        if 'spec' not in list(self.hdf[self.group].keys()):
+            warnings.warn("No spectra in group: {:s}".format(self.group))
+            return None, None
         # Check memory
         if self.stage_data(rows, **kwargs):
             if verbose:
