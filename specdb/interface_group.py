@@ -360,7 +360,6 @@ class InterfaceGroup(object):
         rows = self.groupids_to_rows(meta['GROUP_ID'])
         # Grab spectra
         spec, _ = self.grab_specmeta(rows)
-        # Return
         return spec
 
     def stage_data(self, rows, verbose=None, **kwargs):

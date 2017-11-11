@@ -66,6 +66,14 @@ spectra associated with the meta data Table, aligned to the
 Table.  Of course, one can first slice the meta data Table to
 retrieve only a subset of the spectra.
 
+specdb files with groups that contain *only* meta are now
+appearing.  To retrieve spectra when the meta table is a
+mix of sources with and without spectra, use the `subset=True`
+option::
+
+    # Retrieve spectra
+    sub_spec, sub_meta = sdb.spectra_from_meta(qmeta, subset=True)
+
 Spectra for a single Source
 ---------------------------
 
