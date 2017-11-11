@@ -562,8 +562,8 @@ class QueryCatalog(object):
         # SkyCoord
         self.coords = SkyCoord(ra=self.cat['RA'], dec=self.cat['DEC'], unit='deg')
         # Formatting the Table
-        self.cat['RA'].format = '8.4f'
-        self.cat['DEC'].format = '8.4f'
+        self.cat['RA'].format = '9.5f'
+        self.cat['DEC'].format = '9.5f'
         self.cat['zem'].format = '6.3f'
         self.cat['sig_zem'].format = '7.5f'
 
