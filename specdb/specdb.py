@@ -373,10 +373,11 @@ class SpecDB(object):
             spec = self[group].spec_from_meta(meta[sub_meta])
             if (spec is None) and (not subset):
                 print("One or more rows of your input meta does *not* have spectra")
-                raise ValueError("Use subset=False to return only the subset that do")
+                raise ValueError("Use subset=True to return only the subset that do")
             else:
-                all_spec.append(spec)
-                sv_rows.append(np.where(sub_meta)[0])
+                if spec is not None:
+                    all_spec.append(spec)
+                    sv_rows.append(np.where(sub_meta)[0])
         # Collate
         spec = ltsu.collate(all_spec, masking='edges')
         # Re-order
