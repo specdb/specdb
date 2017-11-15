@@ -78,16 +78,20 @@ class InterfaceGroup(object):
         # Reformat
         if reformat:
             try:
-                self.meta['RA_GROUP'].format = '8.4f'
+                self.meta['RA_GROUP'].format = '9.5f'
             except KeyError:  # Backwards compatible, will deprecate
-                self.meta['RA'].format = '8.4f'
-                self.meta['DEC'].format = '8.4f'
+                self.meta['RA'].format = '9.5f'
+                self.meta['DEC'].format = '9.5f'
                 self.meta['zem'].format = '6.3f'
             else:
-                self.meta['DEC_GROUP'].format = '8.4f'
+                self.meta['DEC_GROUP'].format = '9.5f'
                 self.meta['zem_GROUP'].format = '6.3f'
-            self.meta['WV_MIN'].format = '6.1f'
-            self.meta['WV_MAX'].format = '6.1f'
+            try:
+                self.meta['WV_MIN'].format = '6.1f'
+            except KeyError:  # meta table without spectra
+                pass
+            else:
+                self.meta['WV_MAX'].format = '6.1f'
         # Add group
         self.meta.meta['group'] = group
 
@@ -201,6 +205,10 @@ class InterfaceGroup(object):
             rows = np.array([rows])  # Insures meta and other arrays are proper
         if verbose is None:
             verbose = self.verbose
+        # Check spectra even exist!  (can be only meta data)
+        if 'spec' not in list(self.hdf[self.group].keys()):
+            warnings.warn("No spectra in group: {:s}".format(self.group))
+            return None, None
         # Check memory
         if self.stage_data(rows, **kwargs):
             if verbose:
@@ -352,7 +360,6 @@ class InterfaceGroup(object):
         rows = self.groupids_to_rows(meta['GROUP_ID'])
         # Grab spectra
         spec, _ = self.grab_specmeta(rows)
-        # Return
         return spec
 
     def stage_data(self, rows, verbose=None, **kwargs):
