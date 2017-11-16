@@ -395,7 +395,7 @@ class SpecDB(object):
         Radial search at that location within a small tolerance
         Returns closet source if multiple are found
 
-        Warning: Only returns meta that has spectra
+        Warning: Only returns meta entires that have corresponding spectra
 
 
         Parameters
