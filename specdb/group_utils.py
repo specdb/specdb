@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import numpy as np
 import pdb
+import warnings
 
 def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
     """ Show (nicely) a set of meta data
@@ -34,6 +35,13 @@ def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
         for key in meta.keys():
             if key not in mkeys:
                 mkeys += [key]
-    meta[mkeys].pprint(max_width=120)
+    # Confirm the keys are in meta
+    keep_keys = []
+    for key in mkeys:
+        if key in meta.keys():
+            keep_keys += [key]
+        else:
+            warnings.warn("Key: {:s} not in meta so not showing".format(key))
+    meta[keep_keys].pprint(max_width=120)
     return
 
