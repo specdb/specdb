@@ -110,7 +110,7 @@ class SpecDB(object):
         imt = np.where((mtbl['PLATE'] == plate) & (mtbl['FIBERID'] == fiberid))[0]
         if len(imt) == 0:
             print("Plate and Fiber not found.  Try again")
-            return
+            return None, -1
         else:
             mt = imt[0]
             scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
