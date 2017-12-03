@@ -234,7 +234,8 @@ class SpecDB(object):
                 final_list[jj] = gd_rows
             return matches, final_list, stack
 
-    def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
+    def meta_from_position(self, inp, radius, cat_query=None,
+                           meta_query=None, groups=None, **kwargs):
         """  Retrieve meta data for sources around a position on the sky
 
         Parameters
@@ -243,7 +244,10 @@ class SpecDB(object):
         radius : Angle or Quantity
           If Quantity has dimensions of length (e.g. kpc), then
           it is assumed a proper radius (dependent on Cosmology)
-        query_dict : dict, optional
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           Restrict to input groups
         kwargs
@@ -258,11 +262,13 @@ class SpecDB(object):
         """
 
         # Cut down using source catalog
-        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=query_dict,
+        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         # Add IDs
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query
         query_dict[self.idkey] = IDs.tolist()
 
         # Build up groups (to restrict on those that match)
