@@ -316,6 +316,9 @@ class InterfaceGroup(object):
         ----------
         qdict : dict
           Query_dict
+        kwargs
+          Passed on to query_table
+          e.g. ignore_missing_keys
 
         Returns
         -------
@@ -325,7 +328,7 @@ class InterfaceGroup(object):
         IDs : int ndarray
         """
         # Query
-        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data')
+        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data', **kwargs)
 
         # Return
         return matches, self.meta[matches], self.meta[self.idkey][matches].data

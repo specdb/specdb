@@ -132,7 +132,7 @@ def load_db(db_type, **kwargs):
 
 
 def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
-                tbl_name=''):
+                tbl_name='', **kwargs):
     """ Find all rows in the input table satisfying
     the query given by qdict
     Parameters
@@ -142,7 +142,7 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
       See query_dict documentation for rules
     ignore_missing_keys : bool, optional
       Ignores any keys in the query_dict not found in Table
-      Otherwise, throw an IOError
+      Otherwise, return match = False for all rows
     tbl_name : str, optional
       Name of table.  Mainly for error message
 
@@ -171,13 +171,14 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
             flg_bitwise = 0
         # Check
         if key not in tkeys:
-            msg = "Key {:s} in query_dict is not present in Table {:s}".format(key, tbl_name)
+            if verbose:
+                msg = "Key {:s} in query_dict is not present in Table {:s}".format(key, tbl_name)
+                print(msg)
             if ignore_missing_keys:
-                if verbose:
-                    print(msg)
                 continue
             else:
-                raise IOError(msg)
+                match = np.array([False]*len(tbl))
+                return match
         # Proceed
         if isinstance(value,tuple):
             # Check

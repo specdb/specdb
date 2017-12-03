@@ -122,14 +122,18 @@ class SpecDB(object):
         # Return
         return spec, meta
 
-    def meta_from_coords(self, coords, query_dict=None, groups=None,
+    def meta_from_coords(self, coords, cat_query=None, meta_query=None, groups=None,
                                first=True, **kwargs):
         """ Return meta data for an input set of coordinates
+
         Parameters
         ----------
         coords : SkyCoord
           Expecting an array of coordinates
-        query_dict : dict, optional
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           If provided, the meta data of the groups are searched in the list order
         first : bool, optional
@@ -153,12 +157,14 @@ class SpecDB(object):
         """
         from specdb.cat_utils import match_ids
         # Cut down using source catalog
-        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
+        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         gdIDs = np.where(IDs >= 0)[0]
         # Setup
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query.copy()
         query_dict[self.idkey] = IDs[gdIDs].tolist()
 
         # Generate sub_groups for looping -- One by one is too slow for N > 100
@@ -181,7 +187,7 @@ class SpecDB(object):
         meta_groups = []
         for sub_group in sub_groups:
             # Need to call this query_meta to add in GROUP name
-            meta = self.query_meta(query_dict, groups=[sub_group])
+            meta = self.query_meta(query_dict, groups=[sub_group], **kwargs)
             if meta is not None:
                 meta_list.append(meta)
                 meta_groups.append(sub_group)
@@ -304,9 +310,11 @@ class SpecDB(object):
         Parameters
         ----------
         qdict : dict
-          Query dict
+          Query dict for meta tables
         groups : list, optional
         kwargs
+          Passed to specdb[group].query_meta
+          e.g.  ignore_missing_keys
 
         Returns
         -------
