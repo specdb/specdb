@@ -17,5 +17,7 @@ specdb databases.
 4. Provide Python code to generate new specdb databases,
 including private datasets.
 
+http://specdb.readthedocs.io/en/latest/
+
 [![DOI](https://zenodo.org/badge/68651886.svg)](https://zenodo.org/badge/latestdoi/68651886)
 
