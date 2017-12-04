@@ -267,7 +267,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for sfile in meta['SPEC_FILE']:
             if verbose:
                 print('Parsing {:s}'.format(sfile))
-            head = fits.open(sfile)[0].header
+            try:
+                head = fits.open(sfile)[0].header
+            except FileNotFoundError:  # Try for compressed
+                head = fits.open(sfile+'.gz')[0].header
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
