@@ -310,7 +310,7 @@ class SpecDB(object):
         # Return
         return meta
 
-    def query_meta(self, qdict, groups=None, **kwargs):
+    def query_meta(self, qdict, groups=None, require_spec=False, **kwargs):
         """ Return all meta data matching the query dict
 
         Parameters
@@ -318,6 +318,8 @@ class SpecDB(object):
         qdict : dict
           Query dict for meta tables
         groups : list, optional
+        require_spec : bool, optional
+          Require that the meta Table is tied to spectra
         kwargs
           Passed to specdb[group].query_meta
           e.g.  ignore_missing_keys
@@ -335,6 +337,12 @@ class SpecDB(object):
         # Loop on groups
         all_meta = []
         for group in groups:
+            if require_spec:
+                if 'R' not in self[group].meta.keys():
+                    if self.verbose:
+                        print("No spectra for group: {:s}".format(group))
+                        print("Skipping it on the Meta query")
+                    continue
             matches, sub_meta, IDs = self[group].query_meta(qdict, **kwargs)
             if len(sub_meta) > 0:
                 # Add group
