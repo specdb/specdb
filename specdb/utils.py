@@ -172,7 +172,7 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
         # Check
         if key not in tkeys:
             if verbose:
-                msg = "Key {:s} in query_dict is not present in this specific meta Table: {:s}".format(key, tbl_name)
+                msg = "Warning: Key {:s} in query_dict is not present in this specific meta Table: {:s}".format(key, tbl_name)
                 print(msg)
             if ignore_missing_keys:
                 continue
