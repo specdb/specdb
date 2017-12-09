@@ -76,7 +76,7 @@ def test_meta_from_coords(igmsp):
     _, meta = igmsp.meta_from_coords(coords)
     assert len(meta) == 2
     # With one query retrieving None
-    matchesN, metaN = igmsp.meta_from_coords(coords, query_dict=dict(PLATE=6177))
+    matchesN, metaN = igmsp.meta_from_coords(coords, meta_query=dict(PLATE=6177))
     assert np.sum(matchesN) == 1
     assert metaN['RA_GROUP'][1].mask == True
     # Multiple sources with one bad

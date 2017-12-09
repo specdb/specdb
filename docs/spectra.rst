@@ -123,11 +123,12 @@ returns only the first spectrum and meta row identified
 in the group for each source, ordered the same as the input coordinates.
 
 For cases where one or more spectra may be present, you may
-wish to restrict by providing a :doc:`query_dict`, e.g.::
+wish to restrict by providing a :doc:`query_dict`, which will
+either query on the meta data or the catalog, e.g.::
 
     coords = SkyCoord(ra=[2.8135,16.5802], dec=[14.7672, 0.8065], unit='deg')
     qdict = dict(DISPERSER='R400')
-    spec, meta = sdb.spectra_in_group(coords, 'GGG', query_dict=qdict)
+    spec, meta = sdb.spectra_in_group(coords, 'GGG', meta_query=qdict)
 
 This requires the spectra returned were taken with the R400 grating.
 

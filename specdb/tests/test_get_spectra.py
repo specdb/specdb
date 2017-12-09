@@ -93,12 +93,12 @@ def test_spectra_in_group(igmsp):
     spec, meta = igmsp.spectra_in_group(coords, 'GGG')
     assert meta['DISPERSER'][0] == 'B600'
     qdict = dict(DISPERSER='R400')
-    spec, meta = igmsp.spectra_in_group(coords, 'GGG', query_dict=qdict)
+    spec, meta = igmsp.spectra_in_group(coords, 'GGG', meta_query=qdict)
     assert meta['DISPERSER'][0] == 'R400'
     # Another with bad grating
     qdict = dict(DISPERSER='X400')
     with pytest.raises(IOError):
-        spec, meta = igmsp.spectra_in_group(coords, 'GGG', query_dict=qdict)
+        spec, meta = igmsp.spectra_in_group(coords, 'GGG', meta_query=qdict)
     '''
     # Multiple spectra per group
     coords = SkyCoord(ra=[2.8135, 16.5802], dec=[14.7672, 0.8065], unit='deg')
