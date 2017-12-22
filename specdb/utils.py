@@ -131,7 +131,7 @@ def load_db(db_type, **kwargs):
     return Specdb
 
 
-def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
+def query_table(tbl, qdict, ignore_missing_keys=False, verbose=True,
                 tbl_name='', **kwargs):
     """ Find all rows in the input table satisfying
     the query given by qdict
