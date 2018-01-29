@@ -210,6 +210,7 @@ def query_table(tbl, qdict, ignore_missing_keys=False, verbose=True,
                 # Match
                 match &= np.in1d(tbl[key].data, mlist)
         else:
-            raise IOError("Bad data type for query_dict value: {}".format(type(value)))
+            print("Bad data type for query_dict value: {}".format(type(value)))
+            raise IOError("Needs to be a simple Python type, e.g. float, int, list, str")
     # Return
     return match
