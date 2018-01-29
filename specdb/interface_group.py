@@ -184,7 +184,7 @@ class InterfaceGroup(object):
         match_survey = np.in1d(self.meta[self.idkey], IDs)
         return np.where(match_survey)[0]
 
-    def grab_specmeta(self, rows, verbose=None, **kwargs):
+    def grab_specmeta(self, rows, verbose=None, masking='edges', **kwargs):
         """ Grab the spectra and meta data for an input set of rows
         Aligned to the rows input
 
@@ -228,7 +228,7 @@ class InterfaceGroup(object):
             co = data['co']
         else:
             co = None
-        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking='edges')
+        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking=masking)
         # Return
         return spec, self.meta[rows]
 
@@ -316,6 +316,9 @@ class InterfaceGroup(object):
         ----------
         qdict : dict
           Query_dict
+        kwargs
+          Passed on to query_table
+          e.g. ignore_missing_keys
 
         Returns
         -------
@@ -325,7 +328,7 @@ class InterfaceGroup(object):
         IDs : int ndarray
         """
         # Query
-        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data')
+        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data', **kwargs)
 
         # Return
         return matches, self.meta[matches], self.meta[self.idkey][matches].data
@@ -345,12 +348,13 @@ class InterfaceGroup(object):
         # Show
         show_group_meta()
 
-    def spec_from_meta(self, meta):
+    def spec_from_meta(self, meta, **kwargs):
         """ Return spectra aligned to input meta table
 
         Parameters
         ----------
         meta : Table
+        kwargs : passed to grab_specmeta()
 
         Returns
         -------
@@ -359,7 +363,7 @@ class InterfaceGroup(object):
         """
         rows = self.groupids_to_rows(meta['GROUP_ID'])
         # Grab spectra
-        spec, _ = self.grab_specmeta(rows)
+        spec, _ = self.grab_specmeta(rows, **kwargs)
         return spec
 
     def stage_data(self, rows, verbose=None, **kwargs):

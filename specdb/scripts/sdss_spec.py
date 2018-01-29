@@ -48,6 +48,9 @@ def main(args, unit_test=False, **kwargs):
 
     # Load
     spec, meta = Specdb.get_sdss(args.plate, args.fiberid, groups=surveys)
+    if spec is None:
+        if meta == -1:
+            return
 
     # Outcome
     if len(meta) == 0:

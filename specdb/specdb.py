@@ -110,7 +110,7 @@ class SpecDB(object):
         imt = np.where((mtbl['PLATE'] == plate) & (mtbl['FIBERID'] == fiberid))[0]
         if len(imt) == 0:
             print("Plate and Fiber not found.  Try again")
-            return
+            return None, -1
         else:
             mt = imt[0]
             scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
@@ -122,14 +122,18 @@ class SpecDB(object):
         # Return
         return spec, meta
 
-    def meta_from_coords(self, coords, query_dict=None, groups=None,
+    def meta_from_coords(self, coords, cat_query=None, meta_query=None, groups=None,
                                first=True, **kwargs):
         """ Return meta data for an input set of coordinates
+
         Parameters
         ----------
         coords : SkyCoord
           Expecting an array of coordinates
-        query_dict : dict, optional
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           If provided, the meta data of the groups are searched in the list order
         first : bool, optional
@@ -153,12 +157,14 @@ class SpecDB(object):
         """
         from specdb.cat_utils import match_ids
         # Cut down using source catalog
-        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
+        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         gdIDs = np.where(IDs >= 0)[0]
         # Setup
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query.copy()
         query_dict[self.idkey] = IDs[gdIDs].tolist()
 
         # Generate sub_groups for looping -- One by one is too slow for N > 100
@@ -181,7 +187,7 @@ class SpecDB(object):
         meta_groups = []
         for sub_group in sub_groups:
             # Need to call this query_meta to add in GROUP name
-            meta = self.query_meta(query_dict, groups=[sub_group])
+            meta = self.query_meta(query_dict, groups=[sub_group], **kwargs)
             if meta is not None:
                 meta_list.append(meta)
                 meta_groups.append(sub_group)
@@ -228,7 +234,8 @@ class SpecDB(object):
                 final_list[jj] = gd_rows
             return matches, final_list, stack
 
-    def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
+    def meta_from_position(self, inp, radius, cat_query=None,
+                           meta_query=None, groups=None, **kwargs):
         """  Retrieve meta data for sources around a position on the sky
 
         Parameters
@@ -237,7 +244,10 @@ class SpecDB(object):
         radius : Angle or Quantity
           If Quantity has dimensions of length (e.g. kpc), then
           it is assumed a proper radius (dependent on Cosmology)
-        query_dict : dict, optional
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           Restrict to input groups
         kwargs
@@ -252,11 +262,13 @@ class SpecDB(object):
         """
 
         # Cut down using source catalog
-        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=query_dict,
+        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         # Add IDs
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query
         query_dict[self.idkey] = IDs.tolist()
 
         # Build up groups (to restrict on those that match)
@@ -298,15 +310,19 @@ class SpecDB(object):
         # Return
         return meta
 
-    def query_meta(self, qdict, groups=None, **kwargs):
+    def query_meta(self, qdict, groups=None, require_spec=False, **kwargs):
         """ Return all meta data matching the query dict
 
         Parameters
         ----------
         qdict : dict
-          Query dict
+          Query dict for meta tables
         groups : list, optional
+        require_spec : bool, optional
+          Require that the meta Table is tied to spectra
         kwargs
+          Passed to specdb[group].query_meta
+          e.g.  ignore_missing_keys
 
         Returns
         -------
@@ -321,6 +337,12 @@ class SpecDB(object):
         # Loop on groups
         all_meta = []
         for group in groups:
+            if require_spec:
+                if 'R' not in self[group].meta.keys():
+                    if self.verbose:
+                        print("No spectra for group: {:s}".format(group))
+                        print("Skipping it on the Meta query")
+                    continue
             matches, sub_meta, IDs = self[group].query_meta(qdict, **kwargs)
             if len(sub_meta) > 0:
                 # Add group
