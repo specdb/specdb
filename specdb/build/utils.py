@@ -384,7 +384,10 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
                     continue
                 dcoord = sub_c_new[idup]
                 sep = dcoord.separation(sub_c_new)
-                isep = np.where(sep < mtch_toler)[0]
+                if close_pairs:
+                    isep = np.where(sep < pair_sep)[0]
+                else:
+                    isep = np.where(sep < mtch_toler)[0]
                 # ID
                 newID += 1
                 IDs[new_idx[isep]] = newID
