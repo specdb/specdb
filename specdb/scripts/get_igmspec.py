@@ -15,8 +15,8 @@ except NameError:
 def parser(options=None):
     import argparse
     # Parse
-    parser = argparse.ArgumentParser(description='Grab the IGMspec DB [v2.1]')
-    parser.add_argument("-v", "--version", default='v02.1', help="DB version to grab")
+    parser = argparse.ArgumentParser(description='Grab the IGMspec DB [v3.0]')
+    parser.add_argument("-v", "--version", default='v03', help="DB version to grab")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
@@ -39,7 +39,8 @@ def main(pargs):
     import subprocess
 
     # Version
-    if pargs.version not in ['v02.1']:
+    if pargs.version not in ['v02.1', # BOSS DR12
+                             'v03']:  # BOSS DR14
         raise IOError("Bad version number")
 
     # URL
