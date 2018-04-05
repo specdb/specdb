@@ -214,7 +214,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['DEC_GROUP'] = coords.dec.deg
     meta['STYPE'] = [str(stype)]*len(meta)
 
-    zem, zsource = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl)
+    zem, zsource = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl, **kwargs)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
