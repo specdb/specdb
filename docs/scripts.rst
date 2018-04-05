@@ -133,6 +133,8 @@ Here is the usage::
       --db_file DB_FILE     Full path of db_file
 
 
+.. _sdss-spec:
+
 sdss_spec
 =========
 

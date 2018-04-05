@@ -267,7 +267,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for sfile in meta['SPEC_FILE']:
             if verbose:
                 print('Parsing {:s}'.format(sfile))
-            head = fits.open(sfile)[0].header
+            try:
+                head = fits.open(sfile)[0].header
+            except FileNotFoundError:  # Try for compressed
+                head = fits.open(sfile+'.gz')[0].header
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
@@ -407,7 +410,7 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
-                   debug=False,
+                   debug=False, xspec=None,
                    refs=None, verbose=False, badf=None, set_idkey=None,
                    grab_conti=False, **kwargs):
     """ Ingest the spectra
@@ -429,6 +432,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Grab continua.  They should exist but do not have to
     set_idkey : str, optional
       Only required if you are not performing the full script
+    xspec : XSpectrum1D, optional
+      Take spectra from this object instead of reading from files
     **kwargs : optional
       Passed to readspec()
 
@@ -467,22 +472,28 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
         if verbose:
             print(fname)
         # Read
-        if badf is not None:
-            for ibadf in badf:
-                if ibadf in f:
-                    spec = dumb_spec()
-                else:
-                    try:
-                        spec = lsio.readspec(f, **kwargs)
-                    except ValueError:  # Probably a continuum problem
-                        pdb.set_trace()
+        if xspec is None:
+            if badf is not None:
+                for ibadf in badf:
+                    if ibadf in f:
+                        spec = dumb_spec()
+                    else:
+                        try:
+                            spec = lsio.readspec(f, **kwargs)
+                        except ValueError:  # Probably a continuum problem
+                            pdb.set_trace()
+            else:
+                spec = lsio.readspec(f, **kwargs)
         else:
-            spec = lsio.readspec(f, **kwargs)
+            spec = xspec[jj]
         if debug:
             pdb.set_trace()
-        # npix
-        head = spec.header
-        npix = spec.npix
+        # Meta
+        #head = spec.header
+        if spec.masking == 'none':
+            npix = spec.wavelength.value.size
+        else:
+            npix = spec.npix
         if npix > max_npix:
             raise ValueError("Not enough pixels in the data... ({:d} vs {:d})".format(
                     npix, max_npix))

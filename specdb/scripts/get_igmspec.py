@@ -15,8 +15,8 @@ except NameError:
 def parser(options=None):
     import argparse
     # Parse
-    parser = argparse.ArgumentParser(description='Grab the IGMspec DB')
-    parser.add_argument("-v", "--version", default='v02', help="DB version to generate")
+    parser = argparse.ArgumentParser(description='Grab the IGMspec DB [v2.1]')
+    parser.add_argument("-v", "--version", default='v02.1', help="DB version to grab")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
@@ -39,14 +39,13 @@ def main(pargs):
     import subprocess
 
     # Version
-    if pargs.version not in ['v01', 'v02']:
+    if pargs.version not in ['v02.1']:
         raise IOError("Bad version number")
 
     # URL
-    #url_page = 'http://www.ucolick.org/~xavier/HD-LLS/DR1/'
     url_page = 'http://specdb.ucsc.edu/'
     url = url_page+'IGMspec_DB_{:s}.hdf5'.format(pargs.version)
-    
+
     # wget command
     subprocess.call(['wget', '--continue', '--timestamping', url])
 

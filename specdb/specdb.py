@@ -9,6 +9,7 @@ import h5py
 
 from astropy import units as u
 from astropy.table import Table, vstack
+from astropy.coordinates import SkyCoord
 
 from specdb import utils as spdbu
 from specdb.query_catalog import QueryCatalog
@@ -59,6 +60,8 @@ class SpecDB(object):
         self.name = spdbu.hdf_decode(self.qcat.cat_attr['NAME'])
         print("Database is {:s}".format(self.name))
         print("Created on {:s}".format(spdbu.hdf_decode(self.qcat.cat_attr['CREATION_DATE'])))
+        if self.qcat.version is not None:
+            print("Version: {:s}".format(self.qcat.version))
         # Return
         return
 
@@ -79,14 +82,58 @@ class SpecDB(object):
         self.hdf = h5py.File(db_file,'r')
         self.db_file = db_file
 
-    def meta_from_coords(self, coords, query_dict=None, groups=None,
+    def get_sdss(self, plate, fiberid, groups=['BOSS_DR12', 'SDSS_DR7']):
+        """ Grab data using plate, fiber of SDSS/BOSS
+
+        Parameters
+        ----------
+        plate : int
+        fiberid : int
+        groups : list, optional
+
+        Returns
+        -------
+        spec: XSpectrum1D object
+        meta: Table
+
+        """
+        for kk,group in enumerate(groups):
+            meta = self[group].meta
+            if 'FIBERID' not in meta.keys():
+                meta.rename_column('FIBER','FIBERID')
+            if kk > 0:
+                mtbl = vstack([mtbl, meta], join_type='inner')
+            else:
+                mtbl = meta
+
+        # Find plate/fiber
+        imt = np.where((mtbl['PLATE'] == plate) & (mtbl['FIBERID'] == fiberid))[0]
+        if len(imt) == 0:
+            print("Plate and Fiber not found.  Try again")
+            return None, -1
+        else:
+            mt = imt[0]
+            scoord = SkyCoord(ra=mtbl['RA_GROUP'][mt], dec=mtbl['DEC_GROUP'][mt], unit='deg')
+
+        # Grab
+        print("Grabbing data for J{:s}{:s}".format(scoord.ra.to_string(unit=u.hour,sep='',pad=True),
+                                                   scoord.dec.to_string(sep='',pad=True,alwayssign=True)))
+        spec, meta = self.spectra_from_coord(scoord, groups=groups)
+        # Return
+        return spec, meta
+
+    def meta_from_coords(self, coords, cat_query=None, meta_query=None, groups=None,
                                first=True, **kwargs):
         """ Return meta data for an input set of coordinates
+
         Parameters
         ----------
         coords : SkyCoord
           Expecting an array of coordinates
-        query_dict : dict, optional
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           If provided, the meta data of the groups are searched in the list order
         first : bool, optional
@@ -110,12 +157,14 @@ class SpecDB(object):
         """
         from specdb.cat_utils import match_ids
         # Cut down using source catalog
-        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=query_dict,
+        matches, matched_cat, IDs = self.qcat.query_coords(coords, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         gdIDs = np.where(IDs >= 0)[0]
         # Setup
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query.copy()
         query_dict[self.idkey] = IDs[gdIDs].tolist()
 
         # Generate sub_groups for looping -- One by one is too slow for N > 100
@@ -138,7 +187,7 @@ class SpecDB(object):
         meta_groups = []
         for sub_group in sub_groups:
             # Need to call this query_meta to add in GROUP name
-            meta = self.query_meta(query_dict, groups=[sub_group])
+            meta = self.query_meta(query_dict, groups=[sub_group], **kwargs)
             if meta is not None:
                 meta_list.append(meta)
                 meta_groups.append(sub_group)
@@ -185,14 +234,20 @@ class SpecDB(object):
                 final_list[jj] = gd_rows
             return matches, final_list, stack
 
-    def meta_from_position(self, inp, radius, query_dict=None, groups=None, **kwargs):
+    def meta_from_position(self, inp, radius, cat_query=None,
+                           meta_query=None, groups=None, **kwargs):
         """  Retrieve meta data for sources around a position on the sky
 
         Parameters
         ----------
         inp : coordinate in one of several formats
         radius : Angle or Quantity
-        query_dict : dict, optional
+          If Quantity has dimensions of length (e.g. kpc), then
+          it is assumed a proper radius (dependent on Cosmology)
+        cat_query : dict, optional
+          Query the catalog
+        meta_query : dict, optional
+          Query the meta tables
         groups : list, optional
           Restrict to input groups
         kwargs
@@ -207,11 +262,13 @@ class SpecDB(object):
         """
 
         # Cut down using source catalog
-        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=query_dict,
+        matches, sub_cat, IDs = self.qcat.query_position(inp, radius, query_dict=cat_query,
                                                          groups=groups, **kwargs)
         # Add IDs
-        if query_dict is None:
+        if meta_query is None:
             query_dict = {}
+        else:
+            query_dict = meta_query
         query_dict[self.idkey] = IDs.tolist()
 
         # Build up groups (to restrict on those that match)
@@ -253,15 +310,19 @@ class SpecDB(object):
         # Return
         return meta
 
-    def query_meta(self, qdict, groups=None, **kwargs):
+    def query_meta(self, qdict, groups=None, require_spec=False, **kwargs):
         """ Return all meta data matching the query dict
 
         Parameters
         ----------
         qdict : dict
-          Query dict
+          Query dict for meta tables
         groups : list, optional
+        require_spec : bool, optional
+          Require that the meta Table is tied to spectra
         kwargs
+          Passed to specdb[group].query_meta
+          e.g.  ignore_missing_keys
 
         Returns
         -------
@@ -276,6 +337,12 @@ class SpecDB(object):
         # Loop on groups
         all_meta = []
         for group in groups:
+            if require_spec:
+                if 'R' not in self[group].meta.keys():
+                    if self.verbose:
+                        print("No spectra for group: {:s}".format(group))
+                        print("Skipping it on the Meta query")
+                    continue
             matches, sub_meta, IDs = self[group].query_meta(qdict, **kwargs)
             if len(sub_meta) > 0:
                 # Add group
@@ -291,7 +358,7 @@ class SpecDB(object):
         else:
             return vstack(all_meta)
 
-    def spectra_from_meta(self, meta, debug=False):
+    def spectra_from_meta(self, meta, subset=False, debug=False, **kwargs):
         """ Returns one spectrum per row in the input meta data table
         This meta data table should have been generated by a meta query
 
@@ -300,12 +367,17 @@ class SpecDB(object):
         meta : Table
           Must include a column 'GROUP' indicating the group for each row
           This automatically generated by any of the meta query methods
+        subset : bool, optional
+          Return a subset of the spectra if only a fraction of the meta rows have them
+          Otherwise raise an Error
 
         Returns
         -------
         spec : XSpectrum1D
           An object containing all of the spectra
           These are aligned with the input meta table
+        sub_meta : Table, optional
+          Returned if subset=True
         """
         from linetools.spectra import utils as ltsu
         # Checks
@@ -319,22 +391,34 @@ class SpecDB(object):
         sv_rows = []
         for group in groups:
             sub_meta = meta['GROUP'] == group
-            sv_rows.append(np.where(sub_meta)[0])
             # Grab
-            all_spec.append(self[group].spec_from_meta(meta[sub_meta]))
+            spec = self[group].spec_from_meta(meta[sub_meta])
+            if (spec is None) and (not subset):
+                print("One or more rows of your input meta does *not* have spectra")
+                raise ValueError("Use subset=True to return only the subset that do")
+            else:
+                if spec is not None:
+                    all_spec.append(spec)
+                    sv_rows.append(np.where(sub_meta)[0])
         # Collate
         spec = ltsu.collate(all_spec, masking='edges')
         # Re-order
         idx = np.concatenate(sv_rows)
         srt = np.argsort(idx)
         spec2 = spec[srt]
-        #
-        return spec2
+        # Return
+        if subset:
+            return spec2, meta[idx[srt]]
+        else:
+            return spec2
 
     def spectra_from_coord(self, inp, tol=0.5*u.arcsec, **kwargs):
         """ Return spectra and meta data from an input coordinate
         Radial search at that location within a small tolerance
         Returns closet source if multiple are found
+
+        Warning: Only returns meta entires that have corresponding spectra
+
 
         Parameters
         ----------
@@ -359,7 +443,7 @@ class SpecDB(object):
         if meta is None:
             return None, None
         # Grab spec and return
-        return self.spectra_from_meta(meta), meta
+        return self.spectra_from_meta(meta, subset=True)
 
     def spectra_from_ID(self, ID, **kwargs):
         """ Return all spectra for a given source ID
@@ -489,6 +573,7 @@ class IgmSpec(SpecDB):
             fils = glob.glob(db_dir+'/IGMspec_DB_*hdf5')
         fils.sort()
         db_file = fils[-1]  # Should grab the latest
+        print("Loading igmspec from {:s}".format(db_file))
         # Return
         return db_file
 

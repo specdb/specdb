@@ -10,7 +10,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from ..specdb import IgmSpec
+from specdb.specdb import IgmSpec
 
 #version = 'v01'
 version = 'v02'
@@ -56,6 +56,9 @@ def test_meta_from_position(igmsp):
     meta = igmsp.meta_from_position((2.813500,14.767200), 20*u.deg, groups=['GGG','HD-LLS_DR1'])
     for group in meta['GROUP'].data:
         assert group in ['GGG', 'HD-LLS_DR1']
+    # Physical separation
+    meta6 = igmsp.meta_from_position('001115.23+144601.8', 300*u.kpc)
+    assert len(meta6) == 2
 
 
 def test_meta_from_coords(igmsp):
@@ -73,7 +76,7 @@ def test_meta_from_coords(igmsp):
     _, meta = igmsp.meta_from_coords(coords)
     assert len(meta) == 2
     # With one query retrieving None
-    matchesN, metaN = igmsp.meta_from_coords(coords, query_dict=dict(PLATE=6177))
+    matchesN, metaN = igmsp.meta_from_coords(coords, meta_query=dict(PLATE=6177))
     assert np.sum(matchesN) == 1
     assert metaN['RA_GROUP'][1].mask == True
     # Multiple sources with one bad

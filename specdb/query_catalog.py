@@ -82,6 +82,11 @@ class QueryCatalog(object):
         self.group_dict = json.loads(spdbu.hdf_decode(hdf['catalog'].attrs['GROUP_DICT']))
 
         self.groups = list(self.group_dict.keys())
+        try:
+            self.version = self.cat_attr['VERSION']
+        except KeyError:
+            self.version = None
+
         if self.verbose:
             print("Available groups: {}".format(self.groups))
 
@@ -356,7 +361,7 @@ class QueryCatalog(object):
         return matches, cat[matches], cat[self.idkey][matches].data
 
     def query_position(self, inp, radius, query_dict=None, max_match=None,
-                       verbose=True, groups=None, **kwargs):
+                       verbose=True, groups=None, cosmo=None, **kwargs):
         """ Search for sources in a radius around the input coord
 
         Parameters
@@ -366,6 +371,8 @@ class QueryCatalog(object):
           Single coordinate
         radius : Angle or Quantity
           Tolerance for a match
+          If Quantity has dimensions of length (e.g. kpc), then
+          it is assumed a physical radius (dependent on Cosmology)
         groups : list, optional
           Restrict to matches within one or more groups
           Uses query_dict()
@@ -375,6 +382,8 @@ class QueryCatalog(object):
         max_match : int, optional
           Maximum number of rows to return in sub_cat and IDs
           Ordered by separation distance
+        cosmo : astropy.cosmology, optional
+          Used if radius is a length
         verbose
         kwargs
 
@@ -392,14 +401,27 @@ class QueryCatalog(object):
         """
         # Checks
         if not isinstance(radius, (Angle, Quantity)):
-            raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
+            raise IOError("Input radius must be an Angle or Quantity type, e.g. 10.*u.arcsec or 300*u.kpc")
         # Convert to SkyCoord
         coord = ltu.radec_to_coord(inp)
         # Separation
         sep = coord.separation(self.coords)
 
-        # Match
-        matches = sep < radius
+        # Find matches within tolerance
+        if radius.cgs.unit == u.cm:
+            # Cosmology
+            if not hasattr(self, 'cosmo'):
+                from astropy.cosmology import Planck15
+                self.cosmo = Planck15
+            # Offset
+            kpc_proper = self.cosmo.kpc_proper_per_arcmin(self.cat['zem'])
+            phys_sep = kpc_proper * sep.to('arcmin')
+            good_z = self.cat['zem'] > 1e-3  # Floating point but somewhat arbitrary
+            # Match
+            matches = (phys_sep < radius) & good_z
+        else:
+            # Match
+            matches = sep < radius
 
         # Query dict?
         if (query_dict is not None) or (groups is not None):
@@ -540,10 +562,10 @@ class QueryCatalog(object):
         # SkyCoord
         self.coords = SkyCoord(ra=self.cat['RA'], dec=self.cat['DEC'], unit='deg')
         # Formatting the Table
-        self.cat['RA'].format = '8.4f'
-        self.cat['DEC'].format = '8.4f'
+        self.cat['RA'].format = '9.5f'
+        self.cat['DEC'].format = '9.5f'
         self.cat['zem'].format = '6.3f'
-        self.cat['sig_zem'].format = '5.3f'
+        self.cat['sig_zem'].format = '7.5f'
 
 
     def groups_containing_IDs(self, IDs, igroup=None):

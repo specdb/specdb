@@ -222,6 +222,7 @@ def chk_meta(meta, chk_cat_only=False):
             tval = Time(list(meta['DATE-OBS'].data), format='iso')
         except:
             print("Bad DATE-OBS formatting")
+            pdb.set_trace()
             chk = False
         # Clean
         clean_table_for_hdf(meta)

@@ -13,9 +13,8 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from ..specdb import IgmSpec
+from specdb.specdb import IgmSpec
 
-#version = 'v01'
 version = 'v02'
 
 

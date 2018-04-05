@@ -87,6 +87,11 @@ def hdf_decode(obj, itype=None):
                 dobj.remove_column(key)
                 # Add back
                 dobj[key] = Column(ss)
+    elif isinstance(obj, dict):
+        dobj = obj.copy()
+        for key,item in dobj.items():
+            skey = hdf_decode(key)
+            dobj[skey] = hdf_decode(item)
     else:  # Auto
         if isinstance(obj,bytes):
             dobj = obj.decode('utf-8')
@@ -126,8 +131,8 @@ def load_db(db_type, **kwargs):
     return Specdb
 
 
-def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
-                tbl_name=''):
+def query_table(tbl, qdict, ignore_missing_keys=False, verbose=True,
+                tbl_name='', **kwargs):
     """ Find all rows in the input table satisfying
     the query given by qdict
     Parameters
@@ -137,7 +142,7 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
       See query_dict documentation for rules
     ignore_missing_keys : bool, optional
       Ignores any keys in the query_dict not found in Table
-      Otherwise, throw an IOError
+      Otherwise, return match = False for all rows
     tbl_name : str, optional
       Name of table.  Mainly for error message
 
@@ -166,13 +171,14 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
             flg_bitwise = 0
         # Check
         if key not in tkeys:
-            msg = "Key {:s} in query_dict is not present in Table {:s}".format(key, tbl_name)
+            if verbose:
+                msg = "Warning: Key {:s} in query_dict is not present in this specific meta Table: {:s}".format(key, tbl_name)
+                print(msg)
             if ignore_missing_keys:
-                if verbose:
-                    print(msg)
                 continue
             else:
-                raise IOError(msg)
+                match = np.array([False]*len(tbl))
+                return match
         # Proceed
         if isinstance(value,tuple):
             # Check
@@ -204,6 +210,7 @@ def query_table(tbl, qdict, ignore_missing_keys=True, verbose=True,
                 # Match
                 match &= np.in1d(tbl[key].data, mlist)
         else:
-            raise IOError("Bad data type for query_dict value: {}".format(type(value)))
+            print("Bad data type for query_dict value: {}".format(type(value)))
+            raise IOError("Needs to be a simple Python type, e.g. float, int, list, str")
     # Return
     return match

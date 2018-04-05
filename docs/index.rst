@@ -36,9 +36,11 @@ Accessing Data
    :maxdepth: 2
 
    catalog
+   query_dict
    groups
    meta
    spectra
+   sdss
 
 specdb Databases
 ----------------

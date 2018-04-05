@@ -52,6 +52,17 @@ source type 'QSO'.  Here is another::
 Same cut on redshift and now restricting to sources
 with the bitwise flag_group=8.
 
+Examples for Meta Queries
+-------------------------
+
+In general, one uses meta queries for items related to
+the spectra.  Here is one to query on high resolution::
+
+    qdict = {'R': (20000.,1e9)}
+
+This will limit to echelle resolution.
+
+
 .. _bitwise-flags:
 
 Bitwise Flags

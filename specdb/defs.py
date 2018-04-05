@@ -35,6 +35,8 @@ def instruments():
         # Keck/LRIS spectrometer
         'LRISb': dict(gratings=['400/3400', '600/4000', '1200/3400']),
         'LRISr': dict(gratings=['600/7500', '400/8500', '1200/7500']),
+        # Keck/DEIMOS spectrometer
+        'DEIMOS': dict(gratings=['G600']),
         # Keck/NIRSPEC spectrometer
         'NIRSPEC': dict(gratings=['Low-Res']),
         # Keck/MOSFIRE spectrometer
@@ -57,6 +59,7 @@ def instruments():
         # MMT BCS
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
+        'Hectospec': dict(gratings=['G270']),
         # Kast/Lick
         'Kast': dict(gratings=['Both']),
         # LBT/MODS

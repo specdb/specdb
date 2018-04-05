@@ -78,16 +78,20 @@ class InterfaceGroup(object):
         # Reformat
         if reformat:
             try:
-                self.meta['RA_GROUP'].format = '10.6f'
+                self.meta['RA_GROUP'].format = '9.5f'
             except KeyError:  # Backwards compatible, will deprecate
-                self.meta['RA'].format = '10.6f'
-                self.meta['DEC'].format = '10.6f'
+                self.meta['RA'].format = '9.5f'
+                self.meta['DEC'].format = '9.5f'
                 self.meta['zem'].format = '6.3f'
             else:
-                self.meta['DEC_GROUP'].format = '10.6f'
+                self.meta['DEC_GROUP'].format = '9.5f'
                 self.meta['zem_GROUP'].format = '6.3f'
-            self.meta['WV_MIN'].format = '6.1f'
-            self.meta['WV_MAX'].format = '6.1f'
+            try:
+                self.meta['WV_MIN'].format = '6.1f'
+            except KeyError:  # meta table without spectra
+                pass
+            else:
+                self.meta['WV_MAX'].format = '6.1f'
         # Add group
         self.meta.meta['group'] = group
 
@@ -180,7 +184,7 @@ class InterfaceGroup(object):
         match_survey = np.in1d(self.meta[self.idkey], IDs)
         return np.where(match_survey)[0]
 
-    def grab_specmeta(self, rows, verbose=None, **kwargs):
+    def grab_specmeta(self, rows, verbose=None, masking='edges', **kwargs):
         """ Grab the spectra and meta data for an input set of rows
         Aligned to the rows input
 
@@ -201,6 +205,10 @@ class InterfaceGroup(object):
             rows = np.array([rows])  # Insures meta and other arrays are proper
         if verbose is None:
             verbose = self.verbose
+        # Check spectra even exist!  (can be only meta data)
+        if 'spec' not in list(self.hdf[self.group].keys()):
+            warnings.warn("No spectra in group: {:s}".format(self.group))
+            return None, None
         # Check memory
         if self.stage_data(rows, **kwargs):
             if verbose:
@@ -220,7 +228,7 @@ class InterfaceGroup(object):
             co = data['co']
         else:
             co = None
-        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking='edges')
+        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking=masking)
         # Return
         return spec, self.meta[rows]
 
@@ -308,6 +316,9 @@ class InterfaceGroup(object):
         ----------
         qdict : dict
           Query_dict
+        kwargs
+          Passed on to query_table
+          e.g. ignore_missing_keys
 
         Returns
         -------
@@ -317,7 +328,7 @@ class InterfaceGroup(object):
         IDs : int ndarray
         """
         # Query
-        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data')
+        matches = spdbu.query_table(self.meta, qdict, tbl_name='meta data', **kwargs)
 
         # Return
         return matches, self.meta[matches], self.meta[self.idkey][matches].data
@@ -337,12 +348,13 @@ class InterfaceGroup(object):
         # Show
         show_group_meta()
 
-    def spec_from_meta(self, meta):
+    def spec_from_meta(self, meta, **kwargs):
         """ Return spectra aligned to input meta table
 
         Parameters
         ----------
         meta : Table
+        kwargs : passed to grab_specmeta()
 
         Returns
         -------
@@ -351,8 +363,7 @@ class InterfaceGroup(object):
         """
         rows = self.groupids_to_rows(meta['GROUP_ID'])
         # Grab spectra
-        spec, _ = self.grab_specmeta(rows)
-        # Return
+        spec, _ = self.grab_specmeta(rows, **kwargs)
         return spec
 
     def stage_data(self, rows, verbose=None, **kwargs):
