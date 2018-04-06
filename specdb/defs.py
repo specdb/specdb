@@ -60,6 +60,8 @@ def instruments():
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
         'Hectospec': dict(gratings=['G270']),
+        'ISIS red arm': dict(gratings=['R316R']),
+        'ISIS blue arm': dict(gratings=['R316R']),
         # Kast/Lick
         'Kast': dict(gratings=['Both']),
         # LBT/MODS
@@ -263,13 +265,15 @@ def get_res_dicts():
                   'G270M': 20000.,
                   'G140L': 2000.,
                  }
+    ISIS_Rdict = {'R316R': 1710.,    # Assumes 1" slit
+                  'R300B': 975.}
     #
     Rdicts = dict(ESI=ESI_Rdict, HIRES=HIRES_Rdict, RCS=RCS_Rdict,
                   GMOS=GMOS_Rdict, GNIRS=GNIRS_Rdict, LRISb=LRISb_Rdict,
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
-                  COS=COS_Rdict,
+                  COS=COS_Rdict, ISIS=ISIS_Rdict
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit

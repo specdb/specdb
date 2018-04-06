@@ -513,6 +513,8 @@ def set_resolution(head, instr=None):
                 instr = 'MODS1R'
             elif 'COS' in head['INSTRUME']:
                 instr = 'COS'
+            elif 'ISIS' in head['INSTRUME']:
+                instr = 'ISIS'
             elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
                 instr = 'RCS'
         else:
@@ -531,6 +533,12 @@ def set_resolution(head, instr=None):
             return Rdicts[instr][head['OPT_ELEM'].strip()]
         except KeyError:
             print("Need to add {:s}".format(head['DECKNAME']))
+            pdb.set_trace()
+    elif instr == 'ISIS':
+        try:
+            return Rdicts[instr][head['ISIGRAT'].strip()]
+        except KeyError:
+            print("Need to add {:s}".format(head['ISIGRAT']))
             pdb.set_trace()
     elif instr == 'HIRES':
         try:
