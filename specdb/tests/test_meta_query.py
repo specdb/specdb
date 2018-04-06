@@ -29,7 +29,7 @@ def igmsp():
 
 def test_query_dict(igmsp):
     # GGG
-    qdict = {'TELESCOPE': 'Gemini-North', 'NPIX': (1580,1583), 'GRATING': ['B600', 'R400']}
+    qdict = {'TELESCOPE': 'Gemini-North', 'NPIX': (1580,1583), 'DISPERSER': ['B600', 'R400']}
     qmeta = igmsp.query_meta(qdict)
     assert qmeta['GROUP'][0] == 'GGG'
 
