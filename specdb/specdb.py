@@ -417,7 +417,7 @@ class SpecDB(object):
         Radial search at that location within a small tolerance
         Returns closet source if multiple are found
 
-        Warning: Only returns meta entires that have corresponding spectra
+        Warning: Only returns meta entries that have corresponding spectra
 
 
         Parameters
@@ -448,6 +448,8 @@ class SpecDB(object):
     def spectra_from_ID(self, ID, **kwargs):
         """ Return all spectra for a given source ID
 
+        Warning: Only returns meta entries that have corresponding spectra
+
         Parameters
         ----------
         ID : int
@@ -464,7 +466,7 @@ class SpecDB(object):
         # Grab meta
         meta = self.meta_from_ID(ID, **kwargs)
         # Grab spec and return
-        return self.spectra_from_meta(meta), meta
+        return self.spectra_from_meta(meta, subset=True)
 
     def spectra_in_group(self, coords, group, **kwargs):
         """ Grab the first spectrum found in a given group for an input set of coordinates
