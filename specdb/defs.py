@@ -227,8 +227,8 @@ def get_res_dicts():
     GNIRS_Rdict = {'32/mm_G5506': 1700.,    # Assumes 0.3" slit
                    '32/mmSB_G5533': 1700.,
                   }
-    NIRI_Rdict = {'Hgrism_G5203': 940.,    # Assumes 4 pixels
-                  'Kgrism_G5204': 780.,    # Assumes 4 pixels
+    NIRI_Rdict = {'Hgrism_G5203': {'f6-4pix_G5212': 825., 'f6-6pix_G5213': 520.},
+                  'Kgrism_G5204': {'f6-4pix_G5212': 780., 'f6-6pix_G5213': 520.}
                   }
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
                   'LWRS_LIF1B': 20000.,
@@ -281,7 +281,7 @@ def get_res_dicts():
     return Rdicts
 
 
-def slit_width(slitname, req_long=True):
+def slit_width(slitname, req_long=True, LRIS=False):
     """ Slit width
 
     Parameters
@@ -296,12 +296,11 @@ def slit_width(slitname, req_long=True):
       Translates slit mask name to slit with in arcsec or pixels
 
     """
-    sdict = {'long_1.0': 1.0,
-             'long_1.5': 1.5,
+    sdict = {'long_1.0': 1.0, # LRIS
+             'long_1.5': 1.5, # LRIS
              '1.0x180': 1.0,  # MMT
              'LS5x60x0.6': 0.6,  # MODS
              '0.30 arcsec': 0.3,  # GNIRS
-             'f6-4pix_G5212': 4., # NIRI
              '42x0.570': 0.57, # NIRSPEC
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
              'slit 1.5 arcsec': 1.5, # RCS (kp4m)
@@ -310,7 +309,10 @@ def slit_width(slitname, req_long=True):
     try:
         swidth = sdict[slitname]
     except KeyError:
-        try:
+        if LRIS:
+            if ('long' not in slitname): # Must be a slitmask;  assuming 1." slits
+                return 1.
+        try:  # This is risky...
             swidth = float(slitname)
         except ValueError:
             if ('long' not in slitname) & req_long:

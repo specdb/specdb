@@ -572,13 +572,13 @@ def set_resolution(head, instr=None):
             return res/swidth
     elif instr == 'NIRI':
         try:
-            res = Rdicts[instr][head['FILTER3']]/4.
+            res = Rdicts[instr][head['FILTER3']][head['FPMASK']]
         except KeyError:
-            print("Need to add {:s}".format(head['FILTER3']))
+            print("Need to add {:s} and/or mask {:s}".format(head['FILTER3'],
+                                                             head['FPMASK']))
             pdb.set_trace()
         else:
-            swidth = defs.slit_width(head['FPMASK'])  #PIXELS
-            return res*swidth
+            return res
     elif instr == 'NIRSPEC':  # LOW DISPERSION
         try:
             return 2000.*0.38/defs.slit_width(head['SLITNAME'])
