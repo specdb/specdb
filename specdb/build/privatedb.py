@@ -326,7 +326,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 except KeyError:
                     swidth = 1.
                 else:
-                    swidth = defs.slit_width(sname)
+                    swidth = defs.slit_width(sname, LRIS=True)
                 plist['R'].append(res/swidth)
         # Finish
         for key in plist.keys():
