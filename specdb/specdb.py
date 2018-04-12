@@ -470,6 +470,7 @@ class SpecDB(object):
 
     def spectra_in_group(self, coords, group, **kwargs):
         """ Grab the first spectrum found in a given group for an input set of coordinates
+
         Parameters
         ----------
         coords : SkyCoord
