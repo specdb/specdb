@@ -106,11 +106,36 @@ Here is an example or two::
    specdb_plot J220248.31+123656.3 igmspec
 
 
+specdb_cat
+==========
+
+Query the main catalog by coordinate and return RA, DEC, zem,
+and flag_group.  Here is the usage::
+
+    usage: specdb_cat [-h] [--tol TOL] [--db_file DB_FILE] coord dbase
+
+    specdb_cat script v0.1
+
+    positional arguments:
+      coord              Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322 or
+                         07:45:00.47,34:17:31.1
+      dbase              Database [igmspec,uvqs,qpq,priv]
+
+    optional arguments:
+      -h, --help         show this help message and exit
+      --tol TOL          Maximum offset in arcsec [default=5.]
+      --db_file DB_FILE  Full path of db_file
+
+
 specdb_meta
 ===========
 
 Show some meta data for all the sources within
-tolerance of a given coordinate.
+tolerance of a given coordinate and with meta
+data in one of the data groups.  Sources that
+only appear in the main catalog will return nothing.
+You may wish to use spedb_cat instead.
+
 One must specify
 the database and can restrict on Group.
 Here is the usage::
