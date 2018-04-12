@@ -220,7 +220,7 @@ class SpecDB(object):
             #for row in np.where(~matches)[0]:
             #    final_meta.mask[row] = [True]*len(final_meta.mask[row])
             final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
-            print("Final query yielded {:d} matches.".format(np.sum(matches)))
+            print("Final query yielded {:d} matches with group meta data.".format(np.sum(matches)))
             # Return
             return matches, final_meta
         else:

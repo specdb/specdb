@@ -499,7 +499,7 @@ class QueryCatalog(object):
         IDs[~coord_matches] = -1
         matches = IDs >= 0
         if verbose:
-            print("Your search yielded {:d} matches from {:d} input coordinates".format(np.sum(matches), IDs.size))
+            print("Your search yielded {:d} matches in the catalog from {:d} input coordinates".format(np.sum(matches), IDs.size))
         # Matched catalog
         matched_cat = Table(np.repeat(np.zeros_like(self.cat[0]), len(IDs)))
         matched_cat[np.where(matches)] = self.cat[idx[matches]]
