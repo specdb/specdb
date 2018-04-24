@@ -36,3 +36,8 @@ Here is the usage::
       -h, --help            show this help message and exit
       -v VERSION, --version VERSION
                             DB version to grab [v05]
+
+CAT_META
+========
+
+In addition to the main catalog which provides brief all the sources
