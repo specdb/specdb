@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# See top-level LICENSE file for Copyright information
+#
+# -*- coding: utf-8 -*-
+
+
+"""
+This script runs PYPIT
+"""
+
+import specdb.scripts.search_cat as search_cat
+
+if __name__ == '__main__':
+    args = search_cat.parser()
+    search_cat.main(args)

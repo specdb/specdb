@@ -16,7 +16,7 @@ def parser(options=None):
     import argparse
     # Parse
     parser = argparse.ArgumentParser(description='Grab the QPQ DB [v1.0]')
-    parser.add_argument("-v", "--version", default='v05', help="DB version to grab [v05]")
+    parser.add_argument("-v", "--version", default='v06', help="DB version to grab [v05]")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
@@ -39,7 +39,7 @@ def main(pargs):
     import subprocess
 
     # Version
-    if pargs.version not in ['v05']:
+    if pargs.version not in ['v06']:
         raise IOError("Bad version number")
 
     # URL
