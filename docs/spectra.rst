@@ -93,7 +93,7 @@ One can restrict the call to grab spectra from a subset of the
 groups or by querying the meta data, e.g.::
 
     qdict = dict(DISPERSER='R400')
-    spec, meta = sdb.spectra_from_coord('001115.23+144601.8', query_dict=qdict)
+    spec, meta = sdb.spectra_from_coord('001115.23+144601.8', meta_query=qdict)
 
 In this example, we require the spectra have been taken with the R400
 grating.  Note that queries are performed on both the source catalog
