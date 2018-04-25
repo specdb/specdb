@@ -50,6 +50,7 @@ specdb Databases
 
    igmspec
    uvqs
+   qpq
 
 IVOA
 ----

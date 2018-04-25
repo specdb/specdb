@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Run a build of the DB
+Grab the QPQ DB
 """
 from __future__ import (print_function, absolute_import, division, unicode_literals)
 
@@ -15,8 +15,8 @@ except NameError:
 def parser(options=None):
     import argparse
     # Parse
-    parser = argparse.ArgumentParser(description='Grab the IGMspec DB [v3.0]')
-    parser.add_argument("-v", "--version", default='v03', help="DB version to grab")
+    parser = argparse.ArgumentParser(description='Grab the QPQ DB [v1.0]')
+    parser.add_argument("-v", "--version", default='v06', help="DB version to grab [v05]")
     #parser.add_argument("-llist", default='ISM', action='store_true', help="Name of LineList:  ISM, HI, H2, CO, etc.")
 
     if options is None:
@@ -39,14 +39,13 @@ def main(pargs):
     import subprocess
 
     # Version
-    if pargs.version not in ['v02.1', # BOSS DR12
-                             'v03']:  # BOSS DR14
+    if pargs.version not in ['v06']:
         raise IOError("Bad version number")
 
     # URL
     url_page = 'http://specdb.ucsc.edu/'
-    url = url_page+'IGMspec_DB_{:s}.hdf5'.format(pargs.version)
-
+    url = url_page+'QPQ_DB_{:s}.hdf5'.format(pargs.version)
+    
     # wget command
     subprocess.call(['wget', '--continue', '--timestamping', url])
 

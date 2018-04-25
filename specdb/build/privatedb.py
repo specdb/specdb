@@ -289,7 +289,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                     else:
                         raise ValueError("Set something else for R")
                 elif key == 'DATE-OBS':
-                    tval = Time(head[item].replace('/','-'), format='isot', out_subfmt='date')
+                    if 'MJD' in item:
+                        tval = Time(head[item], format='mjd', out_subfmt='date')
+                    else:
+                        tval = Time(head[item].replace('/','-'), format='isot', out_subfmt='date')
                     plist[key].append(tval.iso)
                 else:
                     plist[key].append(head[item])
@@ -323,7 +326,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 except KeyError:
                     swidth = 1.
                 else:
-                    swidth = defs.slit_width(sname)
+                    swidth = defs.slit_width(sname, LRIS=True)
                 plist['R'].append(res/swidth)
         # Finish
         for key in plist.keys():

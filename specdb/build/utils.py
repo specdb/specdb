@@ -384,7 +384,10 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
                     continue
                 dcoord = sub_c_new[idup]
                 sep = dcoord.separation(sub_c_new)
-                isep = np.where(sep < mtch_toler)[0]
+                if close_pairs:
+                    isep = np.where(sep < pair_sep)[0]
+                else:
+                    isep = np.where(sep < mtch_toler)[0]
                 # ID
                 newID += 1
                 IDs[new_idx[isep]] = newID
@@ -510,6 +513,8 @@ def set_resolution(head, instr=None):
                 instr = 'MODS1R'
             elif 'COS' in head['INSTRUME']:
                 instr = 'COS'
+            elif 'ISIS' in head['INSTRUME']:
+                instr = 'ISIS'
             elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
                 instr = 'RCS'
         else:
@@ -528,6 +533,12 @@ def set_resolution(head, instr=None):
             return Rdicts[instr][head['OPT_ELEM'].strip()]
         except KeyError:
             print("Need to add {:s}".format(head['DECKNAME']))
+            pdb.set_trace()
+    elif instr == 'ISIS':
+        try:
+            return Rdicts[instr][head['ISIGRAT'].strip()]
+        except KeyError:
+            print("Need to add {:s}".format(head['ISIGRAT']))
             pdb.set_trace()
     elif instr == 'HIRES':
         try:
@@ -561,13 +572,13 @@ def set_resolution(head, instr=None):
             return res/swidth
     elif instr == 'NIRI':
         try:
-            res = Rdicts[instr][head['FILTER3']]/4.
+            res = Rdicts[instr][head['FILTER3']][head['FPMASK']]
         except KeyError:
-            print("Need to add {:s}".format(head['FILTER3']))
+            print("Need to add {:s} and/or mask {:s}".format(head['FILTER3'],
+                                                             head['FPMASK']))
             pdb.set_trace()
         else:
-            swidth = defs.slit_width(head['FPMASK'])  #PIXELS
-            return res*swidth
+            return res
     elif instr == 'NIRSPEC':  # LOW DISPERSION
         try:
             return 2000.*0.38/defs.slit_width(head['SLITNAME'])

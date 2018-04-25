@@ -220,7 +220,7 @@ class SpecDB(object):
             #for row in np.where(~matches)[0]:
             #    final_meta.mask[row] = [True]*len(final_meta.mask[row])
             final_meta[self.idkey][np.where(~matches)] = IDs[~matches]
-            print("Final query yielded {:d} matches.".format(np.sum(matches)))
+            print("Final query yielded {:d} matches with group meta data.".format(np.sum(matches)))
             # Return
             return matches, final_meta
         else:
@@ -417,7 +417,7 @@ class SpecDB(object):
         Radial search at that location within a small tolerance
         Returns closet source if multiple are found
 
-        Warning: Only returns meta entires that have corresponding spectra
+        Warning: Only returns meta entries that have corresponding spectra
 
 
         Parameters
@@ -448,6 +448,8 @@ class SpecDB(object):
     def spectra_from_ID(self, ID, **kwargs):
         """ Return all spectra for a given source ID
 
+        Warning: Only returns meta entries that have corresponding spectra
+
         Parameters
         ----------
         ID : int
@@ -464,10 +466,11 @@ class SpecDB(object):
         # Grab meta
         meta = self.meta_from_ID(ID, **kwargs)
         # Grab spec and return
-        return self.spectra_from_meta(meta), meta
+        return self.spectra_from_meta(meta, subset=True)
 
     def spectra_in_group(self, coords, group, **kwargs):
         """ Grab the first spectrum found in a given group for an input set of coordinates
+
         Parameters
         ----------
         coords : SkyCoord
@@ -570,7 +573,7 @@ class IgmSpec(SpecDB):
         if version is not None:
             fils = glob.glob(db_dir+'/IGMspec_DB_*{:s}*hdf5'.format(version))
         else:
-            fils = glob.glob(db_dir+'/IGMspec_DB_*hdf5')
+            fils = glob.glob(db_dir+'/IGMspec_DB_*.hdf5')
         fils.sort()
         db_file = fils[-1]  # Should grab the latest
         print("Loading igmspec from {:s}".format(db_file))
@@ -630,9 +633,7 @@ class UVQS(SpecDB):
         """
         import os, glob
         if os.getenv('SPECDB') is None:
-            warnings.warn('Environmental variable SPECDB not set. Assuming this is a test')
-            import igmspec
-            db_dir = igmspec.__path__[0]+'/tests/files/'
+            raise IOError("You need to set the $SPECDB environmental variable")
         else:
             db_dir = os.getenv('SPECDB')
         #
@@ -647,6 +648,59 @@ class UVQS(SpecDB):
 
     def __repr__(self):
         txt = '<{:s}:  UVQS_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
+                                                                  self.db_file, len(self.cat))
+        # Surveys
+        txt += '   Loaded groups are {} \n'.format(self.groups)
+        txt += '>'
+        return (txt)
+
+class QPQ(SpecDB):
+    """ Main class for using QPQ DB
+    See SpecDB for full docs
+
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+    """
+
+    def __init__(self, db_file=None, skip_test=True, **kwargs):
+        """
+        """
+        # db_file
+        SpecDB.__init__(self, db_file=db_file, skip_test=skip_test, **kwargs)
+
+    def grab_dbfile(self, version=None, **kwargs):
+        """ Grabs the DB file
+        Parameters
+        ----------
+        version : str, optional
+          Restrict search to input version
+
+        Returns
+        -------
+        db_file : str
+          full path to the DB file
+
+        """
+        import os, glob
+        if os.getenv('SPECDB') is None:
+            raise IOError("You need to set the $SPECDB environmental variable")
+        else:
+            db_dir = os.getenv('SPECDB')
+        #
+        if version is not None:
+            fils = glob.glob(db_dir+'/QPQ_DB_*{:s}*hdf5'.format(version))
+        else:
+            fils = glob.glob(db_dir+'/QPQ_DB_*hdf5')
+        fils.sort()
+        db_file = fils[-1]  # Should grab the latest
+        # Return
+        return db_file
+
+    def __repr__(self):
+        txt = '<{:s}:  QPQ_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
                                                                  self.db_file, len(self.cat))
         # Surveys
         txt += '   Loaded groups are {} \n'.format(self.groups)

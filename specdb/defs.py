@@ -60,6 +60,8 @@ def instruments():
         'MMT': dict(gratings=['??']),
         'mmtbluechan': dict(gratings=['500GPM']),
         'Hectospec': dict(gratings=['G270']),
+        'ISIS red arm': dict(gratings=['R316R']),
+        'ISIS blue arm': dict(gratings=['R316R']),
         # Kast/Lick
         'Kast': dict(gratings=['Both']),
         # LBT/MODS
@@ -225,8 +227,8 @@ def get_res_dicts():
     GNIRS_Rdict = {'32/mm_G5506': 1700.,    # Assumes 0.3" slit
                    '32/mmSB_G5533': 1700.,
                   }
-    NIRI_Rdict = {'Hgrism_G5203': 940.,    # Assumes 4 pixels
-                  'Kgrism_G5204': 780.,    # Assumes 4 pixels
+    NIRI_Rdict = {'Hgrism_G5203': {'f6-4pix_G5212': 825., 'f6-6pix_G5213': 520.},
+                  'Kgrism_G5204': {'f6-4pix_G5212': 780., 'f6-6pix_G5213': 520.}
                   }
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
                   'LWRS_LIF1B': 20000.,
@@ -263,13 +265,15 @@ def get_res_dicts():
                   'G270M': 20000.,
                   'G140L': 2000.,
                  }
+    ISIS_Rdict = {'R316R': 1710.,    # Assumes 1" slit
+                  'R300B': 975.}
     #
     Rdicts = dict(ESI=ESI_Rdict, HIRES=HIRES_Rdict, RCS=RCS_Rdict,
                   GMOS=GMOS_Rdict, GNIRS=GNIRS_Rdict, LRISb=LRISb_Rdict,
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
-                  COS=COS_Rdict,
+                  COS=COS_Rdict, ISIS=ISIS_Rdict
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -277,7 +281,7 @@ def get_res_dicts():
     return Rdicts
 
 
-def slit_width(slitname, req_long=True):
+def slit_width(slitname, req_long=True, LRIS=False):
     """ Slit width
 
     Parameters
@@ -292,12 +296,11 @@ def slit_width(slitname, req_long=True):
       Translates slit mask name to slit with in arcsec or pixels
 
     """
-    sdict = {'long_1.0': 1.0,
-             'long_1.5': 1.5,
+    sdict = {'long_1.0': 1.0, # LRIS
+             'long_1.5': 1.5, # LRIS
              '1.0x180': 1.0,  # MMT
              'LS5x60x0.6': 0.6,  # MODS
              '0.30 arcsec': 0.3,  # GNIRS
-             'f6-4pix_G5212': 4., # NIRI
              '42x0.570': 0.57, # NIRSPEC
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
              'slit 1.5 arcsec': 1.5, # RCS (kp4m)
@@ -306,7 +309,10 @@ def slit_width(slitname, req_long=True):
     try:
         swidth = sdict[slitname]
     except KeyError:
-        try:
+        if LRIS:
+            if ('long' not in slitname): # Must be a slitmask;  assuming 1." slits
+                return 1.
+        try:  # This is risky...
             swidth = float(slitname)
         except ValueError:
             if ('long' not in slitname) & req_long:
