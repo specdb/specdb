@@ -63,6 +63,7 @@ def clean_vstack(tables, labels, **kwargs):
     # Stack
     return vstack(tables)
 
+
 def hdf_decode(obj, itype=None):
     """ Decode the incoming hdf5 object
     Usually byte to str
@@ -82,7 +83,8 @@ def hdf_decode(obj, itype=None):
         # FIX STRING COLUMNS
         for key in dobj.keys():
             if 'bytes' in dobj[key].dtype.name:
-                ss = [hdf_decode(ii) for ii in dobj[key]]
+                # Recast
+                ss = dobj[key].data.astype(str)
                 # Remove
                 dobj.remove_column(key)
                 # Add back
