@@ -7,7 +7,7 @@ import numpy as np
 import pdb
 import warnings
 
-def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
+def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None, **kwargs):
     """ Show (nicely) a set of meta data
 
     Parameters
@@ -16,6 +16,7 @@ def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
       List of keys to put at the front when showing
     show_all_keys : bool, optional
       Show all keys in meta table
+    **kwargs : Passed to pprint() of the Table
 
     """
     if meta_keys is None:
@@ -42,6 +43,6 @@ def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):
             keep_keys += [key]
         else:
             warnings.warn("Key: {:s} not in meta so not showing".format(key))
-    meta[keep_keys].pprint(max_width=120)
+    meta[keep_keys].pprint(max_width=120, **kwargs)
     return
 

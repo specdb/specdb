@@ -222,6 +222,7 @@ def get_res_dicts():
     # Gemini
     GMOS_Rdict = {'B600+_G5307': 844.,    # Assumes 1" slit
                   'B600+_G5323': 844.,
+                  'R400+_G5305': 959.,
                   'B1200+_G5301': 1872.,
                   }
     GNIRS_Rdict = {'32/mm_G5506': 1700.,    # Assumes 0.3" slit
