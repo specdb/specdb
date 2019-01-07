@@ -14,7 +14,7 @@ def parser(options=None):
     parser.add_argument("plate", type=int, help="Plate")
     parser.add_argument("fiberid", type=int, help="FiberID")
     parser.add_argument("--dbase", default='igmspec', type=str, help="Database [igmspec,all]")
-    parser.add_argument("--survey", help="Name of Survey to use (BOSS_DR12 or SDSS_DR7)")
+    parser.add_argument("--survey", help="Name of Survey to use (BOSS_DR14, BOSS_DR12 or SDSS_DR7)")
     parser.add_argument("--select", default=0, type=int, help="Index of spectrum to plot (when multiple exist)")
     parser.add_argument("-p", "--plot", default=False, action="store_true", help="Plot with lt_xspec")
 
@@ -29,12 +29,9 @@ def main(args, unit_test=False, **kwargs):
     """ Run
     """
     import numpy as np
-    from astropy.table import vstack
-    from astropy.coordinates import SkyCoord
-    from astropy import units as u
+    import pdb
 
     from specdb.utils import load_db
-    from specdb import group_utils
 
     # init
     if args.dbase not in ['igmspec']:
@@ -42,7 +39,10 @@ def main(args, unit_test=False, **kwargs):
     Specdb = load_db(args.dbase, **kwargs)
 
     if args.survey is None:
-        surveys = ['BOSS_DR12', 'SDSS_DR7']
+        surveys = ['SDSS_DR7']
+        for group in Specdb.groups:
+            if 'BOSS_DR' in group:
+                surveys += [group]
     else:
         surveys = [args.survey]
 
