@@ -7,3 +7,9 @@
   'v02.1':
     'oldest_ok_date': '2017-09-18'
     'newest_date': '2017-09-18'
+  'v03':
+    'oldest_ok_date': '2018-03-23'
+    'newest_date': '2019-01-01'
+  'v03.1':
+    'oldest_ok_date': '2019-01-29'
+    'newest_date': '2019-02-08'
