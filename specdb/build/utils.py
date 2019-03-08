@@ -11,6 +11,7 @@ import pdb
 from astropy.table import Table, Column, vstack
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 from astropy import units as u
+from astropy.time import Time
 
 from linetools import utils as ltu
 
@@ -190,8 +191,6 @@ def chk_meta(meta, chk_cat_only=False):
     chk : bool
 
     """
-    from astropy.time import Time
-    from astropy.table import Column
     # Init
     inst_dict = defs.instruments()
 
