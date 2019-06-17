@@ -25,6 +25,8 @@ def instruments():
     """
     inst_dict = {
         # Spectrograph for SDSS-III (BOSS) survey ; https://www.sdss3.org/instruments/boss_spectrograph.php
+        'ALFALFA': dict(gratings=['NULL']),
+        # Spectrograph for SDSS-III (BOSS) survey ; https://www.sdss3.org/instruments/boss_spectrograph.php
         'BOSS': dict(gratings=['BLUE', 'RED', 'BOTH']),
         # Spectrograph for SDSS-I/II survey; http://classic.sdss.org/dr7/instruments/spectrographs/index.html
         'SDSS': dict(gratings=['BLUE', 'RED', 'BOTH']),
