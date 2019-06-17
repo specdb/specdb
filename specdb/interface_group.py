@@ -184,7 +184,7 @@ class InterfaceGroup(object):
         match_survey = np.in1d(self.meta[self.idkey], IDs)
         return np.where(match_survey)[0]
 
-    def grab_specmeta(self, rows, verbose=None, masking='edges', **kwargs):
+    def grab_specmeta(self, rows, verbose=None, masking='edges', use_XSpec=True, **kwargs):
         """ Grab the spectra and meta data for an input set of rows
         Aligned to the rows input
 
@@ -196,12 +196,12 @@ class InterfaceGroup(object):
 
         Returns
         -------
-        spec : XSpectrum1D
+        spec : XSpectrum1D or ndarray
           Spectra requested, ordered by the input rows
         meta : Table  -- THIS MAY BE DEPRECATED
           Meta table, ordered by the input rows
         """
-        if isinstance(rows, int):
+        if isinstance(rows, (int, np.int64)):
             rows = np.array([rows])  # Insures meta and other arrays are proper
         if verbose is None:
             verbose = self.verbose
@@ -228,7 +228,10 @@ class InterfaceGroup(object):
             co = data['co']
         else:
             co = None
-        spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking=masking)
+        if use_XSpec:
+            spec = XSpectrum1D(data['wave'], data['flux'], sig=data['sig'], co=co, masking=masking)
+        else:
+            spec = data
         # Return
         return spec, self.meta[rows]
 

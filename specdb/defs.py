@@ -28,6 +28,8 @@ def instruments():
         'BOSS': dict(gratings=['BLUE', 'RED', 'BOTH']),
         # Spectrograph for SDSS-I/II survey; http://classic.sdss.org/dr7/instruments/spectrographs/index.html
         'SDSS': dict(gratings=['BLUE', 'RED', 'BOTH']),
+        # Spectrograph for SDSS-I/II survey; http://classic.sdss.org/dr7/instruments/spectrographs/index.html
+        'DESI': dict(gratings=['b', 'r', 'z', 'ALL']),
         # Keck/HIRES spectrometer -- BLUE/RED refer to the cross-disperser
         'HIRES': dict(gratings=['UV', 'BLUE', 'RED', 'BOTH']),
         # Keck/ESI spectrometer -- ECH
