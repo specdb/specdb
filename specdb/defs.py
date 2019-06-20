@@ -95,6 +95,7 @@ def instruments():
         'ISAAC': dict(gratings=['SW_MRes']),
         'UVES': dict(gratings=['BOTH']),
         'FORS2': dict(gratings=['GRIS_300I']),
+        'MUSE': dict(gratings=['VPHG']),
         # Palomar
         'TSpec': dict(gratings=['ECH']),
     }
