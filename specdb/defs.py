@@ -94,6 +94,7 @@ def instruments():
         'XSHOOTER': dict(gratings=['UVB,VIS,NIR,ALL']),
         'ISAAC': dict(gratings=['SW_MRes']),
         'UVES': dict(gratings=['BOTH']),
+        'FORS2': dict(gratings=['GRIS_300I']),
         # Palomar
         'TSpec': dict(gratings=['ECH']),
     }
@@ -234,6 +235,10 @@ def get_res_dicts():
     NIRI_Rdict = {'Hgrism_G5203': {'f6-4pix_G5212': 825., 'f6-6pix_G5213': 520.},
                   'Kgrism_G5204': {'f6-4pix_G5212': 780., 'f6-6pix_G5213': 520.}
                   }
+    # FORS2
+    FORS2_Rdict = {'GRIS_300I': 600.}  # 1" slit
+
+    # FUSE
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
                   'LWRS_LIF1B': 20000.,
                   'LWRS_LIF1A': 20000.,
@@ -277,7 +282,7 @@ def get_res_dicts():
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
-                  COS=COS_Rdict, ISIS=ISIS_Rdict
+                  COS=COS_Rdict, ISIS=ISIS_Rdict, FORS2=FORS2_Rdict
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -308,6 +313,7 @@ def slit_width(slitname, req_long=True, LRIS=False):
              '42x0.570': 0.57, # NIRSPEC
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
              'slit 1.5 arcsec': 1.5, # RCS (kp4m)
+             'lSlit1_0arcsec': 1.0, # VLT/FORS2
              }
     #
     try:

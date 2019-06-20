@@ -514,6 +514,8 @@ def set_resolution(head, instr=None):
                 instr = 'COS'
             elif 'ISIS' in head['INSTRUME']:
                 instr = 'ISIS'
+            elif 'FORS2' in head['INSTRUME']:
+                instr = 'FORS2'
             elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
                 instr = 'RCS'
         else:
@@ -590,6 +592,10 @@ def set_resolution(head, instr=None):
         except KeyError:
             print("Need to add {:s}".format(head['SLITNAME']))
             pdb.set_trace()
+    elif 'FORS2' in instr:
+        res_1 = Rdicts[instr][head['DISPNAME']]
+        swidth = defs.slit_width(head['DECKER'])
+        return res_1 / swidth
     elif 'RCS' in instr: # KPNO (retired)
         res_1 = Rdicts[instr][head['DISPERSE']]
         swidth = defs.slit_width(head['APERTURE'])
