@@ -26,8 +26,7 @@ class SpecDB(object):
 
     Parameters
     ----------
-    skip_test : bool, optional
-      Skip tests?  Highly *not* recommended
+    db_file : str, optional
 
     Attributes
     ----------
@@ -35,7 +34,7 @@ class SpecDB(object):
     idb : InterfaceDB
     """
 
-    def __init__(self, skip_test=True, db_file=None, verbose=False, **kwargs):
+    def __init__(self, db_file=None, verbose=False, **kwargs):
         """
         """
         if db_file is None:

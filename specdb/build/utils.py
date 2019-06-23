@@ -589,10 +589,15 @@ def set_resolution(head, instr=None):
             print("Need to add {:s}".format(head['SLITNAME']))
             pdb.set_trace()
     elif instr == 'MagE':
+        # Hack for PyepIt
+        if 'SLITNAME' in head.keys():
+            key = 'SLITNAME'
+        else:
+            key = 'DECKER'
         try:
-            return 4100./defs.slit_width(head['SLITNAME'])
+            return 4100./defs.slit_width(head[key])
         except KeyError:
-            print("Need to add {:s}".format(head['SLITNAME']))
+            print("Need to add {:s}".format(head[key]))
             pdb.set_trace()
     elif 'KCWI' in instr:
         res_1 = Rdicts[instr][head['DISPNAME']]

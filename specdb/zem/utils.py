@@ -28,6 +28,7 @@ def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
       Redshifts
     zsource : array
       str array of sources
+    ZQ : array, optional
     """
     # Generate coordinates
     icoord = SkyCoord(ra=ra, dec=dec, unit='deg')
@@ -47,6 +48,11 @@ def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
     zsource = np.array([str('NONENONE')]*len(ra))
     zsource[good] = catalog['ZEM_SOURCE'][idx[good]]
 
-    # Return
-    return zem, zsource
+    # ZQ?
+    if 'ZQ' in catalog.keys():
+        ZQ = np.zeros_like(zem, dtype=int)
+        ZQ[good] = catalog['ZQ'][idx[good]]
+        return zem, zsource, ZQ
+    else:
+        return zem, zsource, None
 
