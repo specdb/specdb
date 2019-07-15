@@ -11,7 +11,7 @@ def parser(options=None):
 
     parser = argparse.ArgumentParser(description='specdb_plot script v0.3')
     parser.add_argument("coord", type=str, help="Coordinates, e.g. J081240.7+320809 or 122.223,-23.2322 or 07:45:00.47,34:17:31.1")
-    parser.add_argument("dbase", type=str, help="Database [igmspec,uvqs,all,priv]")
+    parser.add_argument("dbase", type=str, help="Database [igmspec,uvqs,qpq,casbah,all,priv]")
     parser.add_argument("--tol", default=5., type=float, help="Maximum offset in arcsec [default=5.]")
     #parser.add_argument("--meta", default=True, help="Show meta data? [default: True]", action="store_true")
     parser.add_argument("-g", "--group", help="Restrict on Group (e.g. BOSS_DR12)")

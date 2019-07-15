@@ -126,6 +126,9 @@ def load_db(db_type, **kwargs):
     elif db_type == 'qpq':
         from specdb.specdb import QPQ
         Specdb = QPQ(**kwargs)
+    elif db_type == 'casbah':
+        from specdb.specdb import CASBaH
+        Specdb = CASBaH(**kwargs)
     elif db_type == 'priv':  # Private
         from specdb.specdb import SpecDB
         Specdb = SpecDB(**kwargs)

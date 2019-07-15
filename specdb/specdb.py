@@ -706,3 +706,58 @@ class QPQ(SpecDB):
         txt += '   Loaded groups are {} \n'.format(self.groups)
         txt += '>'
         return (txt)
+
+
+class CASBaH(SpecDB):
+    """ Main class for using the CASBaH DB
+    See SpecDB for full docs
+
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+    """
+
+    def __init__(self, db_file=None, skip_test=True, **kwargs):
+        """
+        """
+        # db_file
+        SpecDB.__init__(self, db_file=db_file, skip_test=skip_test, **kwargs)
+
+    def grab_dbfile(self, version=None, **kwargs):
+        """ Grabs the DB file
+        Parameters
+        ----------
+        version : str, optional
+          Restrict search to input version, e.g. DR1
+
+        Returns
+        -------
+        db_file : str
+          full path to the DB file
+
+        """
+        import os, glob
+        if os.getenv('SPECDB') is None:
+            raise IOError("You need to set the $SPECDB environmental variable")
+        else:
+            db_dir = os.getenv('SPECDB')
+        #
+        if version is not None:
+            fils = glob.glob(db_dir+'/CASBaH_specDB_{:s}*hdf5'.format(version))
+        else:
+            fils = glob.glob(db_dir+'/CASBaH_specDB_*.hdf5')
+        fils.sort()
+        db_file = fils[-1]  # Should grab the latest
+        print("Using file: {:s}".format(db_file))
+        # Return
+        return db_file
+
+    def __repr__(self):
+        txt = '<{:s}:  CASBaH_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
+                                                                 self.db_file, len(self.cat))
+        # Surveys
+        txt += '   Loaded groups are {} \n'.format(self.groups)
+        txt += '>'
+        return (txt)
