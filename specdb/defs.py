@@ -224,7 +224,8 @@ def get_res_dicts():
     MMT_Rdict = {'500GPM': 1430, '800GPM': 1730.}          # Assumes 1" slit
     MODS_Rdict = {'G400L': 1850, 'G670L': 2300.}          # Assumes 0.6" slit
     # Gemini
-    GMOS_Rdict = {'B600+_G5307': 844.,    # Assumes 1" slit
+    GMOS_Rdict = {'R400+_G5305': 1918/2., # 1" slit
+                  'B600+_G5307': 844.,    # Assumes 1" slit
                   'B600+_G5323': 844.,
                   'B1200+_G5301': 1872.,
                   }
