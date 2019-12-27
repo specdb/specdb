@@ -214,7 +214,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['DEC_GROUP'] = coords.dec.deg
     meta['STYPE'] = [str(stype)]*len(meta)
 
-    zem, zsource = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl, **kwargs)
+    zem, zsource, ZQ = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl, **kwargs)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
@@ -229,6 +229,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['zem_GROUP'] = zem
     meta['sig_zem'] = 0.  # Need to add
     meta['flag_zem'] = zsource
+    if ZQ is not None:
+        meta['ZQ'] = ZQ
     # Cut
     meta = meta[~badz]
 
@@ -413,7 +415,7 @@ def dumb_spec():
 
 
 def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
-                   debug=False, xspec=None,
+                   debug=False, xspec=None, scale=1.,
                    refs=None, verbose=False, badf=None, set_idkey=None,
                    grab_conti=False, **kwargs):
     """ Ingest the spectra
@@ -437,6 +439,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Only required if you are not performing the full script
     xspec : XSpectrum1D, optional
       Take spectra from this object instead of reading from files
+    scale : float, optional
+      Scale the spectra by this factor.  Useful for fluxing
     **kwargs : optional
       Passed to readspec()
 
@@ -503,8 +507,8 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
         # Some fiddling about
         for key in dkeys:
             data[key] = 0.  # Important to init (for compression too)
-        data['flux'][0][:npix] = spec.flux.value
-        data['sig'][0][:npix] = spec.sig.value
+        data['flux'][0][:npix] = spec.flux.value * scale
+        data['sig'][0][:npix] = spec.sig.value * scale
         data['wave'][0][:npix] = spec.wavelength.value
         if grab_conti:
             if spec.co_is_set:

@@ -36,6 +36,8 @@ def instruments():
         'HIRES': dict(gratings=['UV', 'BLUE', 'RED', 'BOTH']),
         # Keck/ESI spectrometer -- ECH
         'ESI': dict(gratings=['ECH']),
+        # Keck/KCWI IFU
+        'KCWI': dict(gratings=['BL', 'BM', 'BH']),
         # Keck/LRIS spectrometer
         'LRISb': dict(gratings=['400/3400', '600/4000', '1200/3400']),
         'LRISr': dict(gratings=['600/7500', '400/8500', '1200/7500']),
@@ -94,6 +96,8 @@ def instruments():
         'XSHOOTER': dict(gratings=['UVB,VIS,NIR,ALL']),
         'ISAAC': dict(gratings=['SW_MRes']),
         'UVES': dict(gratings=['BOTH']),
+        'FORS2': dict(gratings=['GRIS_300I']),
+        'MUSE': dict(gratings=['VPHG']),
         # Palomar
         'TSpec': dict(gratings=['ECH']),
     }
@@ -216,6 +220,8 @@ def get_res_dicts():
                    }
     MOSFIRE_Rdict = {'H': 3660,  # Assumes 0.7" slit
                      }
+    KCWI_Rdict = {'BL': 900,  # Assumes Large IFU slicer
+                     }
     # Calar Alto
     TWIN_Rdict = {'KPC-10A': 408., 'KPC 10A': 408.} # 1" slit
     # kp4m  https://www.noao.edu/kpno/manuals/l2mspect/node8.html
@@ -235,6 +241,10 @@ def get_res_dicts():
     NIRI_Rdict = {'Hgrism_G5203': {'f6-4pix_G5212': 825., 'f6-6pix_G5213': 520.},
                   'Kgrism_G5204': {'f6-4pix_G5212': 780., 'f6-6pix_G5213': 520.}
                   }
+    # FORS2
+    FORS2_Rdict = {'GRIS_300I': 600.}  # 1" slit
+
+    # FUSE
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
                   'LWRS_LIF1B': 20000.,
                   'LWRS_LIF1A': 20000.,
@@ -278,7 +288,8 @@ def get_res_dicts():
                   LRISr=LRISr_Rdict, mmt=MMT_Rdict, MODS1B=MODS_Rdict,
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
-                  COS=COS_Rdict, ISIS=ISIS_Rdict
+                  COS=COS_Rdict, ISIS=ISIS_Rdict, FORS2=FORS2_Rdict,
+                  KCWI=KCWI_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -309,6 +320,10 @@ def slit_width(slitname, req_long=True, LRIS=False):
              '42x0.570': 0.57, # NIRSPEC
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
              'slit 1.5 arcsec': 1.5, # RCS (kp4m)
+             'lSlit1_0arcsec': 1.0, # VLT/FORS2
+             'Small': 0.25, # KCWI
+             'Medium': 0.5, # KCWI
+             'Large': 1.0, # KCWI
              }
     #
     try:
