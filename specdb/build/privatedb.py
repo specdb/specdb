@@ -284,8 +284,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                                 try:
                                     plist[key].append(mdict['R'])
                                 except KeyError:
+                                    print("Key error!")
                                     pdb.set_trace()
                             else:
+                                print('Bad inputs to set_resolution()')
                                 pdb.set_trace()
                                 plist[key].append(0.)
                     else:
