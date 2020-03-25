@@ -553,8 +553,11 @@ def set_resolution(head, instr=None):
         try:
             return Rdicts[instr][head['GRATING']]
         except KeyError:
-            print("Need to add {:s}".format(head['GRATING']))
-            pdb.set_trace()
+            try:
+                return Rdicts[instr][head['DISPNAME']]
+            except KeyError:
+                print("Need to add {:s}".format(head['GRATING']))
+                pdb.set_trace()
     elif instr == 'MOSFIRE':
         try:
             res = Rdicts[instr][head['FILTER']]*0.7

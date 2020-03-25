@@ -231,7 +231,7 @@ def get_res_dicts():
     MODS_Rdict = {'G400L': 1850, 'G670L': 2300.}          # Assumes 0.6" slit
     # Gemini
     GMOS_Rdict = {'R400+_G5305': 1918/2., # 1" slit
-                  'B600+_G5307': 844.,    # Assumes 1" slit
+                  'R400+_G5325': 1918/2.,  # 1" slit
                   'B600+_G5323': 844.,
                   'B1200+_G5301': 1872.,
                   }
@@ -321,6 +321,7 @@ def slit_width(slitname, req_long=True, LRIS=False):
              'LONGSLIT-46x0.7': 0.7, # MOSFIRE
              'slit 1.5 arcsec': 1.5, # RCS (kp4m)
              'lSlit1_0arcsec': 1.0, # VLT/FORS2
+             '1.0arcsec': 1.0, # GMOS
              'Small': 0.25, # KCWI
              'Medium': 0.5, # KCWI
              'Large': 1.0, # KCWI
