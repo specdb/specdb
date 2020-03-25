@@ -306,7 +306,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             except KeyError:
                 instr = 'none'
             if 'LRIS' in instr:
-                if 'DISPERSER' not in plist.keys():
+                if 'DISPERSER' not in plist.keys() or 'R' not in plist.keys():
                     plist['DISPERSER'] = []
                     plist['INSTR'] = []
                     plist['R'] = []
