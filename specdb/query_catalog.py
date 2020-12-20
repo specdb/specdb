@@ -1,8 +1,6 @@
 """ Module to interface with hdf5 database for IGMspec
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-import h5py
 import numpy as np
 import pdb
 import warnings
@@ -18,10 +16,7 @@ from linetools import utils as ltu
 from specdb.cat_utils import match_ids
 from specdb import utils as spdbu
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
+from IPython import embed
 
 
 class QueryCatalog(object):
@@ -38,7 +33,7 @@ class QueryCatalog(object):
       List of groups included in the catalog
     """
 
-    def __init__(self, hdf, maximum_ram=10., verbose=False, **kwargs):
+    def __init__(self, hdf, verbose=False, **kwargs):
         """
         Returns
         -------
@@ -66,7 +61,7 @@ class QueryCatalog(object):
         """
         import json
         # Catalog and attributes
-        self.cat = Table(hdf['catalog'].value)
+        self.cat = Table.read(hdf.filename, path='catalog')
         self.cat_attr = {}
         for key in hdf['catalog'].attrs.keys():
             self.cat_attr[key] = spdbu.hdf_decode(hdf['catalog'].attrs[key])

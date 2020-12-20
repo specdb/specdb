@@ -2,14 +2,8 @@
 """
 Check a DB file from specdb
 """
-from __future__ import (print_function, absolute_import, division, unicode_literals)
-
 import pdb
-
-try:  # Python 3
-    ustr = unicode
-except NameError:
-    ustr = str
+from IPython import embed
 
 def parser(options=None):
     import argparse
@@ -86,7 +80,7 @@ def main(pargs):
 
     # Sources and spectra
     print("-------------------------------------------------")
-    print("There are {:d} unique sources in the source catalog".format(len(hdf['catalog'].value)))
+    print("There are {:d} unique sources in the source catalog".format(len(hdf['catalog'])))
 
     # List datasets
     nspec = 0
