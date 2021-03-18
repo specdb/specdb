@@ -220,6 +220,7 @@ def get_res_dicts():
                    '400/8500': 1232.,
                    '1200/7500': 2*1595.,
                    }
+    # DEIMOS is *not* yet incorporated            
     DEIMOS_Rdict = {'600ZD': 1607.,     # Assumes 1" slit
                    }
     MOSFIRE_Rdict = {'H': 3660,  # Assumes 0.7" slit
