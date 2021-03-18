@@ -1,14 +1,11 @@
 """ Module to build a private DB
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import numpy as np
 import os, glob
 import json
 import h5py
 import warnings
 import pdb
-import datetime
 
 from astropy.table import Table, Column
 from astropy.io import fits
@@ -25,11 +22,7 @@ from specdb import defs
 from specdb.build.utils import add_ids, write_hdf, set_sv_idkey
 from specdb.ssa import default_fields
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
-
+from IPython import embed
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
@@ -294,9 +287,11 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                         raise ValueError("Set something else for R")
                 elif key == 'DATE-OBS':
                     if 'MJD' in item:
-                        tval = Time(head[item], format='mjd', out_subfmt='date')
+                        tval = Time(head[item], format='mjd')
+                        tval.format = 'iso'
                     else:
-                        tval = Time(head[item].replace('/','-'), format='isot', out_subfmt='date')
+                        tval = Time(head[item].replace('/','-'), format='iso')
+                    tval.out_submfit = 'date'
                     plist[key].append(tval.iso)
                 else:
                     plist[key].append(head[item])
@@ -569,7 +564,7 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
     from specdb import defs
 
     # ztbl
-    if isinstance(iztbl, basestring):
+    if isinstance(iztbl, str):
         if iztbl == 'igmspec':
             from specdb.specdb import IgmSpec
             igmsp = IgmSpec()

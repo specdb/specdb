@@ -101,6 +101,8 @@ def instruments():
         # Palomar
         'TSpec': dict(gratings=['ECH']),
     }
+    # Add some odd ones
+    inst_dict['DEIMOS: real science mosaic CCD subsystem with PowerPC in VME crate'] = inst_dict['DEIMOS'].copy()
     return inst_dict
 
 def list_of_stypes():
