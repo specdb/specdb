@@ -259,7 +259,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for key in parse_head.keys():
             plist[key] = []
         # Loop on files
-        for sfile in meta['SPEC_FILE']:
+        for count, sfile in enumerate(meta['SPEC_FILE']):
             if verbose:
                 print('Parsing {:s}'.format(sfile))
             try:
@@ -295,29 +295,44 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                     plist[key].append(tval.iso)
                 else:
                     plist[key].append(head[item])
+
             # INSTRUMENT SPECIFIC
             try:
                 instr = head['INSTRUME']
             except KeyError:
                 instr = 'none'
+            # LRIS
             if 'LRIS' in instr:
-                if 'DISPERSER' not in plist.keys() or 'R' not in plist.keys():
-                    plist['DISPERSER'] = []
-                    plist['INSTR'] = []
-                    plist['R'] = []
+                # Init
+                for skey in ['DISPERSER', 'INSTR', 'R']:
+                    if skey not in plist.keys():
+                        plist[skey] = []
+                # Figure out detector
                 try:
                     det = head['DETECTOR']
                 except KeyError:
-                    if head['OUTFILE'] == 'lred':
-                        det = 'LRIS-R'
-                    else:
+                    if 'BLUE' in instr:
                         det = 'LRIS-B'
+                    else:
+                        if head['OUTFILE'] == 'lred':
+                            det = 'LRIS-R'
+                        else:
+                            det = 'LRIS-B'
+                # Add
                 if 'LRIS-R' in det:
-                    plist['DISPERSER'].append(head['GRANAME'])
-                    plist['INSTR'].append('LRISr')
+                    if len(plist['DISPERSER']) == count:
+                        plist['DISPERSER'].append(head['GRANAME'])
+                    if len(plist['INSTR']) == count:
+                        plist['INSTR'].append('LRISr')
+                    else:
+                        plist['INSTR'][-1] = 'LRISr'
                 else:
-                    plist['DISPERSER'].append(head['GRISNAME'])
-                    plist['INSTR'].append('LRISb')
+                    if len(plist['DISPERSER']) == count:
+                        plist['DISPERSER'].append(head['GRISNAME'])
+                    if len(plist['INSTR']) == count:
+                        plist['INSTR'].append('LRISb')
+                    else:
+                        plist['INSTR'][-1] = 'LRISb'
                 # Resolution
                 res = Rdicts[plist['INSTR'][-1]][plist['DISPERSER'][-1]]
                 try:
@@ -329,7 +344,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 plist['R'].append(res/swidth)
         # Finish
         for key in plist.keys():
-            meta[key] = plist[key]
+            try:
+                meta[key] = plist[key]
+            except:
+                embed(header='338 of private')
     # mdict
     if mdict is not None:
         for key,item in mdict.items():
