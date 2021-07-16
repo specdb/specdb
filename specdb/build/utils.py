@@ -338,6 +338,7 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     pairs = pd2d > pair_sep
     if np.sum(pairs) and (not close_pairs):
         print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
+        from IPython import embed; embed(header='341 of specdb/build/utils')
         raise IOError("Use close_pairs=True if appropriate")
     # Find new sources (ignoring pairs at first)
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
