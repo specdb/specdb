@@ -251,6 +251,9 @@ def get_res_dicts():
     # FORS2
     FORS2_Rdict = {'GRIS_300I': 600.}  # 1" slit
 
+    # SOAR/Goodman
+    Goodman_Rdict = {'400_SYZY': 600.}  # 1" slit
+
     # FUSE
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
                   'LWRS_LIF1B': 20000.,
@@ -296,7 +299,7 @@ def get_res_dicts():
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
                   COS=COS_Rdict, ISIS=ISIS_Rdict, FORS2=FORS2_Rdict,
-                  KCWI=KCWI_Rdict,
+                  KCWI=KCWI_Rdict, Goodman=Goodman_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -332,6 +335,7 @@ def slit_width(slitname, req_long=True, LRIS=False):
              'Small': 0.25, # KCWI
              'Medium': 0.5, # KCWI
              'Large': 1.0, # KCWI
+             '1.0_LONG_SLIT': 1.0, # MOSFIRE
              }
     #
     try:

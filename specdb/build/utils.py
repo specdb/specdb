@@ -517,10 +517,15 @@ def set_resolution(head, instr=None):
                 instr = 'ISIS'
             elif 'FORS2' in head['INSTRUME']:
                 instr = 'FORS2'
+            elif 'Goodman' in head['INSTRUME']:
+                instr = 'Goodman'
             elif 'KCWI' in head['INSTRUME']:
                 instr = 'KCWI'
             elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
                 instr = 'RCS'
+        elif 'PYP_SPEC' in head.keys():
+            if 'goodman' in head['PYP_SPEC']:
+                instr = 'Goodman'
         else:
             pass
         if instr is None:
@@ -559,6 +564,15 @@ def set_resolution(head, instr=None):
             except KeyError:
                 print("Need to add {:s}".format(head['GRATING']))
                 pdb.set_trace()
+    elif instr == 'Goodman':
+        try:
+            res = Rdicts[instr][head['DISPNAME']]
+        except KeyError:
+            print("Need to add {:s}".format(head['DISPNAME']))
+            pdb.set_trace()
+        else:
+            swidth = defs.slit_width(head['DECKER'])
+            return res/swidth
     elif instr == 'MOSFIRE':
         try:
             res = Rdicts[instr][head['FILTER']]*0.7
