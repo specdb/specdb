@@ -80,6 +80,8 @@ def instruments():
         'NIRI': dict(gratings=['Hgrism_G5203','Kgrism_G5204']),
         # UKST
         '2dF': dict(gratings=['300B']),
+        # SOAR
+        'Goodman': dict(gratings=['400_SYZY']),
         # FUSE
         'FUSE': dict(gratings=['LWRS']),
         # HST
