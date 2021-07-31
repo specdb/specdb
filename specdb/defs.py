@@ -252,7 +252,7 @@ def get_res_dicts():
     FORS2_Rdict = {'GRIS_300I': 600.}  # 1" slit
 
     # SOAR/Goodman
-    Goodman_Rdict = {'400_SYZY': 600.}  # 1" slit
+    Goodman_Rdict = {'400_SYZY': 920.}  # 1" slit
 
     # FUSE
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
