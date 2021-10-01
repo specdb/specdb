@@ -54,7 +54,7 @@ def test_ingest():
     tmp = h5py.File('tmp.hdf5','r')
     # Test
     assert 'meta' in tmp['test'].keys()
-    assert isinstance(tmp['test/spec'].value, np.ndarray)
+    assert isinstance(tmp['test/spec'][...], np.ndarray)
 
 
 def test_mkdb():
