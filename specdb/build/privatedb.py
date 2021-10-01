@@ -573,7 +573,7 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
         if iztbl == 'igmspec':
             from specdb.specdb import IgmSpec
             igmsp = IgmSpec()
-            ztbl = Table(igmsp.idb.hdf['quasars'].value)
+            ztbl = Table(igmsp.idb.hdf['quasars'][...])
     elif isinstance(iztbl, Table):
         ztbl = iztbl
     else:

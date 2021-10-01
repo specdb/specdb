@@ -256,7 +256,7 @@ def chk_vstack(hdf):
     labels = []
     for key in hdf.keys():
         try:
-            meta = Table(hdf[key]['meta'].value)
+            meta = Table(hdf[key]['meta'][...])
         except (KeyError,ValueError):
             print("Skipping data group {:s}".format(key))
         else:
