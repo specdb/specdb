@@ -67,7 +67,7 @@ class InterfaceGroup(object):
         group : str
         """
         import json
-        self.meta = spdbu.hdf_decode(self.hdf[group+'/meta'].value, itype='Table')
+        self.meta = spdbu.hdf_decode(self.hdf[group+'/meta'][...], itype='Table')
         # Attributes
         self.meta_attr = {}
         for key in self.hdf[group+'/meta'].attrs.keys():

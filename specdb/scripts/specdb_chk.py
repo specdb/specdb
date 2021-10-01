@@ -86,7 +86,7 @@ def main(pargs):
 
     # Sources and spectra
     print("-------------------------------------------------")
-    print("There are {:d} unique sources in the source catalog".format(len(hdf['catalog'].value)))
+    print("There are {:d} unique sources in the source catalog".format(len(hdf['catalog'][...])))
 
     # List datasets
     nspec = 0
