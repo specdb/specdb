@@ -66,7 +66,7 @@ class QueryCatalog(object):
         """
         import json
         # Catalog and attributes
-        self.cat = Table(hdf['catalog'].value)
+        self.cat = Table(hdf['catalog'][...])
         self.cat_attr = {}
         for key in hdf['catalog'].attrs.keys():
             self.cat_attr[key] = spdbu.hdf_decode(hdf['catalog'].attrs[key])
