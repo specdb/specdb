@@ -409,7 +409,7 @@ class QueryCatalog(object):
                 from astropy.cosmology import Planck15
                 self.cosmo = Planck15
             # Offset
-            kpc_proper = self.cosmo.kpc_proper_per_arcmin(self.cat['zem'])
+            kpc_proper = self.cosmo.kpc_proper_per_arcmin(self.cat['zem'].data)
             phys_sep = kpc_proper * sep.to('arcmin')
             good_z = self.cat['zem'] > 1e-3  # Floating point but somewhat arbitrary
             # Match
