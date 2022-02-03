@@ -214,6 +214,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         if skip_badz:
             warnings.warn("Skipping {:d} entries without a parseable redshift".format(
                 np.sum(badz)))
+            badz[:] = False  # Risky!
         else:
             if chkz:  # Turn this on to hit a stop instead of an Exception
                 pdb.set_trace()
@@ -225,7 +226,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['flag_zem'] = zsource
     if ZQ is not None:
         meta['ZQ'] = ZQ
-    # Cut
+
+    # Cut?
     meta = meta[~badz]
 
     # specdb IDs

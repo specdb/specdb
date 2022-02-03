@@ -18,7 +18,7 @@ def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
       RA in deg
     dec : list or array
       DEC in deg
-    catalog : Table
+    catalog : Table or None
       Must contain RA,DEC,ZEM,ZEM_SOURCE
     debug : bool, optional
 
@@ -30,6 +30,11 @@ def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
       str array of sources
     ZQ : array, optional
     """
+    # For initializing without redshifts
+    if catalog is None:
+        nobj = len(ra)
+        return -1*np.ones_like(ra), np.array(['UNKN']*nobj), np.zeros(nobj)
+
     # Generate coordinates
     icoord = SkyCoord(ra=ra, dec=dec, unit='deg')
     # Quasar catalog
