@@ -386,7 +386,7 @@ def dbase_info():
     update_file = specdb.__path__[0]+'/data/DB/updates.yaml'
     # Read
     with open(update_file, 'r') as infile:
-        db_info = yaml.load(infile)
+        db_info = yaml.safe_load(infile)
     # Return
     return db_info
 
