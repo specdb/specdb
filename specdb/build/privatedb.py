@@ -158,7 +158,6 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     if specdb is not None:
         if sdb_key is None:
             raise IOError("Must specify sdb_key if you are passing in specdb")
-    Rdicts = defs.get_res_dicts()
     #
     coordlist = []
     snames = []
@@ -269,6 +268,12 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 head = fits.open(sfile)[0].header
             except FileNotFoundError:  # Try for compressed
                 head = fits.open(sfile+'.gz')[0].header
+
+            # Call it
+            _ = spbu.parse_header(parse_head, head, mdict=mdict,
+                              plist=plist, count=count)
+
+            '''
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
@@ -345,6 +350,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 else:
                     swidth = defs.slit_width(sname, LRIS=True)
                 plist['R'].append(res/swidth)
+            '''
+
         # Finish
         for key in plist.keys():
             try:

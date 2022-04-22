@@ -663,6 +663,98 @@ def set_resolution(head, instr=None):
     else:
         raise IOError("Not read for this instrument")
 
+def parse_header(parse_head, head, mdict=None, plist=None, count=0):
+
+    Rdicts = defs.get_res_dicts()
+
+    if plist is None:
+        plist = {}
+        for key in parse_head.keys():
+            plist[key] = []
+
+    for key,item in parse_head.items():
+        # R
+        if key == 'R':
+            if parse_head[key] is True:
+                try:
+                    plist[key].append(set_resolution(head))
+                except ValueError:
+                    if mdict is not None:
+                        try:
+                            plist[key].append(mdict['R'])
+                        except KeyError:
+                            print("Key error!")
+                            pdb.set_trace()
+                    else:
+                        print('Bad inputs to set_resolution()')
+                        pdb.set_trace()
+                        plist[key].append(0.)
+            else:
+                raise ValueError("Set something else for R")
+        elif key == 'DATE-OBS':
+            if 'MJD' in item:
+                tval = Time(head[item], format='mjd')
+                tval.format = 'iso'
+            else:
+                if ':' in head[item]:
+                    thead = head[item].replace(':','-')
+                elif '/' in head[item]:
+                    thead = head[item].replace('/','-')
+                else:
+                    thead = head[item]
+                tval = Time(thead, format='iso')
+            tval.out_submfit = 'date'
+            plist[key].append(tval.iso)
+        else:
+            plist[key].append(head[item])
+
+    # INSTRUMENT SPECIFIC
+    try:
+        instr = head['INSTRUME']
+    except KeyError:
+        instr = 'none'
+    # LRIS
+    if 'LRIS' in instr:
+        # Init
+        for skey in ['DISPERSER', 'INSTR', 'R']:
+            if skey not in plist.keys():
+                plist[skey] = []
+        # Figure out detector
+        try:
+            det = head['DETECTOR']
+        except KeyError:
+            if 'BLUE' in instr:
+                det = 'LRIS-B'
+            else:
+                if head['OUTFILE'] == 'lred':
+                    det = 'LRIS-R'
+                else:
+                    det = 'LRIS-B'
+        # Add
+        if 'LRIS-R' in det:
+            if len(plist['DISPERSER']) == count:
+                plist['DISPERSER'].append(head['GRANAME'])
+            if len(plist['INSTR']) == count:
+                plist['INSTR'].append('LRISr')
+            else:
+                plist['INSTR'][-1] = 'LRISr'
+        else:
+            if len(plist['DISPERSER']) == count:
+                plist['DISPERSER'].append(head['GRISNAME'])
+            if len(plist['INSTR']) == count:
+                plist['INSTR'].append('LRISb')
+            else:
+                plist['INSTR'][-1] = 'LRISb'
+        # Resolution
+        res = Rdicts[plist['INSTR'][-1]][plist['DISPERSER'][-1]]
+        try:
+            sname = head['SLITNAME']
+        except KeyError:
+            swidth = 1.
+        else:
+            swidth = defs.slit_width(sname, LRIS=True)
+        plist['R'].append(res/swidth)
+    return plist
 
 def set_sv_idkey(idkey):
     """ Set the idkey in the event that it was not set by
