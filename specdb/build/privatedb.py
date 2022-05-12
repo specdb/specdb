@@ -462,7 +462,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Grab continua.  They should exist but do not have to
     set_idkey : str, optional
       Only required if you are not performing the full script
-    xspec : XSpectrum1D, optional
+    xspec : list or XSpectrum1D object, optional
       Take spectra from this object instead of reading from files
     scale : float, optional
       Scale the spectra by this factor.  Useful for fluxing
