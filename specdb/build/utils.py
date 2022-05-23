@@ -338,7 +338,7 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     pairs = pd2d > pair_sep
     if np.sum(pairs) and (not close_pairs):
         print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
-        from IPython import embed; embed(header='341 of specdb/build/utils')
+        #from IPython import embed; embed(header='341 of specdb/build/utils')
         raise IOError("Use close_pairs=True if appropriate")
     # Find new sources (ignoring pairs at first)
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
@@ -663,7 +663,28 @@ def set_resolution(head, instr=None):
     else:
         raise IOError("Not read for this instrument")
 
-def parse_header(parse_head, head, mdict=None, plist=None, count=0):
+def parse_header(parse_head:dict, head, mdict:dict=None, 
+                 plist:list=None, count=0):
+    """ Method to parse the items in the header
+
+    Args:
+        parse_head : dict
+            Parse header for meta info with this dict
+        head (fits.Header):  FITS header to parse 
+        mdict (_type_, optional): _description_. Defaults to None.
+        mdict (dict, optional):
+            Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
+        plist (dict, optional): Dictionary that holds 
+            the lists of parameters.  If input, it will be
+            modified in place
+        count (int, optional): Running count
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        dict: plist,  dict that holds the list of parameters
+    """
 
     Rdicts = defs.get_res_dicts()
 
