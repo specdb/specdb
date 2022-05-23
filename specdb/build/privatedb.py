@@ -1,14 +1,11 @@
 """ Module to build a private DB
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import numpy as np
 import os, glob
 import json
 import h5py
 import warnings
 import pdb
-import datetime
 
 from astropy.table import Table, Column
 from astropy.io import fits
@@ -25,11 +22,7 @@ from specdb import defs
 from specdb.build.utils import add_ids, write_hdf, set_sv_idkey
 from specdb.ssa import default_fields
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
-
+from IPython import embed
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
@@ -165,7 +158,6 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     if specdb is not None:
         if sdb_key is None:
             raise IOError("Must specify sdb_key if you are passing in specdb")
-    Rdicts = defs.get_res_dicts()
     #
     coordlist = []
     snames = []
@@ -214,12 +206,14 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['DEC_GROUP'] = coords.dec.deg
     meta['STYPE'] = [str(stype)]*len(meta)
 
-    zem, zsource, ZQ = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], ztbl, **kwargs)
+    zem, zsource, ZQ = spzu.zem_from_radec(meta['RA_GROUP'], meta['DEC_GROUP'], 
+                                           ztbl, **kwargs)
     badz = zem <= 0.
     if np.sum(badz) > 0:
         if skip_badz:
             warnings.warn("Skipping {:d} entries without a parseable redshift".format(
                 np.sum(badz)))
+            badz[:] = False  # Risky!
         else:
             if chkz:  # Turn this on to hit a stop instead of an Exception
                 pdb.set_trace()
@@ -231,7 +225,8 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     meta['flag_zem'] = zsource
     if ZQ is not None:
         meta['ZQ'] = ZQ
-    # Cut
+
+    # Cut?
     meta = meta[~badz]
 
     # specdb IDs
@@ -266,13 +261,19 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for key in parse_head.keys():
             plist[key] = []
         # Loop on files
-        for sfile in meta['SPEC_FILE']:
+        for count, sfile in enumerate(meta['SPEC_FILE']):
             if verbose:
                 print('Parsing {:s}'.format(sfile))
             try:
                 head = fits.open(sfile)[0].header
             except FileNotFoundError:  # Try for compressed
                 head = fits.open(sfile+'.gz')[0].header
+
+            # Call it
+            _ = spbu.parse_header(parse_head, head, mdict=mdict,
+                              plist=plist, count=count)
+
+            '''
             for key,item in parse_head.items():
                 # R
                 if key == 'R':
@@ -294,35 +295,52 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                         raise ValueError("Set something else for R")
                 elif key == 'DATE-OBS':
                     if 'MJD' in item:
-                        tval = Time(head[item], format='mjd', out_subfmt='date')
+                        tval = Time(head[item], format='mjd')
+                        tval.format = 'iso'
                     else:
-                        tval = Time(head[item].replace('/','-'), format='isot', out_subfmt='date')
+                        tval = Time(head[item].replace('/','-'), format='iso')
+                    tval.out_submfit = 'date'
                     plist[key].append(tval.iso)
                 else:
                     plist[key].append(head[item])
+
             # INSTRUMENT SPECIFIC
             try:
                 instr = head['INSTRUME']
             except KeyError:
                 instr = 'none'
+            # LRIS
             if 'LRIS' in instr:
-                if 'DISPERSER' not in plist.keys() or 'R' not in plist.keys():
-                    plist['DISPERSER'] = []
-                    plist['INSTR'] = []
-                    plist['R'] = []
+                # Init
+                for skey in ['DISPERSER', 'INSTR', 'R']:
+                    if skey not in plist.keys():
+                        plist[skey] = []
+                # Figure out detector
                 try:
                     det = head['DETECTOR']
                 except KeyError:
-                    if head['OUTFILE'] == 'lred':
-                        det = 'LRIS-R'
-                    else:
+                    if 'BLUE' in instr:
                         det = 'LRIS-B'
+                    else:
+                        if head['OUTFILE'] == 'lred':
+                            det = 'LRIS-R'
+                        else:
+                            det = 'LRIS-B'
+                # Add
                 if 'LRIS-R' in det:
-                    plist['DISPERSER'].append(head['GRANAME'])
-                    plist['INSTR'].append('LRISr')
+                    if len(plist['DISPERSER']) == count:
+                        plist['DISPERSER'].append(head['GRANAME'])
+                    if len(plist['INSTR']) == count:
+                        plist['INSTR'].append('LRISr')
+                    else:
+                        plist['INSTR'][-1] = 'LRISr'
                 else:
-                    plist['DISPERSER'].append(head['GRISNAME'])
-                    plist['INSTR'].append('LRISb')
+                    if len(plist['DISPERSER']) == count:
+                        plist['DISPERSER'].append(head['GRISNAME'])
+                    if len(plist['INSTR']) == count:
+                        plist['INSTR'].append('LRISb')
+                    else:
+                        plist['INSTR'][-1] = 'LRISb'
                 # Resolution
                 res = Rdicts[plist['INSTR'][-1]][plist['DISPERSER'][-1]]
                 try:
@@ -332,9 +350,14 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 else:
                     swidth = defs.slit_width(sname, LRIS=True)
                 plist['R'].append(res/swidth)
+            '''
+
         # Finish
         for key in plist.keys():
-            meta[key] = plist[key]
+            try:
+                meta[key] = plist[key]
+            except:
+                embed(header='338 of private')
     # mdict
     if mdict is not None:
         for key,item in mdict.items():
@@ -439,7 +462,7 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
       Grab continua.  They should exist but do not have to
     set_idkey : str, optional
       Only required if you are not performing the full script
-    xspec : XSpectrum1D, optional
+    xspec : list or XSpectrum1D object, optional
       Take spectra from this object instead of reading from files
     scale : float, optional
       Scale the spectra by this factor.  Useful for fluxing
@@ -569,7 +592,7 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
     from specdb import defs
 
     # ztbl
-    if isinstance(iztbl, basestring):
+    if isinstance(iztbl, str):
         if iztbl == 'igmspec':
             from specdb.specdb import IgmSpec
             igmsp = IgmSpec()

@@ -80,6 +80,8 @@ def instruments():
         'NIRI': dict(gratings=['Hgrism_G5203','Kgrism_G5204']),
         # UKST
         '2dF': dict(gratings=['300B']),
+        # SOAR
+        'Goodman': dict(gratings=['400_SYZY']),
         # FUSE
         'FUSE': dict(gratings=['LWRS']),
         # HST
@@ -100,7 +102,11 @@ def instruments():
         'MUSE': dict(gratings=['VPHG']),
         # Palomar
         'TSpec': dict(gratings=['ECH']),
+        # AAT
+        'AAOMEGA': dict(gratings=['580V']),
     }
+    # Add some odd ones
+    inst_dict['DEIMOS: real science mosaic CCD subsystem with PowerPC in VME crate'] = inst_dict['DEIMOS'].copy()
     return inst_dict
 
 def list_of_stypes():
@@ -218,6 +224,9 @@ def get_res_dicts():
                    '400/8500': 1232.,
                    '1200/7500': 2*1595.,
                    }
+    # DEIMOS is *not* yet incorporated            
+    DEIMOS_Rdict = {'600ZD': 1607.,     # Assumes 1" slit
+                   }
     MOSFIRE_Rdict = {'H': 3660,  # Assumes 0.7" slit
                      }
     KCWI_Rdict = {'BL': 900,  # Assumes Large IFU slicer
@@ -243,6 +252,9 @@ def get_res_dicts():
                   }
     # FORS2
     FORS2_Rdict = {'GRIS_300I': 600.}  # 1" slit
+
+    # SOAR/Goodman
+    Goodman_Rdict = {'400_SYZY': 920.}  # 1" slit
 
     # FUSE
     FUSE_Rdict = {'LWRS_LIF2B': 20000.,
@@ -289,7 +301,7 @@ def get_res_dicts():
                   MODS1R=MODS_Rdict, NIRI=NIRI_Rdict, MOSFIRE=MOSFIRE_Rdict,
                   FUSE=FUSE_Rdict, STIS=STIS_Rdict, GHRS=GHRS_Rdict,
                   COS=COS_Rdict, ISIS=ISIS_Rdict, FORS2=FORS2_Rdict,
-                  KCWI=KCWI_Rdict,
+                  KCWI=KCWI_Rdict, Goodman=Goodman_Rdict,
                   )
     Rdicts['MIKE-Blue'] = 28000. # 1" slit
     Rdicts['MIKE-Red'] = 22000. # 1" slit
@@ -325,6 +337,7 @@ def slit_width(slitname, req_long=True, LRIS=False):
              'Small': 0.25, # KCWI
              'Medium': 0.5, # KCWI
              'Large': 1.0, # KCWI
+             '1.0_LONG_SLIT': 1.0, # MOSFIRE
              }
     #
     try:
@@ -375,7 +388,7 @@ def dbase_info():
     update_file = specdb.__path__[0]+'/data/DB/updates.yaml'
     # Read
     with open(update_file, 'r') as infile:
-        db_info = yaml.load(infile)
+        db_info = yaml.safe_load(infile)
     # Return
     return db_info
 

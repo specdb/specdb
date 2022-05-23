@@ -338,6 +338,7 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     pairs = pd2d > pair_sep
     if np.sum(pairs) and (not close_pairs):
         print ("Input catalog includes pairs closer than {:g} and wider than {:g}".format(mtch_toler, pair_sep))
+        #from IPython import embed; embed(header='341 of specdb/build/utils')
         raise IOError("Use close_pairs=True if appropriate")
     # Find new sources (ignoring pairs at first)
     idx, d2d, d3d = match_coordinates_sky(c_new, c_main, nthneighbor=1)
@@ -516,10 +517,15 @@ def set_resolution(head, instr=None):
                 instr = 'ISIS'
             elif 'FORS2' in head['INSTRUME']:
                 instr = 'FORS2'
+            elif 'Goodman' in head['INSTRUME']:
+                instr = 'Goodman'
             elif 'KCWI' in head['INSTRUME']:
                 instr = 'KCWI'
             elif ('test' in head['INSTRUME']) and ('kp4m' in head['TELESCOP']):  # Kludge for old RCS data
                 instr = 'RCS'
+        elif 'PYP_SPEC' in head.keys():
+            if 'goodman' in head['PYP_SPEC']:
+                instr = 'Goodman'
         else:
             pass
         if instr is None:
@@ -558,6 +564,15 @@ def set_resolution(head, instr=None):
             except KeyError:
                 print("Need to add {:s}".format(head['GRATING']))
                 pdb.set_trace()
+    elif instr == 'Goodman':
+        try:
+            res = Rdicts[instr][head['DISPNAME']]
+        except KeyError:
+            print("Need to add {:s}".format(head['DISPNAME']))
+            pdb.set_trace()
+        else:
+            swidth = defs.slit_width(head['DECKER'])
+            return res/swidth
     elif instr == 'MOSFIRE':
         try:
             res = Rdicts[instr][head['FILTER']]*0.7
@@ -648,6 +663,119 @@ def set_resolution(head, instr=None):
     else:
         raise IOError("Not read for this instrument")
 
+def parse_header(parse_head:dict, head, mdict:dict=None, 
+                 plist:list=None, count=0):
+    """ Method to parse the items in the header
+
+    Args:
+        parse_head : dict
+            Parse header for meta info with this dict
+        head (fits.Header):  FITS header to parse 
+        mdict (_type_, optional): _description_. Defaults to None.
+        mdict (dict, optional):
+            Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
+        plist (dict, optional): Dictionary that holds 
+            the lists of parameters.  If input, it will be
+            modified in place
+        count (int, optional): Running count
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        dict: plist,  dict that holds the list of parameters
+    """
+
+    Rdicts = defs.get_res_dicts()
+
+    if plist is None:
+        plist = {}
+        for key in parse_head.keys():
+            plist[key] = []
+
+    for key,item in parse_head.items():
+        # R
+        if key == 'R':
+            if parse_head[key] is True:
+                try:
+                    plist[key].append(set_resolution(head))
+                except ValueError:
+                    if mdict is not None:
+                        try:
+                            plist[key].append(mdict['R'])
+                        except KeyError:
+                            print("Key error!")
+                            pdb.set_trace()
+                    else:
+                        print('Bad inputs to set_resolution()')
+                        pdb.set_trace()
+                        plist[key].append(0.)
+            else:
+                raise ValueError("Set something else for R")
+        elif key == 'DATE-OBS':
+            if 'MJD' in item:
+                tval = Time(head[item], format='mjd')
+                tval.format = 'iso'
+            else:
+                if ':' in head[item]:
+                    thead = head[item].replace(':','-')
+                elif '/' in head[item]:
+                    thead = head[item].replace('/','-')
+                else:
+                    thead = head[item]
+                tval = Time(thead, format='iso')
+            tval.out_submfit = 'date'
+            plist[key].append(tval.iso)
+        else:
+            plist[key].append(head[item])
+
+    # INSTRUMENT SPECIFIC
+    try:
+        instr = head['INSTRUME']
+    except KeyError:
+        instr = 'none'
+    # LRIS
+    if 'LRIS' in instr:
+        # Init
+        for skey in ['DISPERSER', 'INSTR', 'R']:
+            if skey not in plist.keys():
+                plist[skey] = []
+        # Figure out detector
+        try:
+            det = head['DETECTOR']
+        except KeyError:
+            if 'BLUE' in instr:
+                det = 'LRIS-B'
+            else:
+                if head['OUTFILE'] == 'lred':
+                    det = 'LRIS-R'
+                else:
+                    det = 'LRIS-B'
+        # Add
+        if 'LRIS-R' in det:
+            if len(plist['DISPERSER']) == count:
+                plist['DISPERSER'].append(head['GRANAME'])
+            if len(plist['INSTR']) == count:
+                plist['INSTR'].append('LRISr')
+            else:
+                plist['INSTR'][-1] = 'LRISr'
+        else:
+            if len(plist['DISPERSER']) == count:
+                plist['DISPERSER'].append(head['GRISNAME'])
+            if len(plist['INSTR']) == count:
+                plist['INSTR'].append('LRISb')
+            else:
+                plist['INSTR'][-1] = 'LRISb'
+        # Resolution
+        res = Rdicts[plist['INSTR'][-1]][plist['DISPERSER'][-1]]
+        try:
+            sname = head['SLITNAME']
+        except KeyError:
+            swidth = 1.
+        else:
+            swidth = defs.slit_width(sname, LRIS=True)
+        plist['R'].append(res/swidth)
+    return plist
 
 def set_sv_idkey(idkey):
     """ Set the idkey in the event that it was not set by
