@@ -588,7 +588,7 @@ class IgmSpec(SpecDB):
 
         """
         from astropy.table import Table
-        return Table(self.idb.hdf['quasars'].value)
+        return Table(self.idb.hdf['quasars'][...])
 
     def __repr__(self):
         txt = '<{:s}:  IGM_file={:s} with {:d} sources\n'.format(self.__class__.__name__,
