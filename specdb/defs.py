@@ -103,7 +103,7 @@ def instruments():
         # Palomar
         'TSpec': dict(gratings=['ECH']),
         # AAT
-        'AAOMEGA': dict(gratings=['580V']),
+        'AAOmega': dict(gratings=['580V']),
     }
     # Add some odd ones
     inst_dict['DEIMOS: real science mosaic CCD subsystem with PowerPC in VME crate'] = inst_dict['DEIMOS'].copy()
