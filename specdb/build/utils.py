@@ -452,10 +452,10 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
 
     Returns
     -------
-    cut_db : Table
+    cut_db : Table or None
       Cut to the new sources
     new : bool array
-    ids : ID values of newdb
+    ids : ID values of newdb;  can include old ones
     """
     # IDs
     ids = get_new_ids(maindb, meta, idkey, debug=debug, **kwargs) # Includes new and old
@@ -467,6 +467,9 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
     else:
         new = ids > 0  # -1 * 0 = 0
     newi = np.where(new)[0]
+    # No new ones?
+    if len(newi) == 0:
+        return None, new, np.abs(ids)
     # Need unique
     uni, idx_uni = np.unique(ids[newi], return_index=True)
     #
