@@ -19,6 +19,8 @@ from specdb import defs
 from specdb.cat_utils import match_ids
 from specdb.utils import clean_vstack
 
+from IPython import embed
+
 try:
     bstr = bytes
 except NameError:  # For Python 2
@@ -75,6 +77,7 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwar
             assert chk_maindb_join(maindb, cat_meta)
             # Append
             maindb = vstack([maindb,cat_meta], join_type='exact')
+                
     # Return
     return maindb
 
