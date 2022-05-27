@@ -469,7 +469,10 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
     newi = np.where(new)[0]
     # No new ones?
     if len(newi) == 0:
-        return None, new, np.abs(ids)
+        # Update meta
+        ids = np.abs(ids)
+        meta[idkey] = ids
+        return None, new, ids
     # Need unique
     uni, idx_uni = np.unique(ids[newi], return_index=True)
     #
