@@ -42,6 +42,8 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwar
       ID key
     first : bool, optional
       First call to the routine?
+    **kwargs:
+      Passed to set_new_ids()
 
     Returns
     -------
@@ -49,7 +51,8 @@ def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwar
       Updated catalog table
 
     """
-    newcut, new, ids = set_new_ids(maindb, meta, idkey, first=first, debug=debug, **kwargs)
+    newcut, new, ids = set_new_ids(maindb, meta, idkey, 
+                                   first=first, debug=debug, **kwargs)
     # If new sources
     if np.sum(new) > 0:
         newcut['flag_group'] = flag_g
@@ -441,6 +444,8 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
     chk
     first : bool, optional
       First call to setting the IDs
+    **kwargs :
+      Passed to get_new_ids
 
     Returns
     -------
