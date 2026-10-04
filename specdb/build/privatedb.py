@@ -5,7 +5,6 @@ import os, glob
 import json
 import h5py
 import warnings
-import pdb
 
 from astropy.table import Table, Column
 from astropy.io import fits
@@ -22,7 +21,6 @@ from specdb import defs
 from specdb.build.utils import add_ids, write_hdf, set_sv_idkey
 from specdb.ssa import default_fields
 
-from IPython import embed
 
 def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                                       'E.fits', 'N.fits', 'old.fits'),
@@ -65,9 +63,9 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                 print("Skipping folder = {:s}".format(folder))
                 continue
             if only_conti:
-                ofiles += glob.glob(branch+'/'+folder+'/*_c.fits*')
+                ofiles += sorted(glob.glob(branch+'/'+folder+'/*_c.fits*'))
             else:
-                ofiles += glob.glob(branch+'/'+folder+'/*.fits*')
+                ofiles += sorted(glob.glob(branch+'/'+folder+'/*.fits*'))
             # Eliminate error and continua files
             for ofile in ofiles:
                 flg = True
@@ -84,7 +82,7 @@ def grab_files(branch, skip_files=('c.fits', 'C.fits', 'e.fits',
                 if flg:
                     pfiles.append(ofile)
         # walk
-        folders = next(walk)[1]
+        folders = sorted(next(walk)[1])
         if verbose:
             print("Will walk through folders {}".format(folders))
     # Dict for meta parsing
@@ -144,7 +142,7 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
     mdict : dict, optional
       Input meta data in dict form e.g.  mdict=dict(INSTR='ESI')
     chkz : bool, optional
-      If any sources have no parseable redshift, hit a set_trace
+      Deprecated;  a ValueError is now always raised for unparseable redshifts
     mtbl_file : str
       Filename of input meta table.  Current allowed extensions are _meta.ascii or _meta.fits
       and they must be readable by Table.read().  The values in this table will overwrite
@@ -185,7 +183,9 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             try:
                 coord = ltu.radec_to_coord(ifile[i0:i1])
             except (UnboundLocalError, ValueError):
-                pdb.set_trace()
+                raise ValueError(
+                    "Could not parse a coordinate out of filename {:s} "
+                    "(tried the substring '{:s}')".format(ifile, ifile[i0:i1]))
         else:
             mt = np.where(ztbl['SPEC_FILE'] == sname)[0]
             if len(mt) != 1:
@@ -215,10 +215,10 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                 np.sum(badz)))
             badz[:] = False  # Risky!
         else:
-            if chkz:  # Turn this on to hit a stop instead of an Exception
-                pdb.set_trace()
-            else:
-                raise ValueError("{:d} entries without a parseable redshift".format(
+            if chkz:
+                warnings.warn("chkz is deprecated and no longer stops in the debugger; "
+                              "a ValueError is raised instead.", DeprecationWarning)
+            raise ValueError("{:d} entries without a parseable redshift".format(
                     np.sum(badz)))
     meta['zem_GROUP'] = zem
     meta['sig_zem'] = 0.  # Need to add
@@ -241,14 +241,6 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         cdict = defs.get_cat_dict()
         mtch = d2d < cdict['match_toler']
         meta[sdb_key][mtch] = specdb.qcat.cat[sdb_key][idx[mtch]]
-
-    # Stack (primarily as a test)
-    '''
-    try:
-        maindb = vstack([maindb,meta], join_type='exact')
-    except:
-        pdb.set_trace()
-    '''
 
     # SPEC_FILE
     meta['SPEC_FILE'] = np.array(files)[~badz]
@@ -285,12 +277,13 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
                                 try:
                                     plist[key].append(mdict['R'])
                                 except KeyError:
-                                    print("Key error!")
-                                    pdb.set_trace()
+                                    raise ValueError(
+                                        "set_resolution() failed and the supplied mdict "
+                                        "has no 'R' key")
                             else:
-                                print('Bad inputs to set_resolution()')
-                                pdb.set_trace()
-                                plist[key].append(0.)
+                                raise ValueError(
+                                    "Bad inputs to set_resolution() and no mdict supplied "
+                                    "to fall back on")
                     else:
                         raise ValueError("Set something else for R")
                 elif key == 'DATE-OBS':
@@ -356,8 +349,11 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
         for key in plist.keys():
             try:
                 meta[key] = plist[key]
-            except:
-                embed(header='338 of private')
+            except Exception as exc:
+                raise ValueError(
+                    "Could not set meta column '{:s}' from the parsed header values "
+                    "({:d} values for {:d} rows)".format(
+                        str(key), len(plist[key]), len(meta))) from exc
     # mdict
     if mdict is not None:
         for key,item in mdict.items():
@@ -415,14 +411,15 @@ def mk_meta(files, ztbl, fname=False, stype='QSO', skip_badz=False,
             if key in ['SPEC_FILE']:
                 continue
             if key in meta.keys():
-                pdb.set_trace()
+                raise ValueError(
+                    "Column '{:s}' from the input meta table is already present in the "
+                    "generated meta; rename it or drop it.".format(str(key)))
             else:
                 # Add Column
                 meta.add_column(imtbl[key][idx])
     # Return
     if debug:
         meta[['RA_GROUP', 'DEC_GROUP', 'SPEC_FILE']].pprint(max_width=120)
-        pdb.set_trace()
     return meta
 
 
@@ -480,12 +477,12 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     grp = hdf.create_group(sname)
     # Spectra
     nspec = len(meta)
-    dtypes=[(str('wave'), 'float64', (max_npix)),
-           (str('flux'), 'float32', (max_npix)),
-           (str('sig'),  'float32', (max_npix))]
+    dtypes=[('wave', 'float64', (max_npix)),
+           ('flux', 'float32', (max_npix)),
+           ('sig',  'float32', (max_npix))]
     dkeys = ['wave','flux','sig']
     if grab_conti:
-        dtypes += [(str('co'),   'float32', (max_npix))]
+        dtypes += [('co',   'float32', (max_npix))]
         dkeys += ['co']
     data = np.ma.empty((1,), dtype=dtypes)
     # Init
@@ -512,14 +509,14 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
                     else:
                         try:
                             spec = lsio.readspec(f, **kwargs)
-                        except ValueError:  # Probably a continuum problem
-                            pdb.set_trace()
+                        except ValueError:
+                            raise ValueError(
+                                "linetools could not read spectrum {:s} "
+                                "(often a continuum problem)".format(str(f)))
             else:
                 spec = lsio.readspec(f, **kwargs)
         else:
             spec = xspec[jj]
-        if debug:
-            pdb.set_trace()
         # Meta
         #head = spec.header
         if spec.masking == 'none':
@@ -553,10 +550,9 @@ def ingest_spectra(hdf, sname, meta, max_npix=10000, chk_meta_only=False,
     # Add HDLLS meta to hdf5
     if spbu.chk_meta(meta):#, skip_igmid=True):
         if chk_meta_only:
-            pdb.set_trace()
+            return
         hdf[sname]['meta'] = meta
     else:
-        pdb.set_trace()
         raise ValueError("meta file failed")
     # References
     if refs is not None:
@@ -658,9 +654,9 @@ def mk_db(dbname, tree, outfil, iztbl, version='v00', id_key='PRIV_ID',
 
     # Check stacking
     if not spbu.chk_vstack(hdf):
-        print("Meta data will not stack using specdb.utils.clean_vstack")
-        print("Proceed to write at your own risk..")
-        pdb.set_trace()
+        raise ValueError(
+            "Meta data will not stack using specdb.utils.clean_vstack; "
+            "refusing to write {:s}".format(str(outfil)))
 
     # Write
     write_hdf(hdf, str(dbname), maindb, zpri, gdict, version,

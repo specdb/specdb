@@ -1,7 +1,5 @@
 # Module to run tests on cat_utils
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -33,8 +31,11 @@ def test_clean_vstack(igmsp):
         stack = utils.clean_vstack(tbls, sdb.groups)
     # Internal
     run_tst(igmsp)
-    # Full IGMSpec
-    if os.getenv('IGMSPEC_DB') is not None:
+    # Full IGMSpec, when the real database is available.  This was gated on
+    # IGMSPEC_DB, which nothing in the library ever reads -- the variable the
+    # library uses is SPECDB (see SpecDB.grab_dbfile) -- so the branch was dead
+    # on every machine.
+    if os.getenv('SPECDB') is not None:
         tigmsp = IgmSpec()
         run_tst(tigmsp)
 

@@ -1,9 +1,7 @@
 """ Module for catalog utilities
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import numpy as np
-import pdb
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord, match_coordinates_sky
@@ -42,15 +40,19 @@ def zem_from_radec(ra, dec, catalog, toler=2*u.arcsec, debug=False):
     # Match
     idx, d2d, d3d = match_coordinates_sky(icoord, qcoord, nthneighbor=1)
     good = d2d < toler
-    if debug:
-        pdb.set_trace()
     # Finish
     zem = np.zeros(len(ra))
     try:
         zem[good] = catalog['ZEM'][idx[good]]
     except IndexError:
-        pdb.set_trace()
-    zsource = np.array([str('NONENONE')]*len(ra))
+        raise IndexError(
+            "Redshift catalog is too short for the matched indices; "
+            "check that 'catalog' contains RA, DEC, ZEM and ZEM_SOURCE.")
+    # An explicit width: np.array(['NONENONE']*n) is '<U8', which silently
+    # truncated any longer source name -- 'BOSS_PIPE' (a real z_priority entry,
+    # 9 characters) became 'BOSS_PIP'.  dtype=object would fix that too but
+    # h5py cannot write object arrays.
+    zsource = np.array(['NONENONE']*len(ra), dtype='<U32')
     zsource[good] = catalog['ZEM_SOURCE'][idx[good]]
 
     # ZQ?

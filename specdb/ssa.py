@@ -1,11 +1,9 @@
 """ Module for IVOA SSA
 See http://www.ivoa.net/documents/SSA/
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import h5py
 import numpy as np
-import pdb
 import warnings
 
 from astropy.io.votable.tree import VOTableFile, Resource, Info, Param
@@ -15,10 +13,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, vstack
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
 
 
 class SSAInterface(object):
@@ -67,7 +61,7 @@ class SSAInterface(object):
 
         # Default Infos
         def_infos = []
-        def_infos.append(Info(name='SERVICE_PROTOCOL', value=1.1, content="SSAP"))
+        def_infos.append(_mk_info('SERVICE_PROTOCOL', '1.1', content="SSAP"))
 
         # METADATA??
         if FORMAT == 'METADATA':
@@ -82,7 +76,7 @@ class SSAInterface(object):
         size_unit = u.deg
         if SIZE is None:
             SIZE = 1e-3  # deg
-        def_infos.append(Info(name='SIZE', value=SIZE, content="Search radius adopted (deg)"))
+        def_infos.append(_mk_info('SIZE', SIZE, content="Search radius adopted (deg)"))
 
         # Other
         if TIME is not None:
@@ -97,7 +91,7 @@ class SSAInterface(object):
         # Parse POS
         if POS is None:
             status = 'ERROR'
-            qinfos.append(Info(name='QUERY_STATUS', value="ERROR", content="POS not provided and not a METADATA query"))
+            qinfos.append(_mk_info('QUERY_STATUS', "ERROR", content="POS not provided and not a METADATA query"))
             spl = []
         else:
             spl = POS.split(';')
@@ -110,7 +104,7 @@ class SSAInterface(object):
             coord_sys = 'ICRS'
         if coord_sys not in ['ICRS']:
             status = 'ERROR'
-            qinfos.append(Info(name='QUERY_STATUS', value="ERROR", content="Coordinate system {:s} not implemented".format(coord_sys)))
+            qinfos.append(_mk_info('QUERY_STATUS', "ERROR", content="Coordinate system {:s} not implemented".format(coord_sys)))
             #raise IOError("Coordinate system {:s} not implemented".format(coord_sys))
 
         # Return if failed
@@ -120,7 +114,7 @@ class SSAInterface(object):
             votable.resources[0].infos += def_infos
             return votable
         else:
-            qinfos.append(Info(name='QUERY_STATUS', value="OK", content="Successful search"))
+            qinfos.append(_mk_info('QUERY_STATUS', "OK", content="Successful search"))
 
         # Build Table
         ra,dec = scoord.split(',')
@@ -194,10 +188,33 @@ def ssa_defs():
 
     """
     ssa_dict = {}
-    ssa_dict['DataModel'] = str('Spectrum-2.0')
-    ssa_dict['DatasetType'] = str('Spectrum')
+    ssa_dict['DataModel'] = 'Spectrum-2.0'
+    ssa_dict['DatasetType'] = 'Spectrum'
 
     return ssa_dict
+
+
+def _mk_info(name, value, content=None):
+    """ Build a VOTable INFO element
+
+    `content` is the text body of the INFO element.  astropy exposes it as an
+    attribute rather than a constructor argument;  passing it to Info(...) lands
+    it in **extra and is dropped with a W48 warning.  `value` must be a string.
+
+    Parameters
+    ----------
+    name : str
+    value : str
+    content : str, optional
+
+    Returns
+    -------
+    info : Info
+    """
+    info = Info(name=name, value=str(value))
+    if content is not None:
+        info.content = content
+    return info
 
 
 def empty_vo(rtype='results'):
@@ -322,7 +339,7 @@ def build_metaquery(def_infos):
     votable = empty_vo(rtype='results')
     resource = votable.resources[0]
     # Info
-    sinfo = Info(name='QUERY_STATUS', value="OK", content="Successful search")
+    sinfo = _mk_info('QUERY_STATUS', "OK", content="Successful search")
     resource.infos.append(sinfo)
     for dinfo in def_infos:
         resource.infos.append(dinfo)
@@ -352,27 +369,27 @@ def input_params(votbl=None):
         votbl = empty_vo(rtype='meta')
     all_params = []
     # POS
-    pos = Param(votbl, name="INPUT:POS", value="", datatype="char", arraysize="*")
+    pos = Param(votbl, ID="InputPos", name="INPUT:POS", value="", datatype="char", arraysize="*")
     pos.description = ('The center of the region of interest. The coordinate values are '+
                        'specified in list format (comma separated) in decimal degrees with '+
                        'no embedded white space followed by an optional coord. system.  '+
                        'Allowed systems are (ICRS) and the default is ICRS.')
     all_params.append(pos)
     # SIZE
-    size = Param(votbl, name="INPUT:SIZE", value="0.1", datatype="double", unit="deg")
+    size = Param(votbl, ID="InputSize", name="INPUT:SIZE", value="0.1", datatype="double", unit="deg")
     size.description = ('The radius of the circular region of interest in decimal degrees.'+
                         'Default sized radius is 0.001 degrees')
     all_params.append(size)
     # BAND
-    band = Param(votbl, name="INPUT:BAND", value="ALL", datatype="char", arraysize="*")
+    band = Param(votbl, ID="InputBand", name="INPUT:BAND", value="ALL", datatype="char", arraysize="*")
     band.description = 'Not currently implemented'
     all_params.append(band)
     # TIME
-    ptime = Param(votbl, name="INPUT:TIME", value="", datatype="char", arraysize="*")
+    ptime = Param(votbl, ID="InputTime", name="INPUT:TIME", value="", datatype="char", arraysize="*")
     ptime.description = 'Not currently implemented'
     all_params.append(ptime)
     # FORMAT
-    format = Param(votbl, name="INPUT:FORMAT", value="ALL", datatype="char", arraysize="*")
+    format = Param(votbl, ID="InputFormat", name="INPUT:FORMAT", value="ALL", datatype="char", arraysize="*")
     format.description = ('Desired format of retrieved data. \n'+
                           'Allowed values are HDF5, METADATA')
     all_params.append(format)
@@ -394,7 +411,11 @@ def metaquery_param(evotbl=None):
     if evotbl is None:
         evotbl = empty_vo(rtype='meta')
     all_params = []
-    cdict = {'version_1_3_or_later': True}
+    # Take the version flags from the VOTableFile itself rather than hand-rolling
+    # them.  The old {'version_1_3_or_later': True} dict was missing the
+    # version_1_4_or_later key that astropy >= 6 requires, which made every SSA
+    # call raise KeyError.
+    cdict = evotbl._get_version_checks()
     # Service metadata
 
     # data model metadata: Dataset.*
@@ -433,7 +454,7 @@ def metaquery_param(evotbl=None):
 
     # data model metadata: Target.*
     tname = Param(evotbl, ID="TargetName", name="OUTPUT:TargetName", datatype="char",
-                    ucd="meta.id;src", utype="ssa:Target.Name", value="")
+                    ucd="meta.id;src", utype="ssa:Target.Name", arraysize="*", value="")
     all_params.append(tname)
 
     # characterization metadata: FluxAxis

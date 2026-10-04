@@ -1,17 +1,11 @@
 """ Module for key definitions in the Spectral database
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import numpy as np
-import pdb
 
 from collections import OrderedDict
 from astropy import units as u
 
-try:
-    bstr = bytes
-except NameError:  # For Python 2
-    bstr = str
 
 def instruments():
     """ Dict of allowed instruments (and definitions)
@@ -117,8 +111,8 @@ def list_of_stypes():
 
     """
     stypes = [
-        str('QSO'),        # Quasars
-        str('GRB'),        # Gamma ray burst
+        'QSO',        # Quasars
+        'GRB',        # Gamma ray burst
     ]
     return stypes
 
@@ -352,7 +346,8 @@ def slit_width(slitname, req_long=True, LRIS=False):
             if ('long' not in slitname) & req_long:
                     swidth = 1.
             else:
-                pdb.set_trace()
+                raise ValueError(
+                    "Unable to parse a slit width from slitname={:s}".format(str(slitname)))
     #
     return swidth
 

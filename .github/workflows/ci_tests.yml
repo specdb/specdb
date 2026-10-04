@@ -1,0 +1,61 @@
+name: CI Tests
+
+on:
+  push:
+    branches:
+    - master
+    # Quoted deliberately: a bare `2026` is parsed by YAML as the integer 2026
+    # and would never match a branch name.
+    - '2026'
+  pull_request:
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  tests:
+    name: py${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+        include:
+          # Xavier develops on macOS and nothing has ever tested it.
+          - os: macos-latest
+            python-version: '3.13'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # setuptools_scm needs the tags
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install linetools from git
+      # linetools has no release compatible with the 3.11+ floor yet, and the
+      # retired Travis config also installed it from git HEAD.  See Q&A #4.
+      run: python -m pip install "linetools @ git+https://github.com/linetools/linetools.git"
+    - name: Install specdb
+      run: python -m pip install ".[test]"
+    - name: Run tests
+      # No network and no external database are required: every test uses the
+      # committed fixtures under specdb/tests/files and specdb/build/tests/files.
+      run: pytest --pyargs specdb -v
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    - name: Install linetools from git
+      run: python -m pip install "linetools @ git+https://github.com/linetools/linetools.git"
+    - name: Install specdb with docs extras
+      run: python -m pip install ".[docs]"
+    - name: Build docs
+      run: sphinx-build -W -b html docs docs/_build/html

@@ -4,8 +4,6 @@
 Default is by PLATE/FIBER
 """
 
-import pdb
-
 def parser(options=None):
 
     import argparse
@@ -25,9 +23,11 @@ def parser(options=None):
     return args
 
 
-def main(args, unit_test=False, **kwargs):
+def main(args=None, unit_test=False, **kwargs):
     """ Run
     """
+    if args is None:
+        args = parser()
     import numpy as np
     import pdb
 

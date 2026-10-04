@@ -1,4 +1,4 @@
-.. highlight:: casbah
+.. highlight:: rest
 
 ******
 CASBaH
@@ -32,5 +32,9 @@ Place it within your $SPECDB folder.
 Example
 =======
 
-Here is a simple call with the standard `specdb` scripts::
+Here is a simple call with the standard `specdb` scripts.
+
+.. note::
+
+   This page is incomplete.
 

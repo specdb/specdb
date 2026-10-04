@@ -10,7 +10,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
-./build/
+/build/
 develop-eggs/
 dist/
 downloads/
@@ -59,3 +59,7 @@ docs/_build/
 target/
 
 # Created by .ignore support plugin (hsz.mobi)
+*/version.py
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store

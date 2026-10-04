@@ -1,4 +1,4 @@
-.. highlight:: igmspec
+.. highlight:: rest
 
 *******
 igmspec

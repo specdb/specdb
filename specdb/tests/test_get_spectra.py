@@ -1,10 +1,8 @@
 # Module to run tests on scripts
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import matplotlib
 matplotlib.use('agg')  # For Travis
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -99,9 +97,3 @@ def test_spectra_in_group(igmsp):
     qdict = dict(DISPERSER='X400')
     with pytest.raises(IOError):
         spec, meta = igmsp.spectra_in_group(coords, 'GGG', meta_query=qdict)
-    '''
-    # Multiple spectra per group
-    coords = SkyCoord(ra=[2.8135, 16.5802], dec=[14.7672, 0.8065], unit='deg')
-    spec, meta = igmsp.coords_to_spectra(coords, 'GGG', all_spec=True)
-    assert spec.nspec == 4
-    '''

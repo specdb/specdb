@@ -1,7 +1,5 @@
 # Module to run tests on meta query
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -65,7 +63,8 @@ def test_meta_from_coords(igmsp):
     # Single
     coord = SkyCoord(ra=0.0019, dec=17.7737, unit='deg')
     _, meta = igmsp.meta_from_coords(coord)
-    meta['GROUP'] == 'BOSS_DR12'
+    assert len(meta) == 1
+    assert meta['GROUP'][0] == 'BOSS_DR12'
     # Single miss
     coord = SkyCoord(ra=0.0019, dec=-17.7737, unit='deg')
     matches, meta = igmsp.meta_from_coords(coord)
@@ -97,7 +96,8 @@ def test_meta_from_coords(igmsp):
     coords = SkyCoord(ra=[2.813458]*2, dec=[14.767167]*2, unit='deg')
     _, meta5 = igmsp.meta_from_coords(coords)
     assert len(meta5) == 2
-    assert np.sum(meta5['GROUP_ID'] == meta5['GROUP_ID']) == 2
+    assert meta5['GROUP_ID'][0] == meta5['GROUP_ID'][1]
+    assert meta5['IGM_ID'][0] == meta5['IGM_ID'][1]
     # Multiple hits on single source with first=False
     coord = SkyCoord(ra=2.813458, dec=14.767167, unit='deg')
     _, meta6_list, meta6_stack = igmsp.meta_from_coords(coord, first=False)

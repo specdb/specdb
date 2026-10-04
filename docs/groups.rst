@@ -1,4 +1,4 @@
-.. highlight:: groups
+.. highlight:: rest
 
 ******
 Groups
@@ -7,7 +7,7 @@ Groups
 This document describes the meta data of
 a `specdb` database and methods to query it.
 
-.. _meta-desc:
+.. _groups-desc:
 
 Description
 ===========

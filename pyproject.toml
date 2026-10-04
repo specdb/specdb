@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "specdb"
+description = "Extragalactic Galaxy Spectra Database"
+readme = "README.md"
+authors = [
+    {name = "IGM Community", email = "xavier@ucolick.org"},
+]
+# NOTE: the `license` field is deliberately absent.  The repository currently
+# contradicts itself -- LICENSE is the verbatim GPLv3 (with an unfilled
+# copyright line), setup.py declared 'BSD', the source headers cite a
+# LICENSE.rst that does not exist, and Zenodo says 'other-open'.  Declaring one
+# here would be picking a licence on the maintainers' behalf.  See the "license
+# contradiction" section and Q&A #1 of claude_prompts/2026_update_prompt.md.
+requires-python = ">=3.11"
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+    "numpy>=1.24",
+    "astropy>=5.3",
+    "h5py>=3.8",
+    "matplotlib>=3.6",
+    "psutil>=5.9",
+    "linetools",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+docs = ["sphinx>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/specdb/specdb"
+Documentation = "https://specdb.readthedocs.io"
+
+[project.scripts]
+specdb_cat = "specdb.scripts.search_cat:main"
+specdb_chk = "specdb.scripts.specdb_chk:main"
+specdb_get_igmspec = "specdb.scripts.get_igmspec:main"
+specdb_get_qpq = "specdb.scripts.get_qpq:main"
+specdb_get_uvqs = "specdb.scripts.get_uvqs:main"
+specdb_meta = "specdb.scripts.grab_meta:main"
+specdb_plot = "specdb.scripts.plot_specdb:main"
+specdb_privatedb = "specdb.scripts.specdb_privatedb:main"
+specdb_sdss = "specdb.scripts.sdss_spec:main"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["specdb*"]
+
+[tool.setuptools.package-data]
+# setup.py walked specdb/data only, so wheels shipped a package whose own test
+# suite could not run.  See Q&A #6 on whether the ~10 MB of test fixtures
+# should ship at all.
+"specdb.data" = ["**/*"]
+"specdb.tests" = ["files/*"]
+"specdb.build.tests" = ["files/*"]
+
+[tool.setuptools_scm]
+version_file = "specdb/version.py"
+
+[tool.pytest.ini_options]
+# `build` is deliberately absent from norecursedirs: pytest's built-in default
+# includes it, which silently hid every test under specdb/build/tests/.
+norecursedirs = [".*", "*.egg", "dist", "docs/_build"]
+testpaths = ["specdb"]

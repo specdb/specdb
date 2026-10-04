@@ -1,5 +1,4 @@
 # Module to run tests on ID methods
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import pytest
 import numpy as np
@@ -33,10 +32,10 @@ def test_chk_vstack(igmsp):
 def test_clean_meta():
     meta = Table()
     meta['SPEC_FILE'] = ['abas', 'adfasd', '123as']
-    assert 'unicode' in meta['SPEC_FILE'].dtype.name
+    assert meta['SPEC_FILE'].dtype.kind == 'U'
     # Clean
     spbu.clean_table_for_hdf(meta)
-    assert 'str' in meta['SPEC_FILE'].dtype.name
+    assert meta['SPEC_FILE'].dtype.kind == 'S'
 
 def test_get_newids():
     # Faux maindb
@@ -50,7 +49,9 @@ def test_get_newids():
     meta['DEC_GROUP'] = [2., 5, 7., 7., 8., 8., 3.]
     IDs = spbu.get_new_ids(maindb, meta, 'ID_KEY')
     assert IDs[0] == 0
-    assert IDs[2] == IDs[2]
+    # Rows 2 and 3 are duplicate coordinates (6., 7.) and must share an ID.
+    # This read `IDs[2] == IDs[2]`, which is a tautology.
+    assert IDs[2] == IDs[3]
     assert IDs[-1] == -1
     # Fail (close pairs with a match to original)
     meta = Table()

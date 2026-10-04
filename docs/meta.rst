@@ -1,4 +1,4 @@
-.. highlight:: meta
+.. highlight:: rest
 
 *********
 Meta Data

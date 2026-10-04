@@ -3,8 +3,6 @@
 """ Loads and plots a requested spectrum
 """
 
-import pdb
-
 def parser(options=None):
 
     import argparse
@@ -26,9 +24,11 @@ def parser(options=None):
     return args
 
 
-def main(args, unit_test=False, **kwargs):
+def main(args=None, unit_test=False, **kwargs):
     """ Run
     """
+    if args is None:
+        args = parser()
     import numpy as np
     from astropy import units as u
     from specdb.utils import load_db

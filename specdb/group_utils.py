@@ -1,10 +1,7 @@
 """ Module for catalog utilities
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 
 import numpy as np
-import pdb
 import warnings
 
 def show_group_meta(meta, meta_keys=None, show_all_keys=True, idkey=None):

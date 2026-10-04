@@ -3,7 +3,6 @@
 import matplotlib
 matplotlib.use('agg')  # For Travis
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os

@@ -1,8 +1,6 @@
 """ Module for SpecDB Class
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-import pdb
 import numpy as np
 import warnings
 import h5py
@@ -43,8 +41,6 @@ def igmspec_file(version='v02', nspec=5):
         keep = gdi[0:nspec]
         all_IDs += keep.tolist()  # Save for main catalog
         # Grab data
-        if dset == '2QZ':
-            pdb.set_trace()
         rows = igmsp[dset].ids_to_allrows(keep)   # Match to all rows
         spec, meta = igmsp[dset].grab_specmeta(rows)  # Grab
         # Group
@@ -54,14 +50,6 @@ def igmspec_file(version='v02', nspec=5):
         # Add attrs :: SSA -- read from igmspec later
         for key in igmsp[dset].hdf[dset+'/meta'].attrs.keys():
             hdf[dset]['meta'].attrs[key] = igmsp[dset].hdf[dset+'/meta'].attrs[key]
-        '''
-        if 'SSA' not in hdf[dset]['meta'].attrs.keys():
-            pdb.set_trace()
-            from specdb.ssa import default_fields
-            Title='BOSS DR12 Quasars'
-            ssa_dict = default_fields(Title, flux='flambda', fxcalib='ABSOLUTE')
-            hdf[dset]['meta'].attrs['SSA'] = json.dumps(ltu.jsonify(ssa_dict))
-        '''
     # Catalog
     IDs = np.unique(np.array(all_IDs))
     zpri = igmsp.hdf['catalog'].attrs['Z_PRIORITY']
@@ -71,8 +59,8 @@ def igmspec_file(version='v02', nspec=5):
     for dkey in sdict.keys():
         if dkey not in hdfkeys:
             sdict.pop(dkey, None)
-    sdbbu.write_hdf(hdf, str('igmspec'), igmsp.qcat.cat[IDs], zpri,
-                    sdict, version, Publisher=str('specdb'))
+    sdbbu.write_hdf(hdf, 'igmspec', igmsp.qcat.cat[IDs], zpri,
+                    sdict, version, Publisher='specdb')
     print("Wrote {:s} DB file".format(outfil))
 
 def main(flg_file, sdss=None, ml_survey=None):

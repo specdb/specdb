@@ -36,6 +36,7 @@ Accessing Data
    :maxdepth: 2
 
    catalog
+   coords
    query_dict
    groups
    meta

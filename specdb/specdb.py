@@ -1,8 +1,6 @@
 """ Module for SpecDB Class
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-import pdb
 import numpy as np
 import warnings
 import h5py
@@ -15,10 +13,6 @@ from specdb import utils as spdbu
 from specdb.query_catalog import QueryCatalog
 from specdb.interface_group import InterfaceGroup
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
 
 class SpecDB(object):
     """ The primary class of this Repository
@@ -40,9 +34,9 @@ class SpecDB(object):
         if db_file is None:
             try:
                 db_file = self.grab_dbfile(**kwargs)
-            except:
+            except Exception as exc:
                 raise IOError("DB not found. Please either check the corresponding environmental "
-                              "variable or directly provide the db_file")
+                              "variable or directly provide the db_file") from exc
         # Init
         self.verbose = verbose
         self.open_db(db_file)
@@ -227,7 +221,7 @@ class SpecDB(object):
             # Loop on coords
             gdI = np.where(matches)[0]
             for ii,jj in enumerate(gdI):
-                if self.verbose & ((ii % 100) == 0):
+                if self.verbose and ((ii % 100) == 0):
                     print('Done with {:d} of {:d}'.format(ii,len(gdI)))
                 gd_rows = stack[self.idkey] == IDs[jj]
                 final_list[jj] = gd_rows
@@ -508,7 +502,7 @@ class SpecDB(object):
 
         """
         # Check
-        if not isinstance(key, basestring):
+        if not isinstance(key, str):
             raise IOError("Item must be str")
         # Try to access the dict
         try:

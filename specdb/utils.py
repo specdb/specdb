@@ -1,15 +1,9 @@
 """ Module for DB utilities
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import numpy as np
 import warnings
-import pdb
 
-try:
-    basestring
-except NameError:  # For Python 3
-    basestring = str
 
 
 def clean_vstack(tables, labels, **kwargs):
@@ -29,7 +23,8 @@ def clean_vstack(tables, labels, **kwargs):
     stack : Table
 
     """
-    from astropy.table import operations, TableMergeError, vstack
+    from astropy.table import TableMergeError, vstack
+    from astropy.utils.metadata import common_dtype
 
     # Loop on tables
     tkeys = []
@@ -45,7 +40,7 @@ def clean_vstack(tables, labels, **kwargs):
                 rename = False
                 # Check data type
                 try:
-                    operations.common_dtype([table[key],tables[tbl_idx[idx]][key]])
+                    common_dtype([table[key],tables[tbl_idx[idx]][key]])
                 except TableMergeError:
                     rename = True
                 # Check shape
@@ -91,8 +86,12 @@ def hdf_decode(obj, itype=None):
                 dobj[key] = Column(ss)
     elif isinstance(obj, dict):
         dobj = obj.copy()
-        for key,item in dobj.items():
+        # list() because the loop inserts decoded keys as it goes;  iterating
+        # the live dict raises RuntimeError as soon as a key needs decoding.
+        for key, item in list(dobj.items()):
             skey = hdf_decode(key)
+            if skey != key:
+                dobj.pop(key)
             dobj[skey] = hdf_decode(item)
     else:  # Auto
         if isinstance(obj,bytes):
@@ -194,7 +193,7 @@ def query_table(tbl, qdict, ignore_missing_keys=False, verbose=True,
                 raise IOError("Tuple for key={:s} in query_dict must have length 2 for min/max".format(key))
             # Min/Max
             match = match & (tbl[key].data >= value[0]) & (tbl[key].data <= value[1])
-        elif isinstance(value,(list,float,basestring,int)):
+        elif isinstance(value,(list,float,str,int)):
             if flg_bitwise > 0: # BITWISE
                 if isinstance(value,(int)):
                     match &= (tbl[key].data & 2**value).astype(bool)
@@ -211,12 +210,14 @@ def query_table(tbl, qdict, ignore_missing_keys=False, verbose=True,
                     try:
                         match &= bit_match
                     except TypeError:
-                        pdb.set_trace()
+                        raise TypeError(
+                            "Could not combine a bitwise match on column '{:s}'. "
+                            "Check that the column is integer-typed.".format(key))
             else:
                 # Recast
                 mlist = np.array(value).astype(tbl[key].dtype)
                 # Match
-                match &= np.in1d(tbl[key].data, mlist)
+                match &= np.isin(tbl[key].data, mlist)
         else:
             print("Bad data type for query_dict value: {}".format(type(value)))
             raise IOError("Needs to be a simple Python type, e.g. float, int, list, str")

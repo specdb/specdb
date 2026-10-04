@@ -1,12 +1,10 @@
 """ Module to interface with an hdf5 data group in specdb
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import os
 import psutil
 import warnings
 import h5py
-import pdb
 
 import numpy as np
 
@@ -112,7 +110,7 @@ class InterfaceGroup(object):
 
         """
         # Checking
-        if isinstance(group_IDs, int):
+        if isinstance(group_IDs, (int, np.integer)):
             group_IDs = np.array([group_IDs])  # Insures meta and other arrays are proper
         # Find rows
         rows = match_ids(group_IDs, self.meta['GROUP_ID'])
@@ -136,14 +134,14 @@ class InterfaceGroup(object):
           Array of indices in meta table, that correspond to the input IDs (in order)
         """
         # Checking
-        if isinstance(IDs, int):
+        if isinstance(IDs, (int, np.integer)):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check that input IDs are all covered
-        chk_survey = np.in1d(IDs, self.meta[self.idkey])
+        chk_survey = np.isin(IDs, self.meta[self.idkey])
         if np.sum(chk_survey) != IDs.size:
             raise IOError("Not all of the input IDs are located in requested group: {:s}".format(self.group))
         # All matching rows
-        match_group = np.in1d(self.meta[self.idkey], IDs)
+        match_group = np.isin(self.meta[self.idkey], IDs)
         # Find indices of input IDs in meta table -- first instance in meta only!
         gdi = self.meta[self.idkey].data[match_group]
         xsorted = np.argsort(gdi)
@@ -174,17 +172,14 @@ class InterfaceGroup(object):
           is more than one spectrum per source
         """
         # Checking
-        if isinstance(IDs, int):
+        if isinstance(IDs, (int, np.integer)):
             IDs = np.array([IDs])  # Insures meta and other arrays are proper
         # Check that input IDs are all covered
-        try:
-            chk_survey = np.in1d(IDs, self.meta[self.idkey])
-        except:
-            pdb.set_trace()
+        chk_survey = np.isin(IDs, self.meta[self.idkey])
         if np.sum(chk_survey) != IDs.size:
             raise IOError("Not all of the input IDs are located in requested group: {:s}".format(self.group))
         # Find rows (bool array)
-        match_survey = np.in1d(self.meta[self.idkey], IDs)
+        match_survey = np.isin(self.meta[self.idkey], IDs)
         return np.where(match_survey)[0]
 
     def grab_specmeta(self, rows, verbose=None, masking='edges', use_XSpec=True, **kwargs):
@@ -204,7 +199,7 @@ class InterfaceGroup(object):
         meta : Table  -- THIS MAY BE DEPRECATED
           Meta table, ordered by the input rows
         """
-        if isinstance(rows, (int, np.int64)):
+        if isinstance(rows, (int, np.integer)):
             rows = np.array([rows])  # Insures meta and other arrays are proper
         if verbose is None:
             verbose = self.verbose

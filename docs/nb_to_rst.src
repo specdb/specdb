@@ -1,25 +1,23 @@
-#/bin/bash
+#!/bin/bash
 
-# Converts notebooks to rst and insert a line at the top with a link
+# Converts notebooks to rst and inserts a line at the top with a link
 # to the original notebook.
+#
+# Run from the docs/ directory.  Requires `jupyter nbconvert`.
 
-# Requires pandoc https://github.com/jgm/pandoc/releases/tag/1.15.2
+set -euo pipefail
 
-filenames=( Simple_Usage
-     Simple_Scripts
+# Simple_Usage was listed here but docs/nb/ has never contained it.
+filenames=( Simple_Scripts
      Private_Ingest
      )
 
 for n in "${filenames[@]}"
-
 do
-	echo nb/$n\.ipynb
-	echo $n\.rst
-	jupyter nbconvert nb/$n.ipynb --to rst;
-	sed -i '' "5 i\\
- :download:\`Download <nb/$n\.ipynb>\` this notebook.\\
-\\
-
-" $n\.rst;
-
+	echo "nb/$n.ipynb -> $n.rst"
+	jupyter nbconvert "nb/$n.ipynb" --to rst --output-dir .
+	# Portable in-place edit: BSD sed needs an argument to -i, GNU sed does not.
+	tmp=$(mktemp)
+	awk -v n="$n" 'NR==5{print " :download:`Download <nb/" n ".ipynb>` this notebook.\n"} {print}' \
+		"$n.rst" > "$tmp" && mv "$tmp" "$n.rst"
 done

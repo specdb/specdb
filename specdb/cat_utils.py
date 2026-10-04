@@ -1,11 +1,8 @@
 """ Module for catalog utilities
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 
 import numpy as np
 import h5py
-import pdb
 
 from astropy.table import Table
 
@@ -30,7 +27,7 @@ def match_ids(IDs, match_IDs, require_in_match=True):
     """
     rows = -1 * np.ones_like(IDs).astype(int)
     # Find which IDs are in match_IDs
-    in_match = np.in1d(IDs, match_IDs)
+    in_match = np.isin(IDs, match_IDs)
     if require_in_match:
         if np.sum(~in_match) > 0:
             raise IOError("qcat.match_ids: One or more input IDs not in match_IDs")
@@ -115,7 +112,7 @@ def write_cat_to_fits(DB_file, cat_fits_file):
         raise IOError("Output file {:s} must have .fits extension".format(cat_fits_file))
     # Read
     hdf = h5py.File(DB_file, 'r')
-    cat = Table(hdf['catalog'])
+    cat = Table(hdf['catalog'][()])
     # Write
     cat.write(cat_fits_file)
     # Finish

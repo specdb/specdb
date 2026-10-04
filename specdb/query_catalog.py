@@ -2,7 +2,6 @@
 """
 
 import numpy as np
-import pdb
 import warnings
 
 
@@ -16,7 +15,6 @@ from linetools import utils as ltu
 from specdb.cat_utils import match_ids
 from specdb import utils as spdbu
 
-from IPython import embed
 
 
 class QueryCatalog(object):
@@ -109,7 +107,10 @@ class QueryCatalog(object):
             ncoord = coords.shape[0]
         matched_cat = Table(np.repeat(np.zeros_like(self.cat[0]), ncoord))
         # Grab IDs
-        IDs = self.match_coord(coords, toler=toler, **kwargs)
+        #  match_coord() was renamed query_coords() in a1b4018 (2017-01-04) and
+        #  this caller was never updated;  the old method returned exactly the
+        #  ID array that query_coords() now returns third.
+        _, _, IDs = self.query_coords(coords, toler=toler, **kwargs)
 
         # Find rows in catalog
         rows = match_ids(IDs, self.cat[self.idkey], require_in_match=False)
@@ -284,7 +285,9 @@ class QueryCatalog(object):
             ID_fg = self.cat[self.idkey][close][gdz][izfg]
             ID_bg = self.cat[self.idkey][idx[close]][gdz][izfg]
         else:
-            pdb.set_trace()
+            raise NotImplementedError(
+                "pairs() only supports projected pairs (dv > 0) at present; "
+                "got dv={}".format(dv))
         # Reload
         return ID_fg, ID_bg
 
@@ -321,7 +324,6 @@ class QueryCatalog(object):
         # Init
         if cat is None:
             cat = self.cat
-        #reload(spdbu)
         # Copy in case we need to add group search
         qdict = idict.copy()
         # Groups
@@ -474,11 +476,14 @@ class QueryCatalog(object):
             raise IOError("Input radius must be an Angle type, e.g. 10.*u.arcsec")
         # Match
         idx, d2d, d3d = match_coordinates_sky(coords, self.coords, nthneighbor=1)
-        if len(d2d) == 1:  # Annoying array/scalar bit
-            IDs = np.array([self.cat[self.idkey][idx]])
-            idx = np.array([int(idx)])
-        else:
-            IDs = self.cat[self.idkey][idx].data
+        # Normalise the scalar / length-1 cases.  match_coordinates_sky returns
+        # 0-d results for a scalar SkyCoord, and the previous special-case built
+        # a (1,1) array for a length-1 SkyCoord *array*.  np.array() also forces
+        # a copy, so the IDs[...] = -1/-2 assignments below cannot write back
+        # into the catalog.
+        idx = np.atleast_1d(idx)
+        d2d = np.atleast_1d(d2d)
+        IDs = np.array(self.cat[self.idkey][idx])
         coord_matches = d2d <= toler
         if np.sum(coord_matches) > 0:
             # Query dict or groups? -- Performed on a cut of the full catalog
@@ -533,7 +538,7 @@ class QueryCatalog(object):
 
         """
         # IGMspec catalog
-        good = np.in1d(self.cat[self.idkey], IDs)
+        good = np.isin(self.cat[self.idkey], IDs)
 
         # Catalog keys
         cat_keys = [self.idkey, 'RA', 'DEC', 'zem', 'flag_group']

@@ -19,10 +19,7 @@ of Version 2.0 of the Spectral Data Model (dated 20160928).
 Notebooks
 =========
 
-.. toctree::
-   :maxdepth: 1
-
-       SSA <SSA_IVOA>
+A worked example is provided as a Jupyter notebook in ``docs/nb/SSA_IVOA.ipynb``.
 
 Meta Data
 =========

@@ -1,7 +1,5 @@
 # Module to run tests on cat_utils
-from __future__ import print_function, absolute_import, division, unicode_literals
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -41,3 +39,16 @@ def test_flags_to_groups():
     # Test
     for igroup in ['BOSS_DR12','GGG','SDSS_DR7']:
         assert igroup in groups[-1]
+
+
+def test_write_cat_to_fits(tmp_path):
+    from astropy.table import Table
+    db_file = os.path.join(os.path.dirname(__file__), 'files',
+                           'IGMspec_DB_v02_debug.hdf5')
+    outfil = str(tmp_path / 'cat.fits')
+    cat_utils.write_cat_to_fits(db_file, outfil)
+    cat = Table.read(outfil)
+    assert len(cat) == 19
+    # Refuses a non-FITS extension
+    with pytest.raises(IOError):
+        cat_utils.write_cat_to_fits(db_file, str(tmp_path / 'cat.hdf5'))

@@ -1,12 +1,10 @@
 """ Module of utilities for building DB files
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import numpy as np
 import warnings
 
 import numbers
-import pdb
 
 from astropy.table import Table, Column, vstack
 from astropy.coordinates import SkyCoord, match_coordinates_sky
@@ -19,10 +17,6 @@ from specdb import defs
 from specdb.cat_utils import match_ids
 from specdb.utils import clean_vstack
 
-try:
-    bstr = bytes
-except NameError:  # For Python 2
-    bstr = str
 
 def add_ids(maindb, meta, flag_g, tkeys, idkey, first=False, debug=False, **kwargs):
     """ Add IDs to
@@ -147,7 +141,7 @@ def chk_maindb_join(maindb, newdb):
         try:
             assert key in maindb.keys()
         except AssertionError:
-            pdb.set_trace()
+            print("Key {:s} of the new meta is not in the main DB".format(str(key)))
             return False
     return True
 
@@ -219,16 +213,15 @@ def chk_meta(meta, chk_cat_only=False):
         # Check date formatting
         try:
             tval = Time(list(meta['DATE-OBS'].data), format='iso')
-        except:
+        except ValueError:
             print("Bad DATE-OBS formatting")
-            pdb.set_trace()
             chk = False
         # Clean
         clean_table_for_hdf(meta)
         # Check instrument
         meta_instr = meta['INSTR'].data
-        db_instr = np.array(list(inst_dict.keys())).astype(bstr)  # bytes
-        if not np.all(np.in1d(meta_instr, db_instr)):
+        db_instr = np.array(list(inst_dict.keys())).astype(bytes)  # bytes
+        if not np.all(np.isin(meta_instr, db_instr)):
             print("Bad instrument in meta data")
             chk = False
         # ID key
@@ -266,7 +259,8 @@ def chk_vstack(hdf):
     # Try to stack
     try:
         stack = clean_vstack(meta_tables, labels)
-    except:
+    except Exception as exc:
+        print("clean_vstack failed: {:s}: {:s}".format(type(exc).__name__, str(exc)))
         chk = False
     else:
         print("Passing chk_vstack...")
@@ -295,7 +289,7 @@ def clean_table_for_hdf(tbl):
         #if 'unicode' in tbl[key].dtype.name:
         if 'U' in tbl[key].dtype.__repr__():
             warnings.warn("unicode in column {:s}.  Will convert to str for hdf5".format(key))
-            tmp = Column(tbl[key].data.astype(bstr), name=key)
+            tmp = Column(tbl[key].data.astype(bytes), name=key)
             tbl.remove_column(key)
             tbl[key] = tmp
 
@@ -377,8 +371,6 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
             # Cut down to unique and restrict to new ones (there are at least 2 duplicates per match)
             dup_idx = np.where(dups)[0]
             dup_filled = np.array([False]*len(sub_c_new))
-            if debug:
-                pdb.set_trace()
             for idup in dup_idx: # Ugly loop..
                 if dup_filled[idup]:  # Already filled as a duplicate
                     continue
@@ -395,13 +387,6 @@ def get_new_ids(maindb, newdb, idkey, chk=True, mtch_toler=None, pair_sep=0.5*u.
     if chk:
         print("The following sources were previously in the DB")
         print(newdb[~new])
-    '''
-    if close_pairs: # TEST SDSS
-        tc = SkyCoord(ra=210.053222, dec=31.581701, unit='deg')#, (210.053552, 31.58131)]>
-        isep = np.argmin(tc.separation(c_new))
-        pdb.set_trace()
-        IDs[isep]
-    '''
     # Return
     return IDs
 
@@ -419,11 +404,11 @@ def init_data(npix, include_co=False):
     -------
     data : masked  ndarray
     """
-    dtype = [(str('wave'), 'float64', (npix)),
-          (str('flux'), 'float32', (npix)),
-          (str('sig'),  'float32', (npix))]
+    dtype = [('wave', 'float64', (npix)),
+          ('flux', 'float32', (npix)),
+          ('sig',  'float32', (npix))]
     if include_co:
-        dtype += [(str('co'),   'float32', (npix))]
+        dtype += [('co',   'float32', (npix))]
     data = np.ma.empty((1,), dtype=dtype)
     # Return
     return data
@@ -451,8 +436,6 @@ def set_new_ids(maindb, meta, idkey, chk=True, first=False, debug=False, **kwarg
     """
     # IDs
     ids = get_new_ids(maindb, meta, idkey, debug=debug, **kwargs) # Includes new and old
-    if debug:
-        pdb.set_trace()
     # Crop to rows with new IDs
     if first:
         new = ids >= 0
@@ -536,25 +519,22 @@ def set_resolution(head, instr=None):
         try:
             return Rdicts[instr][head['SLMSKNAM']]
         except KeyError:
-            pdb.set_trace()
+            raise ValueError("Need to add ESI slitmask {:s}".format(head['SLMSKNAM']))
     elif instr == 'COS':
         try:
             return Rdicts[instr][head['OPT_ELEM'].strip()]
         except KeyError:
-            print("Need to add {:s}".format(head['DECKNAME']))
-            pdb.set_trace()
+            raise ValueError("Need to add COS OPT_ELEM {:s}".format(head['OPT_ELEM']))
     elif instr == 'ISIS':
         try:
             return Rdicts[instr][head['ISIGRAT'].strip()]
         except KeyError:
-            print("Need to add {:s}".format(head['ISIGRAT']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['ISIGRAT']))
     elif instr == 'HIRES':
         try:
             return Rdicts[instr][head['DECKNAME'].strip()]
         except KeyError:
-            print("Need to add {:s}".format(head['DECKNAME']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['DECKNAME']))
     elif instr == 'GMOS':
         try:
             return Rdicts[instr][head['GRATING']]
@@ -562,14 +542,12 @@ def set_resolution(head, instr=None):
             try:
                 return Rdicts[instr][head['DISPNAME']]
             except KeyError:
-                print("Need to add {:s}".format(head['GRATING']))
-                pdb.set_trace()
+                raise ValueError("Need to add {:s}".format(head['GRATING']))
     elif instr == 'Goodman':
         try:
             res = Rdicts[instr][head['DISPNAME']]
         except KeyError:
-            print("Need to add {:s}".format(head['DISPNAME']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['DISPNAME']))
         else:
             swidth = defs.slit_width(head['DECKER'])
             return res/swidth
@@ -577,8 +555,7 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[instr][head['FILTER']]*0.7
         except KeyError:
-            print("Need to add {:s}".format(head['FILTER']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['FILTER']))
         else:
             swidth = defs.slit_width(head['MASKNAME'])
             return res/swidth
@@ -586,8 +563,7 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[instr][head['GRATING']]*0.3
         except KeyError:
-            print("Need to add {:s}".format(head['GRATING']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['GRATING']))
         else:
             swidth = defs.slit_width(head['SLIT'])
             return res/swidth
@@ -595,17 +571,15 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[instr][head['FILTER3']][head['FPMASK']]
         except KeyError:
-            print("Need to add {:s} and/or mask {:s}".format(head['FILTER3'],
+            raise ValueError("Need to add {:s} and/or mask {:s}".format(head['FILTER3'],
                                                              head['FPMASK']))
-            pdb.set_trace()
         else:
             return res
     elif instr == 'NIRSPEC':  # LOW DISPERSION
         try:
             return 2000.*0.38/defs.slit_width(head['SLITNAME'])
         except KeyError:
-            print("Need to add {:s}".format(head['SLITNAME']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['SLITNAME']))
     elif instr == 'MagE':
         # Hack for PyepIt
         if 'SLITNAME' in head.keys():
@@ -615,8 +589,7 @@ def set_resolution(head, instr=None):
         try:
             return 4100./defs.slit_width(head[key])
         except KeyError:
-            print("Need to add {:s}".format(head[key]))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head[key]))
     elif 'KCWI' in instr:
         res_1 = Rdicts[instr][head['DISPNAME']]
         swidth = defs.slit_width(head['DECKER'])
@@ -633,8 +606,7 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[instr][head['DISPERSE']]*0.6
         except KeyError:
-            print("Need to add {:s}".format(head['DISPERSE']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['DISPERSE']))
         else:
             swidth = defs.slit_width(head['APERTURE'])
             return res/swidth
@@ -642,8 +614,7 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[instr][head['GRATNAME']]*0.6
         except KeyError:
-            print("Need to add {:s}".format(head['GRATNAME']))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(head['GRATNAME']))
         else:
             swidth = defs.slit_width(head['MASKNAME'])
             return res/swidth
@@ -651,8 +622,7 @@ def set_resolution(head, instr=None):
         try:
             res = Rdicts[head['INSTRUME']]
         except KeyError:
-            print("Need to add {:s}".format(instr))
-            pdb.set_trace()
+            raise ValueError("Need to add {:s}".format(instr))
         else:
             try:
                 swidth = defs.slit_width(head['SLITSIZE'])
@@ -704,12 +674,11 @@ def parse_header(parse_head:dict, head, mdict:dict=None,
                         try:
                             plist[key].append(mdict['R'])
                         except KeyError:
-                            print("Key error!")
-                            pdb.set_trace()
+                            raise ValueError(
+                                "set_resolution() failed and the supplied mdict has no 'R' key")
                     else:
-                        print('Bad inputs to set_resolution()')
-                        pdb.set_trace()
-                        plist[key].append(0.)
+                        raise ValueError(
+                            "Bad inputs to set_resolution() and no mdict supplied to fall back on")
             else:
                 raise ValueError("Set something else for R")
         elif key == 'DATE-OBS':
@@ -717,13 +686,21 @@ def parse_header(parse_head:dict, head, mdict:dict=None,
                 tval = Time(head[item], format='mjd')
                 tval.format = 'iso'
             else:
-                if ':' in head[item]:
-                    thead = head[item].replace(':','-')
-                elif '/' in head[item]:
-                    thead = head[item].replace('/','-')
-                else:
-                    thead = head[item]
-                tval = Time(thead, format='iso')
+                # Let astropy sniff the format first: this handles plain dates
+                # ('2015-09-10') and full ISO timestamps with either separator
+                # ('2015-09-10T08:36:38', '2015-09-10 08:36:38').  The
+                # separator munging below predates that and corrupts the time
+                # part of a T-separated timestamp, so it is only a fallback.
+                try:
+                    tval = Time(head[item])
+                except ValueError:
+                    if ':' in head[item]:
+                        thead = head[item].replace(':','-')
+                    elif '/' in head[item]:
+                        thead = head[item].replace('/','-')
+                    else:
+                        thead = head[item]
+                    tval = Time(thead, format='iso')
             tval.out_submfit = 'date'
             plist[key].append(tval.iso)
         else:

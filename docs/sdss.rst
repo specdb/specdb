@@ -12,7 +12,7 @@ and scripts for those data.
 get_sdss
 ========
 
-A default method of the `specdb-class`_ is
+A default method of the :ref:`specdb-class` is
 get_sdss() which takes plate, fiber and returns
 meta and spectra::
 
@@ -23,5 +23,5 @@ specdb_sdss
 
 This script also takes plate, fiber and shows
 meta data and may plot the spectra.  See
-`sdss-spec`_ for more details.
+:ref:`sdss-spec` for more details.
 

@@ -33,7 +33,7 @@ def test_meta():
     np.testing.assert_allclose(meta['zem_GROUP'].data, (2.39499998093, 2.59719920158))
 
 
-def test_ingest():
+def test_ingest(tmp_path):
     # Begin
     id_key = 'TEST_ID'
     maindb, tkeys = spbu.start_maindb(id_key)
@@ -47,25 +47,29 @@ def test_ingest():
     flag_g = spbu.add_to_group_dict('COS', gdict)
     maindb = pbuild.add_ids(maindb, meta, flag_g, tkeys, id_key, first=(flag_g==1))
     #
-    hdf = h5py.File('tmp.hdf5','w')
+    outfil = str(tmp_path / 'tmp.hdf5')
+    hdf = h5py.File(outfil, 'w')
     pbuild.ingest_spectra(hdf, 'test', meta)
     hdf.close()
     # Read
-    tmp = h5py.File('tmp.hdf5','r')
+    tmp = h5py.File(outfil, 'r')
     # Test
     assert 'meta' in tmp['test'].keys()
     assert isinstance(tmp['test/spec'][...], np.ndarray)
+    tmp.close()
 
 
-def test_mkdb():
+def test_mkdb(tmp_path):
     import specdb
     # Redshift table
     ztbl = Table.read(specdb.__path__[0]+'/data/test_privateDB/testDB_ztbl.fits')
     # Run
     tree = specdb.__path__[0]+'/data/test_privateDB'
-    pbuild.mk_db('tst_db', tree, data_path('tst_db.hdf5'), ztbl, fname=True)
+    outfil = str(tmp_path / 'tst_db.hdf5')
+    pbuild.mk_db('tst_db', tree, outfil, ztbl, fname=True)
     # Test SSA
     # Read
-    hdf = h5py.File(data_path('tst_db.hdf5'),'r')
+    hdf = h5py.File(outfil, 'r')
     ssadict = json.loads(hdf['COS/meta'].attrs['SSA'])
     assert ssadict['FluxUcd'] == 'phot.fluDens;em.wl'
+    hdf.close()

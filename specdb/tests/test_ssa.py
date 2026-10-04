@@ -1,10 +1,8 @@
 # Module to run tests on scripts
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import matplotlib
 matplotlib.use('agg')  # For Travis
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -75,13 +73,15 @@ def test_ssa_init(igmsp):
     assert ssai.name == 'SSAI_igmspec'
 
 
-def test_query_data(igmsp):
+def test_query_data(igmsp, tmp_path):
     ssai = spdb_ssa.SSAInterface(igmsp)
     votable = ssai.querydata('0.0019,17.7737', SIZE=1e-3)
     # Test
     assert isinstance(votable, VOTableFile)
     assert len(votable.resources[0].tables) == 1
-    votable.to_xml(data_path('tst.xml'))
+    outfil = str(tmp_path / 'tst.xml')
+    votable.to_xml(outfil)
+    assert os.path.isfile(outfil)
 
 
 def test_metadata(igmsp):

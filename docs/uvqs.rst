@@ -1,4 +1,4 @@
-.. highlight:: uvqs
+.. highlight:: rest
 
 ****
 uvqs

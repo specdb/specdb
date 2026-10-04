@@ -1,4 +1,4 @@
-.. highlight:: catalog
+.. highlight:: rest
 
 **********
 Query dict

@@ -1,10 +1,8 @@
 # Module to run tests on scripts
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import matplotlib
 matplotlib.use('agg')  # For Travis
 
-# TEST_UNICODE_LITERALS
 
 import pytest
 import os
@@ -132,3 +130,25 @@ def test_ids_in_groups(igmsp):
     assert IDs4.size == 2
 
 
+
+def test_cat_from_coords(igmsp):
+    # cat_from_coords called the long-removed QueryCatalog.match_coord
+    coords = SkyCoord(ra=[0.0019, 10.038604], dec=[17.7737, 55.298477], unit='deg')
+    matched_cat = igmsp.qcat.cat_from_coords(coords)
+    assert len(matched_cat) == 2
+    # First coordinate is in the debug DB, second is not
+    assert matched_cat[igmsp.qcat.idkey][0] >= 0
+    assert matched_cat[igmsp.qcat.idkey][1] < 0
+
+
+def test_query_coords_one_element_array(igmsp):
+    # A length-1 SkyCoord *array* used to hit int() on a 1-element ndarray,
+    # which numpy 2 rejects.  Scalar and N>=2 always worked.
+    coords = SkyCoord(ra=[0.0019], dec=[17.7737], unit='deg')
+    matches, matched_cat, IDs = igmsp.qcat.query_coords(coords)
+    assert IDs.size == 1
+    assert matches[0]
+    # Same answer as the scalar form
+    _, _, IDs_scalar = igmsp.qcat.query_coords(
+        SkyCoord(ra=0.0019, dec=17.7737, unit='deg'))
+    assert IDs[0] == IDs_scalar[0]

@@ -1,4 +1,4 @@
-.. highlight:: qpq
+.. highlight:: rest
 
 ***
 qpq

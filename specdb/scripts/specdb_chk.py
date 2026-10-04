@@ -2,8 +2,6 @@
 """
 Check a DB file from specdb
 """
-import pdb
-from IPython import embed
 
 def parser(options=None):
     import argparse
@@ -21,7 +19,7 @@ def parser(options=None):
     return pargs
 
 
-def main(pargs):
+def main(pargs=None):
     """ Run
     Parameters
     ----------
@@ -31,6 +29,8 @@ def main(pargs):
     -------
 
     """
+    if pargs is None:
+        pargs = parser()
     import h5py
     import warnings
     from specdb import defs
@@ -49,7 +49,7 @@ def main(pargs):
     # Name
     try:
         dbname = catalog['NAME']
-    except:
+    except KeyError:
         warnings.warn('DB file has no name.  Must be really old.')
         dbname = None
     else:
@@ -58,7 +58,7 @@ def main(pargs):
     # Check Creation Date
     try:
         cdate = catalog['CREATION_DATE']
-    except:
+    except KeyError:
         warnings.warn('DB file has no Creation Date.  Must be really old..')
         return
     else:
@@ -91,7 +91,7 @@ def main(pargs):
         # Spectra
         try:
             nspec += hdf[key]['spec'].size
-        except:
+        except KeyError:
             pass
 
     print("There are a total of {:d} spectra in the database".format(nspec))
